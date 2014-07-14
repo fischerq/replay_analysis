@@ -56,11 +56,11 @@ public class Display extends JPanel {
     	return g2d;
     }
     
-    public int[] convertCoords(float[] pos){
+    public int[] convertCoords(double[] pos){
     	int[] result = new int[2];
     	//x: [-8200, 7930.0] Y: [-8400.0, 8080.0]
-    	result[0] = (int)((pos[0]+8200)/(float)(8200+7930)*(float)(image.getWidth()));
-    	result[1] = (int)((8080-pos[1])/(float)(8400+8080)*(float)(image.getHeight()));
+    	result[0] = (int)((pos[0]+8200)/(double)(8200+7930)*(double)(image.getWidth()));
+    	result[1] = (int)((8080-pos[1])/(double)(8400+8080)*(double)(image.getHeight()));
     	return result;
     }
 

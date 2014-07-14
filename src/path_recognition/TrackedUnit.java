@@ -6,11 +6,15 @@ import utils.Utils;
 
 public class TrackedUnit {
 	private int handle;
+	private int unit_id;
+	private String name;
 	private Path current_path;
 	private boolean tracking;
 	
-	public TrackedUnit(int handle){
+	public TrackedUnit(int handle, int id, String name){
 		this.handle = handle;
+		unit_id = id;
+		this.name = name;
 		tracking = false;
 	}
 	
@@ -18,11 +22,11 @@ public class TrackedUnit {
 		Path result = null;
 		Entity entity = match.getEntities().getByHandle(handle);
 		int alive = entity.getProperty("m_lifeState");
-		float[] position = Utils.getPosition(entity);
+		double[] position = Utils.getPosition(entity);
 		if(alive == 0){
 			if(!tracking){
 				tracking = true;
-				current_path = new Path();
+				current_path = new Path(unit_id, name);
 			}
 			
 			current_path.add(match.getGameTime(), position);
@@ -31,7 +35,6 @@ public class TrackedUnit {
 			if(tracking)
 			{
 				current_path.add(match.getGameTime(), position);
-				System.out.println("finished_path");
 				result = current_path;
 				tracking = false;
 				current_path = null;

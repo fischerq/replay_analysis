@@ -32,7 +32,6 @@ public class PathRecognition {
 			Path p = unit.update(m);
 			if(p != null)
 			{
-				System.out.println("finished path");
 				recorded_paths.add(p);
 			}
 		}
@@ -48,20 +47,21 @@ public class PathRecognition {
 		else 
 			return;
 		Integer[] selected_heroes = player_resource.getArrayProperty(Integer.class, "m_nSelectedHeroID");
+		String[] nicks = player_resource.getArrayProperty(String.class, "m_iszPlayerNames");
 		Integer[] hero_handles = player_resource.getArrayProperty(Integer.class, "m_hSelectedHero");
 		for(int i = 0; i<selected_heroes.length; ++i){
 			if(tracked_players.contains(i))
 				continue;
 			else if(selected_heroes[i] != -1)
 			{
-				units.add(new TrackedUnit(hero_handles[i]));
+				//System.out.println(player_resource.toString());
+				units.add(new TrackedUnit(hero_handles[i], selected_heroes[i], nicks[i]));
 				tracked_players.add(i);
-				System.out.println("got"+i+": "+hero_handles[i]);
 			}
 		}
 	}
 	
-	public void postProcess(){
+	public void finish(){
 		Iterator<TrackedUnit> it_u = units.iterator();
 		while(it_u.hasNext()){
 			TrackedUnit unit = it_u.next();
@@ -77,8 +77,6 @@ public class PathRecognition {
 			p.process();
 			System.out.println("processing path "+i+"/"+recorded_paths.size());
 			i++;
-			if(i > 5)
-				break;
 		}
 	}
 	

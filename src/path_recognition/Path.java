@@ -10,38 +10,39 @@ import java.util.List;
 
 import utils.Display;
 
-import javax.vecmath.Vector3f;
+import javax.vecmath.Vector3d;
 
-class Node{
-	public float time;
-	public float[] position = new float[2];
+class TrackedNode{
+	public double time;
+	public double[] position = new double[2];
 }
-
-class ProcessedNode{
-	public float time;
-	public float[] position = new float[2];
-	public float duration;
-}
-
 
 public class Path {
-	private List<Node> nodes;
-	private List<ProcessedNode> processed;
-	public Path(){
-		nodes = new LinkedList<Node>();
-		processed = new LinkedList<ProcessedNode>();
+	public int unit_id;
+	public String name;
+	private List<TrackedNode> nodes;
+	private List<PathNode> processed;
+	public Path(int id, String name){
+		unit_id = id;
+		this.name = name;
+		nodes = new LinkedList<TrackedNode>();
+		processed = new LinkedList<PathNode>();
 	}
 	
-	public void add(float time, float[] position){
-		Node n = new Node();
+	public void add(double time, double[] position){
+		TrackedNode n = new TrackedNode();
 		n.position = position.clone();
 		n.time = time;
 		nodes.add(n);
 	}
 	
+	public List<PathNode> getNodes(){
+		return processed;
+	}
+	
 	public void process() {
-		float tolerance = 150;
-		float time_factor = 522.0f;
+		double tolerance = 50;
+		double time_factor = 522.0f;
 		System.out.println("Original nodes: "+nodes.size());
 		List<Integer> results = new LinkedList<Integer>();
 		results.add(0);
@@ -51,13 +52,13 @@ public class Path {
 		
 		while(current_result != results.size()-1){
 
-			Node start = nodes.get(results.get(current_result));
-			Node end = nodes.get(results.get(current_result+1));
+			TrackedNode start = nodes.get(results.get(current_result));
+			TrackedNode end = nodes.get(results.get(current_result+1));
 			//System.out.println("Start: "+results.get(current_result));
 			//System.out.println("End: "+results.get(current_result+1));
 			
-			Vector3f p = new Vector3f();
-			Vector3f d = new Vector3f();
+			Vector3d p = new Vector3d();
+			Vector3d d = new Vector3d();
 			
 			p.x = start.position[0];
 			p.y = start.position[1];
@@ -71,21 +72,21 @@ public class Path {
 			int max_index = -1;
 			for(int index = results.get(current_result)+1; index < results.get(current_result+1); ++index){
 
-				Node node = nodes.get(index);
+				TrackedNode node = nodes.get(index);
 
-				Vector3f n = new Vector3f();
+				Vector3d n = new Vector3d();
 				n.x = node.position[0];
 				n.y = node.position[1];
 				n.z = time_factor*node.time;
 				//System.out.println("n: "+n);
 				n.sub(p);
 				//System.out.println("n: "+n);
-				float dot_prod = n.dot(d);
+				double dot_prod = n.dot(d);
 				//System.out.println("dot: "+dot_prod);
-				Vector3f projected = new Vector3f();
+				Vector3d projected = new Vector3d();
 				projected.scale(dot_prod, d);
 				
-				Vector3f distance_vec = new Vector3f();
+				Vector3d distance_vec = new Vector3d();
 				distance_vec.sub(n, projected);
 				//System.out.println("projected: "+projected+" dist: "+distance_vec);
 				
@@ -110,26 +111,26 @@ public class Path {
 		System.out.println("After simplification: "+results.size());
 		
 		Iterator<Integer> it = results.iterator(); 
-		Node last = nodes.get(it.next());
+		TrackedNode last = nodes.get(it.next());
 
-		ProcessedNode finished_node = new ProcessedNode();
+		PathNode finished_node = new PathNode();
 		finished_node.position[0] = last.position[0];
 		finished_node.position[1] = last.position[1];
 		finished_node.time = last.time;
 		finished_node.duration = 0;
 		
-		processed = new LinkedList<ProcessedNode>();
+		processed = new LinkedList<PathNode>();
 
 		while(it.hasNext()){
 			Integer index = it.next();
-			Node next = nodes.get(index);
-			float distance = (last.position[0]-next.position[0])*(last.position[0]-next.position[0]) + (last.position[1]-next.position[1])*(last.position[1]-next.position[1]);
-			if(distance < tolerance){
+			TrackedNode next = nodes.get(index);
+			double distance = (last.position[0]-next.position[0])*(last.position[0]-next.position[0]) + (last.position[1]-next.position[1])*(last.position[1]-next.position[1]);
+			if(distance < tolerance*tolerance){
 				finished_node.duration = next.time - finished_node.time;
 			}
 			else{
 				processed.add(finished_node);
-				finished_node = new ProcessedNode();
+				finished_node = new PathNode();
 				finished_node.position[0] = next.position[0];
 				finished_node.position[1] = next.position[1];
 				finished_node.time = next.time;
@@ -147,9 +148,9 @@ public class Path {
 		int radius = 5;
 		Graphics2D g2d = display.getGraphics();
 		g2d.setColor(Color.WHITE);
-		Iterator<Node> it = nodes.iterator();
+		Iterator<TrackedNode> it = nodes.iterator();
 		while(it.hasNext()){
-			Node n = it.next();
+			TrackedNode n = it.next();
 			int[] position = display.convertCoords(n.position);
 			g2d.fillOval(position[0]-radius, position[1]-radius, 2*radius+1, 2*radius+1);
 		}
@@ -157,10 +158,10 @@ public class Path {
 		FontMetrics fm = g2d.getFontMetrics();
 		
 		radius = 4;
-		Iterator<ProcessedNode> it2 = processed.iterator();
+		Iterator<PathNode> it2 = processed.iterator();
 		int[] last_pos = null;
 		while(it2.hasNext()){
-			ProcessedNode n = it2.next();
+			PathNode n = it2.next();
 			int[] position = display.convertCoords(n.position);
 			g2d.setColor(Color.BLACK);
 			if(last_pos != null)
@@ -169,13 +170,14 @@ public class Path {
 			}
 			last_pos = position;
 			g2d.fillOval(position[0]-radius, position[1]-radius, 2*radius+1, 2*radius+1);
-			
-			g2d.setColor(Color.GREEN);
-			String duration = String.format("%.3g%n", n.duration);
-	        Rectangle2D r = fm.getStringBounds(duration, g2d);
-	        int x = position[0] + (int)(r.getWidth() / 2);
-	        int y = position[1] + (int)(r.getHeight() / 2);
-	        //g2d.drawString(duration, x, y);
+			if(n.duration > 0 ){
+				g2d.setColor(Color.GREEN);
+				String duration = String.format("%.3g%n", n.duration);
+		        Rectangle2D r = fm.getStringBounds(duration, g2d);
+		        int x = position[0] + (int)(r.getWidth() / 2);
+		        int y = position[1] + (int)(r.getHeight() / 2);
+		        g2d.drawString(duration, x, y);
+			}
 		}
 	}
 
