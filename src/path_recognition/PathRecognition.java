@@ -77,7 +77,7 @@ public class PathRecognition {
 			p.process();
 			System.out.println("processing path "+i+"/"+recorded_paths.size());
 			i++;
-			if(i > 9)
+			if(i > 5)
 				break;
 		}
 	}

@@ -49,11 +49,6 @@ public class DisplayWindow extends JFrame {
         setVisible(true);
     }
 
-    public void close(){
-		display.save("out.png");
-		dispose();
-    }
-
 	public void addPathResults(List<Path> results) {
 		paths_recognized = results;
 		current_path_displayed = -1;
@@ -68,5 +63,7 @@ public class DisplayWindow extends JFrame {
 		display.reset();
 		paths_recognized.get(current_path_displayed).draw(display);
 		repaint();
+		
+		display.save("out.png");
 	}
 }

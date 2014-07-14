@@ -41,7 +41,7 @@ public class Path {
 	
 	public void process() {
 		float tolerance = 150;
-		float time_factor = 1;//;1/522.0f;
+		float time_factor = 522.0f;
 		System.out.println("Original nodes: "+nodes.size());
 		List<Integer> results = new LinkedList<Integer>();
 		results.add(0);
@@ -144,18 +144,19 @@ public class Path {
 	}
 
 	public void draw(Display display) {
-		int diameter = 9;
+		int radius = 5;
 		Graphics2D g2d = display.getGraphics();
 		g2d.setColor(Color.WHITE);
 		Iterator<Node> it = nodes.iterator();
 		while(it.hasNext()){
 			Node n = it.next();
 			int[] position = display.convertCoords(n.position);
-			g2d.fillOval(position[0], position[1], diameter, diameter);
+			g2d.fillOval(position[0]-radius, position[1]-radius, 2*radius+1, 2*radius+1);
 		}
 				
 		FontMetrics fm = g2d.getFontMetrics();
 		
+		radius = 4;
 		Iterator<ProcessedNode> it2 = processed.iterator();
 		int[] last_pos = null;
 		while(it2.hasNext()){
@@ -167,7 +168,7 @@ public class Path {
 				g2d.drawLine(last_pos[0], last_pos[1], position[0], position[1]);
 			}
 			last_pos = position;
-			g2d.fillOval(position[0], position[1], diameter-3, diameter-3);
+			g2d.fillOval(position[0]-radius, position[1]-radius, 2*radius+1, 2*radius+1);
 			
 			g2d.setColor(Color.GREEN);
 			String duration = String.format("%.3g%n", n.duration);
