@@ -5,7 +5,6 @@ import java.util.List;
 
 public class Position {
 	public double[] position;
-	public float y;
 	
 	public List<Move> moves = new LinkedList<Move>();
 	public List<Stay> stays = new LinkedList<Stay>();

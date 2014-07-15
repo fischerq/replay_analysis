@@ -1,7 +1,12 @@
 package utils;
 
 
+import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
+
 import javax.vecmath.Vector2f;
+
 
 import skadistats.clarity.model.Entity;
 
@@ -22,5 +27,28 @@ public class Utils {
 	    pos[0] = ((cell_x * cellwidth) - MAX_COORD_INTEGER) + (double)offset.x;
 	    pos[1] = ((cell_y * cellwidth) - MAX_COORD_INTEGER) + (double)offset.y;
 	    return pos;
+	}
+	
+	public static List<Replay> findReplays(File root)
+	{
+		List<Replay> results = new LinkedList<Replay>();
+		
+	    File[] files = root.listFiles(); 
+	    
+	    for (File file : files) {
+	        if (file.isFile()) {
+	            if(file.getName().endsWith(".dem"))
+	            {
+	            	Replay r = new Replay();
+	            	r.id = Integer.parseInt(file.getName().substring(0,file.getName().length()-4));
+	            	r.filename = file.getAbsolutePath();
+	            	results.add(r);
+	            }
+	        } else if (file.isDirectory()) {
+	            results.addAll(findReplays(file));
+	        }
+	    }
+	    
+	    return results;	    
 	}
 }

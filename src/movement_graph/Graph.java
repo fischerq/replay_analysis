@@ -49,29 +49,43 @@ public class Graph {
 		
 		PathNode node = it.next();
 		Position pos_last = insertPosition(node.position);
-		double last_end_time = node.time + node.duration;
-		if(node.duration > 0)
-			pos_last.stays.add(new Stay(node.time + node.duration/2, node.duration));
+		Stay last_stay;
+		
+		double last_start = node.time;
+		double last_end = node.time + node.duration;
+		
+		Move last_move = null;
 		
 		while(it.hasNext()){
 			node = it.next();
 			
 			Position pos_next = insertPosition(node.position);
-			if(node.duration > 0)
-				pos_next.stays.add(new Stay(node.time + node.duration/2, node.duration));
 			
-			Move m = new Move();
-			m.start = pos_last;
-			m.end = pos_next;
-			m.duration = node.time - last_end_time;
-			m.time = (node.time + last_end_time) / 2;
-			
-			moves.add(m);
-			pos_last.moves.add(m);
-			pos_next.moves.add(m);
-			pos_last = pos_next;
-			last_end_time = node.time + node.duration;
-			
+			if(pos_next == pos_last){
+				last_end = node.time+node.duration;
+			}
+			else{
+				Stay s = new Stay((last_start+last_end)/2, last_end - last_start);
+				pos_last.stays.add(s);
+				Move m = new Move();
+				m.start = pos_last;
+				m.end = pos_next;
+				m.duration = node.time - last_end;
+				m.time = (node.time + last_end) / 2;
+				
+				m.last = last_move;
+				if(last_move != null)
+					last_move.next = m;
+				last_move = m;
+				
+				moves.add(m);
+				pos_last.moves.add(m);
+				pos_next.moves.add(m);
+				
+				last_start = node.time;
+				last_end = node.time + node.duration;
+				pos_last = pos_next;
+			}	
 		}
 	}
 	
@@ -83,23 +97,146 @@ public class Graph {
 		Graphics2D g2d = display.getGraphics();
 		g2d.setColor(Color.WHITE);
 		int radius = 3;
-		
-		
-		Iterator<Position> it_n = nodes_list.iterator();
-		while(it_n.hasNext()){
-			Position node = it_n.next();
+	
+		for(Position node : nodes_list){
 			if(node.moves.size() == 0 && node.stays.size() == 0)
 				continue;
 			int[] position = display.convertCoords(node.position);
 			g2d.fillOval(position[0]-radius, position[1]-radius, 2*radius+1, 2*radius+1);
 		}
 		
-		Iterator<Move> it_m = moves.iterator();
-		while(it_m.hasNext()){
-			Move m = it_m.next();
+		for(Move m : moves){
 			int[] pos1 = display.convertCoords(m.start.position);
 			int[] pos2 = display.convertCoords(m.end.position);
 			g2d.drawLine(pos1[0], pos1[1], pos2[0], pos2[1]);
 		}
+	}
+	
+	public void plot_evaluation(Display display, Evaluation e, ColorScale cs){
+		
+		Graphics2D g2d = display.getGraphics();
+		for(int i = 0; i<= 10; ++i){
+			g2d.setColor(cs.map((double)i/10));
+			g2d.fillOval(20+i*10, 20, 10, 10);
+		}
+		int radius = 7;
+	
+		for(Position node : nodes_list){
+			if(node.moves.size() == 0 && node.stays.size() == 0)
+				continue;
+			int[] position = display.convertCoords(node.position);
+			double value = e.eval(node);
+			if(value < 0)
+				continue;
+			g2d.setColor(cs.map(value));
+			g2d.fillOval(position[0]-radius, position[1]-radius, 2*radius+1, 2*radius+1);
+		}
+	}
+	
+	public double[] getAllStays(){
+		int total_num = 0;
+		for(Position p : nodes_list){
+			for(Stay s: p.stays)
+				if(s.duration > 0)
+					total_num++;
+		}
+		double[] array = new double[total_num];
+		int i=0;
+		for(Position p : nodes_list){
+			for(Stay s: p.stays){
+				if(s.duration == 0)
+					continue;
+				array[i] = s.duration;
+				if(array[i] > 20)
+					array[i] = 20;
+				i++;
+			}
+		}
+		return array;
+	}
+	
+	public double[] getNVisits(){
+		int num = 0;
+		for(Position p : nodes_list){
+			if(p.moves.size() > 0)
+				num++;
+		}
+		
+		double[] array = new double[num];
+		int i=0;
+		for(Position p : nodes_list){
+			if(p.moves.size() == 0)
+				continue;
+			array[i] = p.moves.size()/2;
+			if(array[i] > 250)
+				array[i] = 250;
+			i++;
+		}
+		return array;
+	}
+	
+	public double[] getMedDuration(){
+		int num = 0;
+		for(Position p : nodes_list){
+			if(p.stays.size() > 0)
+				num++;
+		}
+		
+		double[] array = new double[num];
+		int i=0;
+		for(Position p : nodes_list){
+			if(p.stays.size() == 0)
+				continue;
+			for(Stay s : p.stays){
+				array[i] += s.duration;
+			}
+			array[i] = array[i]/p.stays.size();
+			i++;
+		}
+		return array;
+	}
+	
+	
+	public double[][] getAllSpeeds(){
+		List<Double[]> speeds = new LinkedList<Double[]>();
+
+		double[][] array = new double[moves.size()][2];
+		for(int i = 0; i < moves.size(); i++){
+			array[i][0] = moves.get(i).distance();
+			array[i][1] = moves.get(i).speed();
+			if(array[i][1] > 1000)
+				array[i][1] = 1000;
+			if(array[i][0] > 5000)
+				array[i][0] = 5000;
+		}
+		return array;
+	}
+	
+	public double[] getDistanceVariances(){
+		double[] variances = new double[nodes_list.size()];
+
+		int i= 0;
+		for(Position p : nodes_list){
+			double variance;
+			
+		    int n = 0;
+			double mean = 0;
+			double M2 = 0;
+			for(Move move : p.moves){
+				n = n + 1;
+				double delta = move.distance() - mean;
+		        mean = mean + delta/n;
+				M2 = M2 + delta*(move.distance() - mean);
+			}
+			
+			if (n < 2)
+		        variance =  0;
+			else
+				variance = M2/(n - 1);
+		    variances[i] = variance;
+		    ++i;
+		}
+		
+		return variances;
 	}
 }

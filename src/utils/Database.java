@@ -14,7 +14,6 @@ import com.almworks.sqlite4java.SQLiteStatement;
 
 public class Database {
 	private SQLiteConnection db;
-	
 	public Database(String file){
 		db = new SQLiteConnection(new File(file));
 	    
@@ -43,35 +42,43 @@ public class Database {
 		db.dispose();
 	}
 	
-	public void storePaths(int replay_id, List<Path> paths){
+	public boolean replayExists(Replay r){
+		SQLiteStatement get_replay;
+		boolean result = false;
 		try {
-			SQLiteStatement get_replay = db.prepare("SELECT * FROM Replays WHERE id ="+replay_id+";");
-			
+			get_replay = db.prepare("SELECT * FROM Replays WHERE id =?;");
+			get_replay.bind(1, r.id);
+			result = get_replay.step();
+			get_replay.dispose();
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}
+		return result;			
+	}
+	
+	public void storePaths(Replay replay, List<Path> paths){
+		try {
 			db.exec("BEGIN TRANSACTION;");
-			if(get_replay.step()){
-				db.exec("DELETE FROM PathNodes WHERE EXISTS ( SELECT * FROM Paths AS p WHERE p.replay_id = "+replay_id+" AND p.path_id = PathNodes.path);");
-				db.exec("DELETE FROM Paths WHERE Paths.replay_id = "+replay_id+";");
+			if(replayExists(replay)){
+				db.exec("DELETE FROM PathNodes WHERE EXISTS ( SELECT * FROM Paths AS p WHERE p.replay_id = "+replay.id+" AND p.path_id = PathNodes.path);");
+				db.exec("DELETE FROM Paths WHERE Paths.replay_id = "+replay.id+";");
 				System.out.println("Removed existing data");
 			}
 			else
-				db.exec("INSERT INTO Replays VALUES("+replay_id+");");
+				db.exec("INSERT INTO Replays VALUES("+replay.id+");");
 			
-			SQLiteStatement insert_path = db.prepare("INSERT INTO Paths(replay_id, unit_id, name) VALUES("+replay_id+", ?, ?);");
+			SQLiteStatement insert_path = db.prepare("INSERT INTO Paths(replay_id, unit_id, name) VALUES("+replay.id+", ?, ?);");
 			SQLiteStatement insert_node = db.prepare("INSERT INTO PathNodes(path, x,y,t,duration) VALUES(?,?,?,?,?);");
 			
 			try {
-				Iterator<Path> p_it = paths.iterator();
-				while(p_it.hasNext()){
-					Path p = p_it.next();
+				for(Path p : paths){
 					List<PathNode> nodes = p.getNodes();
 					if(nodes.size() == 0)
 						continue;
 					insert_path.bind(1, p.unit_id).bind(2, p.name.replace("'", "\""));
 					insert_path.step();
 					int path_id = (int) db.getLastInsertId();
-					Iterator<PathNode> it_n = nodes.iterator();
-					while(it_n.hasNext()){
-						PathNode n = it_n.next();
+					for(PathNode n : nodes){
 						insert_node.bind(1, path_id).bind(2, n.position[0]).bind(3, n.position[1]).bind(4, n.time).bind(5, n.duration);
 						insert_node.step();
 						insert_node.reset();
