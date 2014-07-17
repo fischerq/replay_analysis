@@ -12,6 +12,8 @@ import utils.Display;
 
 import javax.vecmath.Vector3d;
 
+import database.PathNode;
+
 class TrackedNode{
 	public double time;
 	public double[] position = new double[2];
@@ -41,7 +43,7 @@ public class Path {
 	}
 	
 	public void process() {
-		double tolerance = 50;
+		double tolerance = 1;
 		double time_factor = 522.0f;
 		System.out.println("Original nodes: "+nodes.size());
 		List<Integer> results = new LinkedList<Integer>();

@@ -1,12 +1,11 @@
-package utils;
+package database;
 
 import java.io.File;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import path_recognition.Path;
-import path_recognition.PathNode;
+
+import utils.Replay;
 
 import com.almworks.sqlite4java.SQLiteConnection;
 import com.almworks.sqlite4java.SQLiteException;
@@ -33,7 +32,6 @@ public class Database {
 			db.exec("CREATE TABLE IF NOT EXISTS Paths (path_id integer primary key, replay_id integer, unit_id integer, name text);");
 			db.exec("CREATE TABLE IF NOT EXISTS PathNodes (node_id integer primary key, path integer, x integer, y integer, t real, duration real);");
 		} catch (SQLiteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -56,7 +54,7 @@ public class Database {
 		return result;			
 	}
 	
-	public void storePaths(Replay replay, List<Path> paths){
+	public void storePaths(Replay replay, List<path_recognition.Path> paths){
 		try {
 			db.exec("BEGIN TRANSACTION;");
 			if(replayExists(replay)){
@@ -71,7 +69,7 @@ public class Database {
 			SQLiteStatement insert_node = db.prepare("INSERT INTO PathNodes(path, x,y,t,duration) VALUES(?,?,?,?,?);");
 			
 			try {
-				for(Path p : paths){
+				for(path_recognition.Path p : paths){
 					List<PathNode> nodes = p.getNodes();
 					if(nodes.size() == 0)
 						continue;
@@ -93,15 +91,61 @@ public class Database {
 		}
 	}
 	
-	public List<LinkedList<PathNode>> loadPaths(){
-		List<LinkedList<PathNode> > result =  new LinkedList<LinkedList<PathNode> >();
+	public List<Integer> getPathIDs(){
+		List<Integer> ids = new LinkedList<Integer>();
+		
 		try {
-			SQLiteStatement get_paths = db.prepare("SELECT path_id FROM Paths;");
+			SQLiteStatement get_path_ids = db.prepare("SELECT path_id FROM Paths;");
+			while(get_path_ids.step()){
+				ids.add(get_path_ids.columnInt(0));
+			}
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}
+		return ids;
+	}
+	
+	public Path loadPath(int id){
+		Path path = new Path();
+		try {
+			SQLiteStatement get_path = db.prepare("SELECT unit_id, name FROM Paths WHERE path_id = "+id+";");
+			SQLiteStatement get_nodes = db.prepare("SELECT x,y,t,duration FROM PathNodes AS n WHERE n.path = ? ORDER BY node_id;");
+			if(get_path.step()){
+				path.unit_id = get_path.columnInt(0);
+				path.player = get_path.columnString(1);
+				
+				get_nodes.bind(1, id);
+				while(get_nodes.step()){
+					PathNode n = new PathNode();
+					n.position[0] = get_nodes.columnInt(0);
+					n.position[1] = get_nodes.columnInt(1);
+					n.time = (float) get_nodes.columnDouble(2);
+					n.duration = (float) get_nodes.columnDouble(3);
+					path.nodes.add(n);
+				}
+			}
+		} catch (SQLiteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return path;
+	}
+	
+	public List<Path> loadPaths(){
+		List<Path> result =  new LinkedList<Path>();
+		try {
+			SQLiteStatement get_paths = db.prepare("SELECT path_id, unit_id, name FROM Paths;");
 			SQLiteStatement get_nodes = db.prepare("SELECT x,y,t,duration FROM PathNodes AS n WHERE n.path = ? ORDER BY node_id;");
 			while(get_paths.step()){
 				System.out.println("Loading path "+result.size());
 				int path_id = get_paths.columnInt(0);
-				LinkedList<PathNode> path = new LinkedList<PathNode>();
+				int unit_id = get_paths.columnInt(1);
+				String player_name = get_paths.columnString(2);
+				
+				Path path = new Path();
+				path.unit_id = unit_id;
+				path.player = player_name;
+				
 				get_nodes.bind(1, path_id);
 				while(get_nodes.step()){
 					PathNode n = new PathNode();
@@ -109,7 +153,7 @@ public class Database {
 					n.position[1] = get_nodes.columnInt(1);
 					n.time = (float) get_nodes.columnDouble(2);
 					n.duration = (float) get_nodes.columnDouble(3);
-					path.add(n);
+					path.nodes.add(n);
 				}
 				get_nodes.reset();
 				result.add(path);

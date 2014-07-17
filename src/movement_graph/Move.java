@@ -1,6 +1,8 @@
 package movement_graph;
 
-public class Move {
+import utils.Timed;
+
+public class Move implements Timed{
 	public Position start;
 	public Position end;
 	public double time;
@@ -15,5 +17,10 @@ public class Move {
 	
 	public double speed(){
 		return distance()/duration;
+	}
+
+	@Override
+	public double getTime() {
+		return time;
 	}
 }

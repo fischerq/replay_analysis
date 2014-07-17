@@ -1,4 +1,4 @@
-package movement_graph;
+package utils;
 
 import java.awt.Color;
 

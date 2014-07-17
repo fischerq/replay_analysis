@@ -1,5 +1,7 @@
 package movement_graph;
 
+import utils.Evaluation;
+
 public class Visits extends Evaluation {
 
 	@Override

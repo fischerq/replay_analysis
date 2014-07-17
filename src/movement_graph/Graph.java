@@ -6,11 +6,15 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import database.Path;
+import database.PathNode;
+
 import ags.utils.dataStructures.trees.thirdGenKD.KdTree;
 import ags.utils.dataStructures.trees.thirdGenKD.SquareEuclideanDistanceFunction;
 
-import path_recognition.PathNode;
+import utils.ColorScale;
 import utils.Display;
+import utils.Evaluation;
 
 public class Graph {
 	private KdTree<Position> nodes;
@@ -42,14 +46,13 @@ public class Graph {
 		}
 	}
 	
-	public void addPath(List<PathNode> nodes){
-		Iterator<PathNode> it = nodes.iterator();
+	public void addPath(Path path){
+		Iterator<PathNode> it = path.nodes.iterator();
 		if(!it.hasNext())
 			return;
 		
 		PathNode node = it.next();
 		Position pos_last = insertPosition(node.position);
-		Stay last_stay;
 		
 		double last_start = node.time;
 		double last_end = node.time + node.duration;
@@ -175,39 +178,36 @@ public class Graph {
 		return array;
 	}
 	
-	public double[] getMedDuration(){
+	public double[] getDurations(){
 		int num = 0;
-		for(Position p : nodes_list){
-			if(p.stays.size() > 0)
+		for(Move m : moves){
+			if(m.duration > 0)
 				num++;
 		}
 		
 		double[] array = new double[num];
 		int i=0;
-		for(Position p : nodes_list){
-			if(p.stays.size() == 0)
+		for(Move m : moves){
+			if(m.duration == 0)
 				continue;
-			for(Stay s : p.stays){
-				array[i] += s.duration;
-			}
-			array[i] = array[i]/p.stays.size();
+			array[i] = m.duration;
+			if(array[i] > 5)
+				array[i] = 5;
 			i++;
 		}
 		return array;
 	}
 	
 	
-	public double[][] getAllSpeeds(){
-		List<Double[]> speeds = new LinkedList<Double[]>();
-
+	public double[][] getAllMoves(){
 		double[][] array = new double[moves.size()][2];
 		for(int i = 0; i < moves.size(); i++){
 			array[i][0] = moves.get(i).distance();
-			array[i][1] = moves.get(i).speed();
-			if(array[i][1] > 1000)
-				array[i][1] = 1000;
-			if(array[i][0] > 5000)
-				array[i][0] = 5000;
+			array[i][1] = moves.get(i).duration;
+			if(array[i][1] > 5)
+				array[i][1] = 5;
+			//if(array[i][0] > 5000)
+			//	array[i][0] = 5000;
 		}
 		return array;
 	}

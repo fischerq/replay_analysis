@@ -41,7 +41,10 @@ public class Display extends JPanel {
     public void reset() {
         g2d.drawImage(background, 0, 0, null);
         g2d.setColor(Color.WHITE);
-        g2d.drawString(display_text, 10, 10);
+        int x = 10;
+        int y = 10;
+        for (String line : display_text.split("\n"))
+            g2d.drawString(line, x, y += g2d.getFontMetrics().getHeight());
     }
     
     private void setSurfaceSize() {

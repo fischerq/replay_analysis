@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
+import database.Database;
+
 
 import path_recognition.PathRecognition;
 
@@ -13,7 +15,6 @@ import skadistats.clarity.match.Match;
 import skadistats.clarity.parser.Peek;
 import skadistats.clarity.parser.PeekIterator;
 import skadistats.clarity.parser.Profile;
-import utils.Database;
 import utils.DisplayWindow;
 import utils.Replay;
 import utils.Utils;
@@ -23,7 +24,7 @@ public class PathExtraction {
 
 	
 	public static void main(String[] args) {
-	    String database_file = "data/replay_analysis.sqlite";
+	    String database_file = "data/replay_analysis_exact.sqlite";
 	    boolean rebuild_db = false;
 	    
 	    List<Replay> replays = Utils.findReplays(new File("data/replays"));
@@ -62,11 +63,9 @@ public class PathExtraction {
     	            }
     	        }
     	        paths.finish();
-    	        
     	        db.storePaths(replay, paths.getResults());
 
-    	        window.addPathResults(paths.getResults());
-    	        System.out.println("Finished parsing");
+    	        System.out.println("Finished parsing "+replay.id);
     		} catch (IOException e) {
     			System.out.println("opening replay failed");
     		}
