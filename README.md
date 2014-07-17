@@ -3,7 +3,7 @@ replay_analysis
 
 Some dota2 replay analysis using the clarity library.
 
-Main classes can be found in the package 'replay_analysis'.
+Main classes can be found in the package `replay_analysis`.
 
 #Path Extraction
 
@@ -42,10 +42,11 @@ Movement of SingSing on Mirana
 
 
 #Movement Graph
-Aggregation of data by position. Currently only simple color scaling and no legends. 
+Aggregation of data by position. All scales are linear with cropping to deal with outliers. Currently only a simple color scale and no legends. 
 
-Sample output:  
-number of visits
+Sample output:
+
+Number of visits (16 games, 0-250 visits)
 ![Visits graph](https://github.com/Zera-/replay_analysis/raw/master/VisitsGraph.png)
-Average stay duration
+Average stay duration(0-2 seconds)
 ![Average duration](https://github.com/Zera-/replay_analysis/raw/master/DurationGraph.png)
