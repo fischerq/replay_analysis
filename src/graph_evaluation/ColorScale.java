@@ -1,4 +1,4 @@
-package utils;
+package graph_evaluation;
 
 import java.awt.Color;
 

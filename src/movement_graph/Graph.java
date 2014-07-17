@@ -1,5 +1,8 @@
 package movement_graph;
 
+import graph_evaluation.ColorScale;
+import graph_evaluation.Evaluation;
+
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.Iterator;
@@ -12,9 +15,7 @@ import database.PathNode;
 import ags.utils.dataStructures.trees.thirdGenKD.KdTree;
 import ags.utils.dataStructures.trees.thirdGenKD.SquareEuclideanDistanceFunction;
 
-import utils.ColorScale;
 import utils.Display;
-import utils.Evaluation;
 
 public class Graph {
 	private KdTree<Position> nodes;

@@ -21,11 +21,10 @@ import utils.Utils;
 
 
 public class PathExtraction {
-
+	private static boolean rebuild_db = false;
 	
 	public static void main(String[] args) {
 	    String database_file = "data/replay_analysis_exact.sqlite";
-	    boolean rebuild_db = false;
 	    
 	    List<Replay> replays = Utils.findReplays(new File("data/replays"));
 	    

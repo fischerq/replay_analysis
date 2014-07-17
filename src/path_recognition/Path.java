@@ -20,6 +20,9 @@ class TrackedNode{
 }
 
 public class Path {
+	private static double tolerance = 1;
+	private static double time_factor = 522.0f;
+	
 	public int unit_id;
 	public String name;
 	private List<TrackedNode> nodes;
@@ -43,8 +46,6 @@ public class Path {
 	}
 	
 	public void process() {
-		double tolerance = 1;
-		double time_factor = 522.0f;
 		System.out.println("Original nodes: "+nodes.size());
 		List<Integer> results = new LinkedList<Integer>();
 		results.add(0);

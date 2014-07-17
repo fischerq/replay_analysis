@@ -1,6 +1,6 @@
 package movement_graph;
 
-import utils.Evaluation;
+import graph_evaluation.Evaluation;
 
 public class Visits extends Evaluation {
 
