@@ -5,6 +5,5 @@ import java.util.List;
 
 public class Path {
 	public List<PathNode> nodes = new LinkedList<PathNode>();
-	public int unit_id = -1;
-	public String player = "";
+	public Unit unit;
 }

@@ -75,8 +75,8 @@ public class PathWindow extends DisplayWindow {
 	private void draw(Path path){
 		double time_start = path.nodes.get(0).time;
 		double time_end = path.nodes.get(path.nodes.size()-1).time + path.nodes.get(path.nodes.size()-1).duration;
-		display.setText("Player: "+path.player+
-				"\n Hero: "+ConstantMapper.heroName(path.unit_id)+
+		display.setText("Player: "+path.unit.player.name+ " ("+path.unit.player.team+")"+
+				"\n Unit: "+path.unit.type+
 				"\n Timeframe: "+ConstantMapper.formatTime(time_start)+" - "+ConstantMapper.formatTime(time_end));
 		display.reset();
 		int radius = 5;

@@ -29,8 +29,11 @@ public class Database {
 
 	    try {
 	    	db.exec("CREATE TABLE IF NOT EXISTS Replays (id integer primary key);");
-			db.exec("CREATE TABLE IF NOT EXISTS Paths (path_id integer primary key, replay_id integer, unit_id integer, name text);");
+	    	db.exec("CREATE TABLE IF NOT EXISTS Players (player_id integer primary key, name text);");
+	    	db.exec("CREATE TABLE IF NOT EXISTS Units (unit_id integer primary key, type text, team integer, player_id integer);");
+			db.exec("CREATE TABLE IF NOT EXISTS Paths (path_id integer primary key, replay_id integer, unit_id integer);");
 			db.exec("CREATE TABLE IF NOT EXISTS PathNodes (node_id integer primary key, path integer, x integer, y integer, t real, duration real);");
+			db.exec("CREATE TABLE IF NOT EXISTS Events (event_id integer primary key, type integer, actor_unit integer, affected_unit integer, value text);");
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 		}

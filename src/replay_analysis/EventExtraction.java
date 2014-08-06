@@ -2,15 +2,17 @@ package replay_analysis;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import database.Database;
-
-
+import event_extraction.EventRecognition;
 import path_recognition.PathRecognition;
 
 import skadistats.clarity.Clarity;
 import skadistats.clarity.match.Match;
+import skadistats.clarity.model.GameEventDescriptor;
 import skadistats.clarity.parser.Peek;
 import skadistats.clarity.parser.PeekIterator;
 import skadistats.clarity.parser.Profile;
@@ -19,24 +21,26 @@ import utils.Replay;
 import utils.Utils;
 
 
-public class PathExtraction {
+public class EventExtraction {
 	private static boolean rebuild_db = false;
 	
 	public static void main(String[] args) {
-	    String database_file = "data/replay_analysis_exact.sqlite";
+	    String database_file = "data/analysis_mine.sqlite";
 	    
-	    List<Replay> replays = Utils.findReplays(new File("data/replays"));
+	    List<Replay> replays = Utils.findReplays(new File("data/replays/meine"));
 	    
 	    DisplayWindow window = new DisplayWindow();
-	    window.open("Path extraction");
+	    window.open("Event extraction");
 	    Database db = new Database(database_file);
         db.open();
 	    
         Match match = new Match();        
-        PathRecognition paths;
+        EventRecognition events;
+
         
         for(Replay replay : replays){
-        	paths = new PathRecognition();
+        	events = new EventRecognition();
+            events.setDatabase(db);
         	if(db.replayExists(replay) && !rebuild_db){
         		System.out.println("Skipping "+replay.id+" (exists)");
         		continue;	
@@ -48,20 +52,19 @@ public class PathExtraction {
             
             PeekIterator iter;
     		try {
-    			iter = Clarity.peekIteratorForFile(replay.filename, Profile.ENTITIES);
-    		
+    			iter = Clarity.peekIteratorForFile(replay.filename, Profile.ENTITIES, Profile.USERMESSAGE_CONTAINER, Profile.COMBAT_LOG);
     	        while (iter.hasNext()) {
     	            Peek p = iter.next();
     	            //System.out.println(match.getGameTime());
     	        	float lastTime = match.getGameTime();
     	            p.apply(match);
+
     	            if(lastTime != match.getGameTime()){
     	            	
-    	            	paths.analyseTick(match);
+    	            	events.analyseTick(match);
     	            }
     	        }
-    	        paths.finish();
-    	        db.storePaths(replay, paths.getResults());
+    	        events.finish();
 
     	        System.out.println("Finished parsing "+replay.id);
     		} catch (IOException e) {
