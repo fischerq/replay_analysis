@@ -16,6 +16,8 @@ import skadistats.clarity.model.GameEventDescriptor;
 import skadistats.clarity.parser.Peek;
 import skadistats.clarity.parser.PeekIterator;
 import skadistats.clarity.parser.Profile;
+import skadistats.clarity.parser.Tick;
+import skadistats.clarity.parser.TickIterator;
 import utils.DisplayWindow;
 import utils.Replay;
 import utils.Utils;
@@ -52,23 +54,20 @@ public class EventExtraction {
             window.display.reset();
             window.repaint();
             
-            PeekIterator iter;
-            PeekIterator iter_old;
+            TickIterator iter;
+            TickIterator iter_old;
     		try {
-    			iter = Clarity.peekIteratorForFile(replay.filename, Profile.ENTITIES, Profile.USERMESSAGE_CONTAINER, Profile.COMBAT_LOG);
-    			iter_old = Clarity.peekIteratorForFile(replay.filename, Profile.ENTITIES, Profile.USERMESSAGE_CONTAINER, Profile.COMBAT_LOG);
+    			iter = Clarity.tickIteratorForFile(replay.filename, Profile.ALL);//Profile.ENTITIES, Profile.USERMESSAGE_CONTAINER, Profile.COMBAT_LOG, Profile.TEMP_ENTITIES);
+    			iter_old = Clarity.tickIteratorForFile(replay.filename, Profile.ALL);//Profile.ENTITIES, Profile.USERMESSAGE_CONTAINER, Profile.COMBAT_LOG, Profile.TEMP_ENTITIES);
     	        while (iter.hasNext()) {
-    	            Peek p = iter.next();
+    	            Tick p = iter.next();
     	            //System.out.println(match.getGameTime());
     	        	float lastTime = match.getGameTime();
     	            p.apply(match);
 
-    	            if(lastTime != match.getGameTime()){
-    	            	
-    	            	events.analyseTick(match, match_old);
-    	            }
+	            	events.analyseTick(match, match_old);
     	            
-    	            Peek p2 = iter_old.next();
+    	            Tick p2 = iter_old.next();
     	            p2.apply(match_old);
     	        }
     	        events.finish();

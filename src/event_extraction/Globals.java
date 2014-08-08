@@ -7,7 +7,15 @@ import java.util.TreeMap;
 public class Globals {
 	public static Map<Integer, TreeMap<String, Integer>> found_unit_names = new HashMap<Integer, TreeMap<String, Integer>>();
 	public static Map<Integer, Integer> found_percents = new HashMap<Integer, Integer>();
-	public static void add_percent(int percent){
+	public static Map<String, Integer> classes = new HashMap<String, Integer>();
+	
+	public static void add_class(String class_){
+		if(classes.containsKey(class_))
+			classes.put(class_, classes.get(class_)+1);
+		else
+			classes.put(class_, 1);
+	}
+ 	public static void add_percent(int percent){
 		if(found_percents.containsKey(percent))
 			found_percents.put(percent, found_percents.get(percent)+1);
 		else
@@ -19,6 +27,13 @@ public class Globals {
 			System.out.println(e.getKey()+": "+e.getValue());
 		}
 	}
+	
+	public static void print_classes(){
+		for(Map.Entry<String, Integer> e : classes.entrySet()){
+			System.out.println(e.getKey()+": "+e.getValue());
+		}
+	}
+	
 	public static boolean add(int index, String name){
 		if(found_unit_names.containsKey(index)){
 			TreeMap<String, Integer> map = found_unit_names.get(index);

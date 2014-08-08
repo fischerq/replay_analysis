@@ -14,6 +14,7 @@ import database.Database;
 import skadistats.clarity.match.EntityCollection;
 import skadistats.clarity.match.Match;
 import skadistats.clarity.match.Snapshot;
+import skadistats.clarity.match.TempEntityCollection;
 import skadistats.clarity.model.Entity;
 import skadistats.clarity.model.GameEvent;
 import skadistats.clarity.model.GameEventDescriptor;
@@ -29,6 +30,8 @@ public class EventRecognition {
 	private Database db = null;
 	
 	private Map<Integer, TrackedUnit> units = new HashMap<Integer, TrackedUnit>();
+	private AnimationTracker animations = new AnimationTracker();
+	
 	
 	private Match current_match = null;
 	private Match old_match = null;
@@ -41,27 +44,30 @@ public class EventRecognition {
 	private static int target = 1;
 	
 	public void analyseTick(Match match, Match match_old) {
-		
 		current_match = match;
 		old_match = match_old;
 		
 		GameEventDescriptor combatlog_descriptor = match.getGameEventDescriptors().forName("dota_combatlog");
+		if(combatlog_descriptor == null)
+			return;
 		CombatLogEntry.init(
                 match.getStringTables().forName("CombatLogNames"),
                 combatlog_descriptor
             );
 		
+		animations.updateAnimations(match);
+		
 		//DT_DOTAFogOfWarWasVisible
 		//System.out.println(player_resource.toString());
-		//if(doPrints())
-		//	return;
+		if(doPrints())
+			return;
 		
 		
 		//System.out.println("Tick");
 		List<LinkedList<CombatLogEntry>> grouped_cles = new LinkedList<LinkedList<CombatLogEntry>>();
 		for (GameEvent g : match.getGameEvents()) {
 			 if (g.getEventId() != combatlog_descriptor.getEventId()) {
-				 System.out.println("Strange event id "+g.getEventId());
+				 //System.out.println("Strange event id "+g.getEventId()+" "+g.getName());
 				 continue;
             }
             CombatLogEntry cle = new CombatLogEntry(g);
@@ -182,70 +188,7 @@ public class EventRecognition {
 	}
 	
 	public boolean doPrints(){
-		/*Entity player_resource;
-		if(current_match.getEntities().getAllByDtName("DT_DOTA_PlayerResource").hasNext())
-			player_resource	= current_match.getEntities().getAllByDtName("DT_DOTA_PlayerResource").next();
-		else 
-			return;
-		Integer[] selected_heroes = player_resource.getArrayProperty(Integer.class, "m_nSelectedHeroID");
-		String[] nicks = player_resource.getArrayProperty(String.class, "m_iszPlayerNames");
-		Integer[] hero_handles = player_resource.getArrayProperty(Integer.class, "m_hSelectedHero");
-		for(int i = 0; i<selected_heroes.length; ++i){
-			if(selected_heroes[i] != -1)
-			{
-//				System.out.println(player_resource.toString());
-				System.out.println("Hero handle: "+hero_handles[i]);
-				if(current_match.getEntities().getByHandle(hero_handles[i]) != null)
-					System.out.println(current_match.getEntities().getByHandle(hero_handles[i]).toString());
-			}
-		}*/
-		/*
-		if(handle_tracked < 0){
-			Iterator<Entity> it =current_match.getEntities().getAllByDtName("DT_DOTA_BaseNPC_Creep_Lane");
-			while(it.hasNext()){
-				Entity e =it.next();
-				handle_tracked = e.getHandle();
-				break;
-				//System.out.println(e.getProperty("m_iTeamNum")+" "+e.getProperty("m_iMaxHealth")+" "+e.getProperty("m_iAttackCapabilities")+" "+e.getProperty("m_iUnitNameIndex"));
-			}
-		}
-		else{
-			Entity e = current_match.getEntities().getByHandle(handle_tracked);
-			if(e != null){
-				for(ReceiveProp prop: e.getDtClass().getReceiveProps()){
-					//System.out.println(prop.getVarName());
-					if(last_ent == null)
-					{}	//System.out.println(prop.getVarName()+": "+ e.getProperty(prop.getVarName()));
-					else{
-						if(!last_ent.getProperty(prop.getVarName()).equals(e.getProperty(prop.getVarName())))
-						{
-							//System.out.println(prop.getVarName()+": "+ last_ent.getProperty(prop.getVarName())+" -> "+ e.getProperty(prop.getVarName()));
-							if(prop.getVarName().equals("m_iHealthPercentage") )
-							{
-								System.out.println("found healthchange");
-								int health = (int)(Encoder.stdPercent((Integer)e.getProperty("m_iHealthPercentage"))*(Integer)e.getProperty("m_iMaxHealth"));
-								int healthold = (int)(Encoder.stdPercent((Integer)last_ent.getProperty("m_iHealthPercentage"))*(Integer)last_ent.getProperty("m_iMaxHealth"));
-								System.out.println(healthold+" ->"+ health);
-								for (GameEvent g : current_match.getGameEvents()) {
-						            CombatLogEntry cle = new CombatLogEntry(g);
-						            System.out.println(cle.toString());
-								}
-								//System.out.println(e.getProperty("m_iHealth"));
-							}
-						}
-						//System.out.println(last_ent.getProperty(prop.getVarName()).getClass());
-					}
-				}
-				last_ent = e.clone();
-			}
-			else{
-				System.out.println("Changing creep");
-				handle_tracked = -1;
-			}
-		}
-		
-		return true;*/
-		return false;
+		return true;
 	}
 	private boolean shouldGroupCLEs(CombatLogEntry a, CombatLogEntry b){
 		if(a.getType() != b.getType()){
@@ -313,7 +256,7 @@ public class EventRecognition {
 			//System.out.println("Single candidate");
 		}
 		else if(candidates.size() == 0){
-			System.out.println("No candidates found: "+combatlog_name+", "+unitName+", "+ConstantMapper.DTClassForName(unitName));
+			System.out.println("No candidates found: "+combatlog_name+", "+unitName+", "+ConstantMapper.DTClassForName(unitName)+"for cle: "+cle.toString());
 			
 		}
 		else{
@@ -436,6 +379,7 @@ public class EventRecognition {
 		// TODO Auto-generated method stub
 		//Globals.print_names();
 		//Globals.print_percent();
+		Globals.print_classes();
 	}
 
 

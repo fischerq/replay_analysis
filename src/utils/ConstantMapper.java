@@ -1277,4 +1277,13 @@ public class ConstantMapper {
 			return "Unknown index: "+index;
 		}
 	}
+	
+	public static String animationAction(int action){
+		switch(action){
+		case 424:
+			return "Attack";
+		default:
+			return ""+action;
+		}
+	}
 }
