@@ -30,11 +30,13 @@ public class EventExtraction {
 	    List<Replay> replays = Utils.findReplays(new File("data/replays/meine"));
 	    
 	    DisplayWindow window = new DisplayWindow();
-	    window.open("Event extraction");
+	    //window.open("Event extraction");
 	    Database db = new Database(database_file);
         db.open();
 	    
         Match match = new Match();        
+        Match match_old = new Match();        
+
         EventRecognition events;
 
         
@@ -51,8 +53,10 @@ public class EventExtraction {
             window.repaint();
             
             PeekIterator iter;
+            PeekIterator iter_old;
     		try {
     			iter = Clarity.peekIteratorForFile(replay.filename, Profile.ENTITIES, Profile.USERMESSAGE_CONTAINER, Profile.COMBAT_LOG);
+    			iter_old = Clarity.peekIteratorForFile(replay.filename, Profile.ENTITIES, Profile.USERMESSAGE_CONTAINER, Profile.COMBAT_LOG);
     	        while (iter.hasNext()) {
     	            Peek p = iter.next();
     	            //System.out.println(match.getGameTime());
@@ -61,8 +65,11 @@ public class EventExtraction {
 
     	            if(lastTime != match.getGameTime()){
     	            	
-    	            	events.analyseTick(match);
+    	            	events.analyseTick(match, match_old);
     	            }
+    	            
+    	            Peek p2 = iter_old.next();
+    	            p2.apply(match_old);
     	        }
     	        events.finish();
 

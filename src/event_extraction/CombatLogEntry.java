@@ -3,6 +3,8 @@ package event_extraction;
 // From skadistats/clarity-examples
 //https://github.com/skadistats/clarity-examples/blob/master/src/main/java/skadistats/clarity/examples/combatlog/CombatLogEntry.java
 
+import java.text.MessageFormat;
+
 import skadistats.clarity.model.GameEvent;
 import skadistats.clarity.model.GameEventDescriptor;
 import skadistats.clarity.model.StringTable;
@@ -110,4 +112,96 @@ public class CombatLogEntry {
         return readCombatLogName((Integer)event.getProperty(targetSourceNameIdx));
     }
     
+    public String toString(){
+    	String time = "["+ (int)(getTimestampRaw()/60)+":"+(int)(getTimestampRaw()%60)+"."+(int)((getTimestampRaw()*1000)%1000)+ "]";
+    	switch(getType()) {
+        case 0:
+            return MessageFormat.format("{0} {1} hits {2}{3} for {4} damage{5}\n",
+                time,
+                getAttackerNameCompiled(),
+                getTargetNameCompiled(),
+                getInflictorName() != null ? String.format(" with %s", getInflictorName()) : "",
+                getValue(),
+                getHealth() != 0 ? String.format(" (%s->%s)", getHealth() + getValue(), getHealth()) : ""
+            );
+        case 1:
+              return MessageFormat.format("{0} {1}'s {2} heals {3} for {4} health ({5}->{6})\n",
+                    time,
+                    getAttackerNameCompiled(),
+                    getInflictorName(),
+                    getTargetNameCompiled(),
+                    getValue(),
+                    getHealth() - getValue(),
+                    getHealth()
+                );
+        case 2:
+            return MessageFormat.format("{0} {1} receives {2} {3} from {4} at health {5}\n",
+                     time,
+                     getTargetNameCompiled(),
+                     getValue() == 0 ? "buff" : "debuff",
+                     getInflictorName(),
+                     getAttackerNameCompiled(),
+                     getHealth()
+                 );
+        case 3:
+        	return MessageFormat.format("{0} {1} loses {2} {3} from {4} at health {5}\n",
+                    time,
+                    getTargetNameCompiled(),
+                    getValue() == 0 ? "buff" : "debuff",
+                    getInflictorName(),
+                    getAttackerNameCompiled(),
+                    getHealth()
+                );
+        case 4:
+        	return MessageFormat.format("{0} {1} is killed by {2}{3}\n",
+	            time,
+	            getTargetNameCompiled(),
+	            getAttackerNameCompiled(),
+	            getAttackerName() != getSourceName() ? String.format(" owned by  %s", getSourceName()) : ""
+	        );
+        case 5:
+            return MessageFormat.format("{0} {1} uses skill {2}{3}\n",
+                 time,
+                 getAttackerNameCompiled(),
+                 getInflictorName(),
+                 getTargetName() != null ? String.format(" on %s", getTargetName()) : "" 
+             );
+        case 6:
+             return MessageFormat.format("{0} {1} uses item {2}{3}\n",
+                 time,
+                 getAttackerNameCompiled(),
+                 getInflictorName(),
+                 getTargetName() != null ? String.format(" on %s", getTargetName()) : ""
+             );
+        case 8:
+            return MessageFormat.format("{0} {1} gains {2} gold\n",
+                 time,
+                 getTargetNameCompiled(),
+                 getValue()
+             );
+        case 9:
+	       	 return MessageFormat.format("{0} Gamestate changes to {1}\n",
+	            time,
+	            getValue()
+	       	 );
+        case 10:
+        	return MessageFormat.format("{0} {1} gained {2} exp\n",
+             time,
+             getTargetNameCompiled(),
+             getValue()
+        	);
+        case 11:
+            return MessageFormat.format("{0} {1} purchases {2}\n",
+                 time,
+                 getTargetNameCompiled(),
+                 getValueName()
+             );
+        default:
+        	return "Unknown combatlog entry: "+event.toString();
+    	}
+    }
+    
+    public String rawString(){
+    	return event.toString();
+    }
 }
