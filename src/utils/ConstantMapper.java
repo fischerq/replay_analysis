@@ -85,7 +85,7 @@ public class ConstantMapper {
 		case 41:
 			return "Faceless Void";
 		case 42:
-			return "Skeleton King";
+			return "Wraith King";
 		case 43:
 			return "Death Prophet";
 		case 44:
@@ -681,43 +681,43 @@ public class ConstantMapper {
 		//System.out.println("DT requested: "+name);
 		switch(name){
 		case "Anti-Mage":
-			return "";
+			return "DT_DOTA_Unit_Hero_AntiMage";
 		case "Axe":
-			return "";
+			return "DT_DOTA_Unit_Hero_Axe";
 		case "Bane":
-			return "";
+			return "DT_DOTA_Unit_Hero_Bane";
 		case "Bloodseeker":
-			return "";
+			return "DT_DOTA_Unit_Hero_Bloodseeker";
 		case "Crystal Maiden":
-			return "";
+			return "DT_DOTA_Unit_Hero_CrystalMaiden";
 		case "Drow Ranger":
-			return "";
+			return "DT_DOTA_Unit_Hero_DrowRanger";
 		case "Earthshaker":
-			return "";
+			return "DT_DOTA_Unit_Hero_Earthshaker";
 		case "Juggernaut":
-			return "";
+			return "DT_DOTA_Unit_Hero_Juggernaut";
 		case "Mirana":
 			return "DT_DOTA_Unit_Hero_Mirana";
 		case "Shadow Fiend":
 			return "DT_DOTA_Unit_Hero_Nevermore";
 		case "Morphling":
-			return "";
+			return "DT_DOTA_Unit_Hero_Morphling";
 		case "Phantom Lancer":
-			return "";
+			return "DT_DOTA_Unit_Hero_PhantomLancer";
 		case "Puck":
-			return "";
+			return "DT_DOTA_Unit_Hero_Puck";
 		case "Pudge":
-			return "";
+			return "DT_DOTA_Unit_Hero_Pudge";
 		case "Razor":
-			return "";
+			return "DT_DOTA_Unit_Hero_Razor";
 		case "Sand King":
 			return "DT_DOTA_Unit_Hero_SandKing";
 		case "Storm Spirit":
-			return "";
+			return "DT_DOTA_Unit_Hero_StormSpirit";
 		case "Sven":
-			return "";
+			return "DT_DOTA_Unit_Hero_Sven";
 		case "Tiny":
-			return "";
+			return "DT_DOTA_Unit_Hero_Tiny";
 		case "Vengeful Spirit":
 			return "DT_DOTA_Unit_Hero_VengefulSpirit";
 		case "Windranger":
@@ -725,177 +725,177 @@ public class ConstantMapper {
 		case "Zeus":
 			return "DT_DOTA_Unit_Hero_Zuus";
 		case "Kunkka":
-			return "";
+			return "DT_DOTA_Unit_Hero_Kunkka";
 		case "Lina":
-			return "";
+			return "DT_DOTA_Unit_Hero_Lina";
 		case "Lion":
-			return "";
+			return "DT_DOTA_Unit_Hero_Lion";
 		case "Shadow Shaman":
-			return "";
+			return "DT_DOTA_Unit_Hero_ShadowShaman";
 		case "Slardar":
-			return "";
+			return "DT_DOTA_Unit_Hero_Slardar";
 		case "Tidehunter":
-			return "";
+			return "DT_DOTA_Unit_Hero_Tidehunter";
 		case "Witch Doctor":
-			return "";
+			return "DT_DOTA_Unit_Hero_WitchDoctor";
 		case "Lich":
-			return "";
+			return "DT_DOTA_Unit_Hero_Lich";
 		case "Riki":
-			return "";
+			return "DT_DOTA_Unit_Hero_Riki";
 		case "Enigma":
-			return "";
+			return "DT_DOTA_Unit_Hero_Enigma";
 		case "Tinker":
-			return "";
+			return "DT_DOTA_Unit_Hero_Tinker";
 		case "Sniper":
-			return "";
+			return "DT_DOTA_Unit_Hero_Sniper";
 		case "Necrophos":
-			return "";
+			return "DT_DOTA_Unit_Hero_Necrolyte";
 		case "Warlock":
-			return "";
+			return "DT_DOTA_Unit_Hero_Warlock";
 		case "Beastmaster":
-			return "";
+			return "DT_DOTA_Unit_Hero_Beastmaster";
 		case "Queen of Pain":
-			return "";
+			return "DT_DOTA_Unit_Hero_QueenOfPain";
 		case "Venomancer":
-			return "";
+			return "DT_DOTA_Unit_Hero_Venomancer";
 		case "Faceless Void":
-			return "";
-		case "Skeleton King":
-			return "";
+			return "DT_DOTA_Unit_Hero_FacelessVoid";
+		case "Wraith King":
+			return "DT_DOTA_Unit_Hero_SkeletonKing";
 		case "Death Prophet":
-			return "";
+			return "DT_DOTA_Unit_Hero_DeathProphet";
 		case "Phantom Assassin":
-			return "";
+			return "DT_DOTA_Unit_Hero_PhantomAssassin";
 		case "Pugna":
-			return "";
+			return "DT_DOTA_Unit_Hero_Pugna";
 		case "Templar Assassin":
-			return "";
+			return "DT_DOTA_Unit_Hero_TemplarAssassin";
 		case "Viper":
 			return "DT_DOTA_Unit_Hero_Viper";
 		case "Luna":
-			return "";
+			return "DT_DOTA_Unit_Hero_Luna";
 		case "Dragon Knight":
 			return "DT_DOTA_Unit_Hero_DragonKnight";
 		case "Dazzle":
-			return "";
+			return "DT_DOTA_Unit_Hero_Dazzle";
 		case "Clockwerk":
-			return "";
+			return "DT_DOTA_Unit_Hero_Rattletrap";
 		case "Leshrac":
-			return "";
+			return "DT_DOTA_Unit_Hero_Leshrac";
 		case "Nature's Prophet":
 			return "DT_DOTA_Unit_Hero_Furion";
 		case "Lifestealer":
-			return "";
+			return "DT_DOTA_Unit_Hero_Life_Stealer";
 		case "Dark Seer":
-			return "";
+			return "DT_DOTA_Unit_Hero_DarkSeer";
 		case "Clinkz":
-			return "";
+			return "DT_DOTA_Unit_Hero_Clinkz";
 		case "Omniknight":
-			return "";
+			return "DT_DOTA_Unit_Hero_Omniknight";
 		case "Enchantress":
-			return "";
+			return "DT_DOTA_Unit_Hero_Enchantress";
 		case "Huskar":
-			return "";
+			return "DT_DOTA_Unit_Hero_Huskar";
 		case "Night Stalker":
-			return "";
+			return "DT_DOTA_Unit_Hero_NightStalker";
 		case "Broodmother":
-			return "";
+			return "DT_DOTA_Unit_Hero_Broodmother";
 		case "Bounty Hunter":
 			return "DT_DOTA_Unit_Hero_BountyHunter";
 		case "Weaver":
-			return "";
+			return "DT_DOTA_Unit_Hero_Weaver";
 		case "Jakiro":
-			return "";
+			return "DT_DOTA_Unit_Hero_Jakiro";
 		case "Batrider":
-			return "";
+			return "DT_DOTA_Unit_Hero_Batrider";
 		case "Chen":
-			return "";
+			return "DT_DOTA_Unit_Hero_Chen";
 		case "Spectre":
-			return "";
+			return "DT_DOTA_Unit_Hero_Spectre";
 		case "Doom":
-			return "";
+			return "DT_DOTA_Unit_Hero_DoomBringer";
 		case "Ancient Apparition":
-			return "";
+			return "DT_DOTA_Unit_Hero_AncientApparition";
 		case "Ursa":
-			return "";
+			return "DT_DOTA_Unit_Hero_Ursa";
 		case "Spirit Breaker":
-			return "";
+			return "DT_DOTA_Unit_Hero_SpiritBreaker";
 		case "Gyrocopter":
-			return "";
+			return "DT_DOTA_Unit_Hero_Gyrocopter";
 		case "Alchemist":
-			return "";
+			return "DT_DOTA_Unit_Hero_Alchemist";
 		case "Invoker":
-			return "";
+			return "DT_DOTA_Unit_Hero_Invoker";
 		case "Silencer":
-			return "";
+			return "DT_DOTA_Unit_Hero_Silencer";
 		case "Outworld Devourer":
-			return "";
+			return "DT_DOTA_Unit_Hero_Obsidian_Destroyer";
 		case "Lycanthrope":
-			return "";
+			return "DT_DOTA_Unit_Hero_Lycan";
 		case "Brewmaster":
-			return "";
+			return "DT_DOTA_Unit_Hero_Brewmaster";
 		case "Shadow Demon":
-			return "";
+			return "DT_DOTA_Unit_Hero_Shadow_Demon";
 		case "Lone Druid":
-			return "";
+			return "DT_DOTA_Unit_Hero_LoneDruid";
 		case "Chaos Knight":
-			return "";
+			return "DT_DOTA_Unit_Hero_ChaosKnight";
 		case "Meepo":
-			return "";
+			return "DT_DOTA_Unit_Hero_Meepo";
 		case "Treant Protector":
-			return "";
+			return "DT_DOTA_Unit_Hero_Treant";
 		case "Ogre Magi":
-			return "";
+			return "DT_DOTA_Unit_Hero_Ogre_Magi";
 		case "Undying":
-			return "";
+			return "DT_DOTA_Unit_Hero_Undying";
 		case "Rubick":
-			return "";
+			return "DT_DOTA_Unit_Hero_Rubick";
 		case "Disruptor":
-			return "";
+			return "DT_DOTA_Unit_Hero_Disruptor";
 		case "Nyx Assassin":
-			return "";
+			return "DT_DOTA_Unit_Hero_Nyx_Assassin";
 		case "Naga Siren":
-			return "";
+			return "DT_DOTA_Unit_Hero_Naga_Siren";
 		case "Keeper of the Light":
-			return "";
+			return "DT_DOTA_Unit_Hero_KeeperOfTheLight";
 		case "Wisp":
-			return "";
+			return "DT_DOTA_Unit_Hero_Wisp";
 		case "Visage":
-			return "";
+			return "DT_DOTA_Unit_Hero_Visage";
 		case "Slark":
-			return "";
+			return "DT_DOTA_Unit_Hero_Slark";
 		case "Medusa":
-			return "";
+			return "DT_DOTA_Unit_Hero_Medusa";
 		case "Troll Warlord":
-			return "";
+			return "DT_DOTA_Unit_Hero_TrollWarlord";
 		case "Centaur Warrunner":
-			return "";
+			return "DT_DOTA_Unit_Hero_Centaur";
 		case "Magnus":
-			return "";
+			return "DT_DOTA_Unit_Hero_Magnataur";
 		case "Timbersaw":
-			return "";
+			return "DT_DOTA_Unit_Hero_Shredder";
 		case "Bristleback":
-			return "";
+			return "DT_DOTA_Unit_Hero_Bristleback";
 		case "Tusk":
-			return "";
+			return "DT_DOTA_Unit_Hero_Tusk";
 		case "Skywrath Mage":
-			return "";
+			return "DT_DOTA_Unit_Hero_Skywrath_Mage";
 		case "Abaddon":
-			return "";
+			return "DT_DOTA_Unit_Hero_Abaddon";
 		case "Elder Titan":
-			return "";
+			return "DT_DOTA_Unit_Hero_Elder_Titan";
 		case "Legion Commander":
-			return "";
+			return "DT_DOTA_Unit_Hero_Legion_Commander";
 		case "Ember Spirit":
-			return "";
+			return "DT_DOTA_Unit_Hero_EmberSpirit";
 		case "Earth Spirit":
-			return "";
+			return "DT_DOTA_Unit_Hero_EarthSpirit";
 		case "Abyssal Underlord":
-			return "";
+			return "DT_DOTA_Unit_Hero_AbyssalUnderlord";
 		case "Terrorblade":
-			return "";
+			return "DT_DOTA_Unit_Hero_Terrorblade";
 		case "Phoenix":
-			return "";
+			return "DT_DOTA_Unit_Hero_Phoenix";
 			
 		//Non-Heroes
 		//Items 

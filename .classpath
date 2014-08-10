@@ -7,6 +7,5 @@
 	<classpathentry kind="lib" path="E:/Informatik/Projekte/replay_analysis/lib/sqlite4java.jar" sourcepath="C:/Users/Zera/.m2/repository/com/almworks/sqlite4java/sqlite4java/0.282/sqlite4java-0.282-sources.jar"/>
 	<classpathentry kind="lib" path="E:/Informatik/Projekte/replay_analysis/lib/jcommon-1.0.22.jar"/>
 	<classpathentry kind="lib" path="E:/Informatik/Projekte/replay_analysis/lib/jfreechart-1.0.18.jar"/>
-	<classpathentry kind="lib" path="E:/Informatik/Projekte/replay_analysis/lib/cloning-1.9.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -14,6 +14,14 @@ import com.almworks.sqlite4java.SQLiteStatement;
 
 public class Database {
 	private SQLiteConnection db;
+	private SQLiteStatement insertReplay;
+	private SQLiteStatement insertTeam;
+	private SQLiteStatement insertPlayer;
+	private SQLiteStatement insertUnit;
+	private SQLiteStatement insertTimeSeries;
+	private SQLiteStatement insertTimeSeriesNode;
+	private SQLiteStatement insertEvent;
+	
 	public Database(String file){
 		db = new SQLiteConnection(new File(file));
 	    
@@ -55,8 +63,19 @@ public class Database {
 			db.exec("BEGIN TRANSACTION;");
 
 	    	db.exec("CREATE TABLE IF NOT EXISTS Replays (id integer primary key);");
-	    	db.exec("CREATE TABLE IF NOT EXISTS Players (player_id integer primary key, name text, replay_id integer);");
+	    	db.exec("CREATE TABLE IF NOT EXISTS Teams (team_id integer primary key, name text, side integer, replay_id integer);");
+	    	db.exec("CREATE TABLE IF NOT EXISTS SideMap (side_id integer primary key, name text);");
+	    	writeConstants(db.prepare("INSERT OR IGNORE INTO SideMap(side_id, name) VALUES(?, ?);"), Constants.sides);
+	    	
+	    	db.exec("CREATE TABLE IF NOT EXISTS Players (player_id integer primary key, name text, hero integer, team_id integer);");
+	    	//Ensure there is no player 0, as it is used to signal NPCs
+	    	db.exec("INSERT INTO Players(player_id) VALUES (0)");
+	    	db.exec("DELETE FROM Players WHERE Players.player_id = 0;");	    	
+	    	
 	    	db.exec("CREATE TABLE IF NOT EXISTS Units (unit_id integer primary key, type integer, team integer, controlled_by_player integer, replay_id integer);");
+	    	//Also reserve unit 0 for empty fields
+	    	db.exec("INSERT INTO Units(unit_id) VALUES (0)");
+	    	db.exec("DELETE FROM Units WHERE Units.unit_id = 0;");	    	
 
 	    	db.exec("CREATE TABLE IF NOT EXISTS UnitTypeMap (type_id integer primary key, name text);");
 	    	writeConstants(db.prepare("INSERT OR IGNORE INTO UnitTypeMap(type_id, name) VALUES(?, ?);"), Constants.unitTypes);
@@ -64,9 +83,12 @@ public class Database {
 	    	db.exec("CREATE TABLE IF NOT EXISTS TeamMap (team_id integer primary key, name text);");
 	    	writeConstants(db.prepare("INSERT OR IGNORE INTO TeamMap(team_id, name) VALUES(?, ?);"), Constants.teams);
 	    	
-			db.exec("CREATE TABLE IF NOT EXISTS Paths (path_id integer primary key, unit_id integer);");
-			db.exec("CREATE TABLE IF NOT EXISTS PathNodes (node_id integer primary key, path_id integer, t real, x integer, y integer, rotation real);");
-			db.exec("CREATE TABLE IF NOT EXISTS Events (event_id integer primary key, type integer, actor_unit integer, affected_unit integer, value text, replay_id integer);");
+			db.exec("CREATE TABLE IF NOT EXISTS TimeSeries (timeseries_id integer primary key, type integer, unit_id integer);");
+	    	db.exec("CREATE TABLE IF NOT EXISTS TimeSeriesTypeMap (type_id integer primary key, name text);");
+	    	writeConstants(db.prepare("INSERT OR IGNORE INTO TimeSeriesTypeMap(type_id, name) VALUES(?, ?);"), Constants.timeSeries);
+	    	db.exec("CREATE TABLE IF NOT EXISTS TimeSeriesNodes (node_id integer primary key, timeseries_id integer, t real, value real);");
+			
+	    	db.exec("CREATE TABLE IF NOT EXISTS Events (event_id integer primary key, type integer, actor_unit integer, affected_unit integer, value text, replay_id integer);");
 			db.exec("CREATE TABLE IF NOT EXISTS EventTypes (type_id integer primary key, name text);");
 			writeConstants(db.prepare("INSERT OR IGNORE INTO EventTypes(type_id, name) VALUES(?, ?);"), Constants.eventTypes);
 
@@ -75,134 +97,154 @@ public class Database {
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 		}
+	    
+		try {
+			insertReplay = db.prepare("INSERT INTO Replays(id) VALUES(?);");
+			insertTeam = db.prepare("INSERT INTO Teams(name, side_id, replay_id) VALUES(?, ?, ?);");
+			insertPlayer = db.prepare("INSERT INTO Players(name, hero, team_id) VALUES(?, ?, ?, ?);");
+			insertUnit = db.prepare("INSERT INTO Units(type, team, controlled_by_player, replay_id) VALUES(?, ?, ?, ?);");
+			insertTimeSeriesNode = db.prepare("INSERT INTO TimeSeriesNodes(timeseries_id, t, value) VALUES(?, ?, ?);");
+			insertTimeSeries = db.prepare("INSERT INTO TimeSeries(type, unit_id) VALUES(?, ?);");
+			insertEvent = db.prepare("INSERT INTO Events(type, actor_unit, affected_unit, value, replay_id) VALUES(?, ?, ?, ?, ?);");
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}
+
 	}
 	
 	public void close(){
 		db.dispose();
 	}
 	
-	public boolean replayExists(int id){
-		SQLiteStatement get_replay;
-		boolean result = false;
+	public void startTransaction(){
 		try {
-			get_replay = db.prepare("SELECT * FROM Replays WHERE id =?;");
-			get_replay.bind(1, id);
-			result = get_replay.step();
-			get_replay.dispose();
+			db.exec("BEGIN TRANSACTION;");
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 		}
-		return result;			
 	}
-	
-	public int storePath(int unit, Path path){
+	public void stopTransaction(){
 		try {
-			db.exec("BEGIN TRANSACTION;");
-			if(replayExists(replay)){
-				db.exec("DELETE FROM PathNodes WHERE EXISTS ( SELECT * FROM Paths AS p WHERE p.replay_id = "+replay.id+" AND p.path_id = PathNodes.path);");
-				db.exec("DELETE FROM Paths WHERE Paths.replay_id = "+replay.id+";");
-				System.out.println("Removed existing data");
-			}
-			else
-				db.exec("INSERT INTO Replays VALUES("+replay.id+");");
-			
-			SQLiteStatement insert_path = db.prepare("INSERT INTO Paths(replay_id, unit_id, name) VALUES("+replay.id+", ?, ?);");
-			SQLiteStatement insert_node = db.prepare("INSERT INTO PathNodes(path, x,y,t,duration) VALUES(?,?,?,?,?);");
-			
-			try {
-				for(path_recognition.Path p : paths){
-					List<PathNode> nodes = p.getNodes();
-					if(nodes.size() == 0)
-						continue;
-					insert_path.bind(1, p.unit_id).bind(2, p.name.replace("'", "\""));
-					insert_path.step();
-					int path_id = (int) db.getLastInsertId();
-					for(PathNode n : nodes){
-						insert_node.bind(1, path_id).bind(2, n.position[0]).bind(3, n.position[1]).bind(4, n.time).bind(5, n.duration);
-						insert_node.step();
-						insert_node.reset();
-					}
-					insert_path.reset();
-				}
-			 } finally {
-			 }
 			db.exec("COMMIT TRANSACTION;");
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public List<Integer> getPathIDs(){
-		List<Integer> ids = new LinkedList<Integer>();
-		
+	public int createReplay(int id){
 		try {
-			SQLiteStatement get_path_ids = db.prepare("SELECT path_id FROM Paths;");
-			while(get_path_ids.step()){
-				ids.add(get_path_ids.columnInt(0));
-			}
+			insertReplay.bind(1, id);
+			insertReplay.step();
+			insertReplay.reset();
+			return (int) db.getLastInsertId();
+			
 		} catch (SQLiteException e) {
 			e.printStackTrace();
+			return 0;
 		}
-		return ids;
 	}
 	
-	public Path loadPath(int id){
-		Path path = new Path();
+	public int createTeam(String name, String side, int replay_id){
 		try {
-			SQLiteStatement get_path = db.prepare("SELECT unit_id, name FROM Paths WHERE path_id = "+id+";");
-			SQLiteStatement get_nodes = db.prepare("SELECT x,y,t,duration FROM PathNodes AS n WHERE n.path = ? ORDER BY node_id;");
-			if(get_path.step()){
-				path.unit_id = get_path.columnInt(0);
-				path.player = get_path.columnString(1);
-				
-				get_nodes.bind(1, id);
-				while(get_nodes.step()){
-					PathNode n = new PathNode();
-					n.position[0] = get_nodes.columnInt(0);
-					n.position[1] = get_nodes.columnInt(1);
-					n.time = (float) get_nodes.columnDouble(2);
-					n.duration = (float) get_nodes.columnDouble(3);
-					path.nodes.add(n);
-				}
-			}
+			insertTeam.bind(1, name).bind(2, Constants.sides.get(side)).bind(3, replay_id);
+			insertTeam.step();
+			insertTeam.reset();
+			return (int) db.getLastInsertId();
+			
 		} catch (SQLiteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return 0;
 		}
-		return path;
 	}
 	
-	public List<Path> loadPaths(){
-		List<Path> result =  new LinkedList<Path>();
+	public int createPlayer(String name, String hero, int team_id){
 		try {
-			SQLiteStatement get_paths = db.prepare("SELECT path_id, unit_id, name FROM Paths;");
-			SQLiteStatement get_nodes = db.prepare("SELECT x,y,t,duration FROM PathNodes AS n WHERE n.path = ? ORDER BY node_id;");
-			while(get_paths.step()){
-				System.out.println("Loading path "+result.size());
-				int path_id = get_paths.columnInt(0);
-				int unit_id = get_paths.columnInt(1);
-				String player_name = get_paths.columnString(2);
-				
-				Path path = new Path();
-				path.unit_id = unit_id;
-				path.player = player_name;
-				
-				get_nodes.bind(1, path_id);
-				while(get_nodes.step()){
-					PathNode n = new PathNode();
-					n.position[0] = get_nodes.columnInt(0);
-					n.position[1] = get_nodes.columnInt(1);
-					n.time = (float) get_nodes.columnDouble(2);
-					n.duration = (float) get_nodes.columnDouble(3);
-					path.nodes.add(n);
-				}
-				get_nodes.reset();
-				result.add(path);
-			}
+			insertPlayer.bind(1, name).bind(2, Constants.unitTypes.get(hero)).bind(3, team_id);
+			insertPlayer.step();
+			insertPlayer.reset();
+			return (int) db.getLastInsertId();
+			
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+	
+	public int createUnit(String unit_name, String team, int player_id, int replay){
+		try {
+			insertUnit.bind(1, Constants.unitTypes.get(unit_name)).bind(2, Constants.teams.get(team)).bind(3, player_id).bind(4, replay);
+			insertUnit.step();
+			insertUnit.reset();
+			return (int) db.getLastInsertId();
+			
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+	
+	public void makeUnitControlChanging(int unit_id){
+		SQLiteStatement modifyUnitControl;
+		try {
+			modifyUnitControl = db.prepare("UPDATE Units SET team ="+Constants.teams.get("Changing")+", controlled_by_player =-1 WHERE Units.unit_id = ?;");
+			modifyUnitControl.bind(1, unit_id);
+			modifyUnitControl.step();			
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 		}
-		
-		return result;
+	}
+	
+	public int createTimeSeries(String type, int unit_id){
+		try {
+			insertTimeSeries.bind(1, Constants.timeSeries.get(type)).bind(2, unit_id);
+			insertTimeSeries.step();
+			insertTimeSeries.reset();
+			return (int) db.getLastInsertId();
+			
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+	
+	public void addTimeSeriesNode(int series_id, double t, double value){
+		try {
+			insertTimeSeriesNode.bind(1, series_id).bind(2, t).bind(3, value);
+			insertTimeSeriesNode.step();
+			insertTimeSeriesNode.reset();
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public int createEvent(int replay_id, String type, int actor_unit, int affected_unit, String value){
+		try {
+			insertEvent.bind(1, Constants.eventTypes.get(type)).bind(2, actor_unit).bind(3, affected_unit).bind(4, value).bind(5, replay_id);
+			insertEvent.step();
+			insertEvent.reset();
+			return (int) db.getLastInsertId();
+			
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+	
+	public boolean replayExists(int id){
+		SQLiteStatement getReplay;
+		boolean result = false;
+		try {
+			getReplay = db.prepare("SELECT * FROM Replays WHERE id =?;");
+			getReplay.bind(1, id);
+			result = getReplay.step();
+			getReplay.dispose();
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}
+		return result;			
+	}
+	
+	public void deleteReplay(int id){
+		//TODO
 	}
 }

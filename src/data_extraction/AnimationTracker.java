@@ -1,4 +1,4 @@
-package event_extraction;
+package data_extraction;
 
 import java.util.ArrayList;
 import java.util.Iterator;

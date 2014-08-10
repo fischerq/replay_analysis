@@ -1,53 +1,58 @@
-package event_extraction;
+package data_extraction;
 
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import javax.vecmath.Vector2f;
 
-import com.rits.cloning.Cloner;
 
 import database.Database;
-import skadistats.clarity.match.EntityCollection;
 import skadistats.clarity.match.Match;
-import skadistats.clarity.match.Snapshot;
-import skadistats.clarity.match.TempEntityCollection;
 import skadistats.clarity.model.Entity;
 import skadistats.clarity.model.GameEvent;
 import skadistats.clarity.model.GameEventDescriptor;
-import skadistats.clarity.model.ReceiveProp;
-import skadistats.clarity.model.StringTable;
 import utils.ConstantMapper;
-import utils.Encoder;
-import utils.Utils;
 
 
-public class EventRecognition {
+public class Extraction {
 
-	
-	private Database db = null;
+	private int replayID;
+	private Database db;
+	private boolean wroteTeams;
+	private Map<Integer, Integer> playerIDs = new HashMap<Integer, Integer>();
 	
 	private Map<Integer, TrackedUnit> units = new HashMap<Integer, TrackedUnit>();
+	private Set<Integer> ignoredUnits = new HashSet<Integer>();
+	private Set<String> trackedClasses = new HashSet<String>();
+	
 	private AnimationTracker animations = new AnimationTracker();
 	
 	
 	private Match current_match = null;
 	private Match old_match = null;
-	
-	private int handle_tracked = -1;
-	private Entity last_ent = null;
-	
-	private double[] lastpos;
-	
+		
 	private static int attacker = 0;
 	private static int target = 1;
 	
+	public Extraction(int id, Database db){
+		this.db = db;
+		replayID = id;
+		wroteTeams = false;
+	}
+	
 	public void analyseTick(Match match, Match match_old) {
+		if(!wroteTeams)
+			wroteTeams = tryWriteTeams(match);
+		
+		if(wroteTeams && playerIDs.size() < 10){
+			writePlayers(match);
+		}
+		
 		//System.out.println(ConstantMapper.formatTime(match.getReplayTime())+" Tick");
 		current_match = match;
 		old_match = match_old;
@@ -209,6 +214,15 @@ public class EventRecognition {
 		 
 		 
 		 
+	}
+	
+	private boolean tryWriteTeams(Match match){
+	//TODO
+		return false;
+	}
+	
+	private void writePlayers(Match match){
+		//TODO
 	}
 	
 	public boolean doPrints(){
@@ -432,7 +446,8 @@ public class EventRecognition {
 		}
 		
 		if(!units.containsKey(handle)){
-			units.put(handle, new TrackedUnit(handle, ConstantMapper.unitName(combatlog_name)));
+		//	units.put(handle, new TrackedUnit(handle, ConstantMapper.unitName(combatlog_name)));
+			System.out.println("Reference to unknown unit?");
 		}
 		//System.out.println("Found unit");
 		return units.get(handle);
@@ -444,10 +459,4 @@ public class EventRecognition {
 		Globals.print_percent();
 		//Globals.print_classes();
 	}
-
-
-	public void setDatabase(Database db) {
-		this.db = db;
-	}
-
 }

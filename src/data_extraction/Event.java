@@ -1,4 +1,4 @@
-package event_extraction;
+package data_extraction;
 
 public class Event {
 	public int type = -1;

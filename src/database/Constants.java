@@ -53,7 +53,7 @@ public class Constants {
         put("Queen of Pain");
         put("Venomancer");
         put("Faceless Void");
-        put( "Skeleton King");
+        put("Wraith King");
         put("Death Prophet");
         put("Phantom Assassin");
         put("Pugna");
@@ -249,12 +249,32 @@ public class Constants {
         eventTypes = Collections.unmodifiableMap(current_map);
     }
     
+    public static final Map<String, Integer> sides;
+    static {
+        current_map = new HashMap<String, Integer>();
+        put("Radiant");
+        put("Dire");
+        sides = Collections.unmodifiableMap(current_map);
+    }
+    
     public static final Map<String, Integer> teams;
     static {
         current_map = new HashMap<String, Integer>();
         put("Neutral");
         put("Radiant");
         put("Dire");
+        put("Changing");
         teams = Collections.unmodifiableMap(current_map);
+    }
+    
+    public static final Map<String, Integer> timeSeries;
+    static {
+        current_map = new HashMap<String, Integer>();
+        put("PositionX");
+        put("PositionY");
+        put("Rotation");
+        put("Health");
+        put("Mana");
+        timeSeries = Collections.unmodifiableMap(current_map);
     }
 }

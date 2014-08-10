@@ -1,4 +1,4 @@
-package event_extraction;
+package data_extraction;
 
 // From skadistats/clarity-examples
 //https://github.com/skadistats/clarity-examples/blob/master/src/main/java/skadistats/clarity/examples/combatlog/CombatLogEntry.java

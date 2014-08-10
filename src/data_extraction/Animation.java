@@ -1,4 +1,4 @@
-package event_extraction;
+package data_extraction;
 
 import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;

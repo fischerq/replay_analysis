@@ -1,4 +1,4 @@
-package event_extraction;
+package data_extraction;
 
 import java.util.HashMap;
 import java.util.Map;
