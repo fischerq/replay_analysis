@@ -10,11 +10,12 @@ import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
 
 public class AnimationTracker {
-	private Map<Integer, Animation> activeAnimations = new TreeMap<Integer,Animation>();
-	private List<Integer> startedAnimations = new ArrayList<Integer>();
-	private List<Integer> stoppedAnimations = new ArrayList<Integer>();
-	private List<Integer> cancelledAnimations = new ArrayList<Integer>();
-	private List<Integer> castedAnimations = new ArrayList<Integer>();
+	private Map<Integer, Animation> currentAnimations = new TreeMap<Integer,Animation>();
+	private Map<Integer, Animation> castedActiveAnimations = new TreeMap<Integer,Animation>();
+	private List<Animation> startedAnimations = new ArrayList<Animation>();
+	private List<Animation> stoppedAnimations = new ArrayList<Animation>();
+	private List<Animation> cancelledAnimations = new ArrayList<Animation>();
+	private List<Animation> castedAnimations = new ArrayList<Animation>();
 	
 	public void updateAnimations(Match match){
 		startedAnimations.clear();
@@ -22,68 +23,70 @@ public class AnimationTracker {
 		cancelledAnimations.clear();
 		castedAnimations.clear();
 		for(Entity e : match.getTempEntities().tempEntities){
-			if(e == null)
+			if(e == null || !e.getDtClass().getDtName().equals("DT_TEUnitAnimation")&&!e.getDtClass().getDtName().equals("DT_TEUnitAnimationEnd") )
 				continue;
 			int handle = (Integer)e.getProperty("m_hEntity");
 			if(e.getDtClass().getDtName().equals("DT_TEUnitAnimation")){
-				if(activeAnimations.containsKey(handle))
-					System.out.println("Overriding Animation for "+handle);
-				activeAnimations.put(handle, new Animation(e, match));
-				startedAnimations.add(handle);
+				if(currentAnimations.containsKey(handle))
+				{}//	System.out.println("Overriding Animation for "+handle);
+				Animation new_anim = new Animation(e, match);
+				currentAnimations.put(handle, new_anim);
+				startedAnimations.add(new_anim);
 			}
 			else if(e.getDtClass().getDtName().equals("DT_TEUnitAnimationEnd")){
 				//String time = "["+ (int)(match.getGameTime()/60)+":"+(int)(match.getGameTime()%60)+"."+(int)((match.getGameTime()*1000)%1000)+ "]";
-				
-				if(!activeAnimations.containsKey(handle))
+				//if(e.getProperty("m_bSnap")!=null &&(boolean)e.getProperty("m_bSnap"))
+				//	System.out.println("Snap: "+handle+" "+getAnimation(handle)+" "+castedActiveAnimations.get(handle));
+				if(castedActiveAnimations.containsKey(handle))
 				{
 					//System.out.println(time +" Animation cancelling "+match.getEntities().getByHandle(handle).getDtClass().getDtName()+"("+handle+")");
-					cancelledAnimations.add(handle);
+					cancelledAnimations.add(castedActiveAnimations.get(handle));
+					castedActiveAnimations.remove(handle);
 				}
 				else
 				{
 					//System.out.println(time +" Stopping "+match.getEntities().getByHandle(handle).getDtClass().getDtName()+"("+handle+") "+e.getProperty("m_bSnap"));
-					stoppedAnimations.add(handle);
+					stoppedAnimations.add(getAnimation(handle));
+					currentAnimations.remove(handle);
 				}
-				activeAnimations.remove(handle);
 			}
 		}
 		//String time = "["+ (int)(match.getGameTime()/60)+":"+(int)(match.getGameTime()%60)+"."+(int)((match.getGameTime()*1000)%1000)+ "]";
 		
-		Iterator<Map.Entry<Integer, Animation>> it = activeAnimations.entrySet().iterator();
-		System.out.println(activeAnimations.size());
+		Iterator<Map.Entry<Integer, Animation>> it = currentAnimations.entrySet().iterator();
 		while(it.hasNext()){
 			Map.Entry<Integer, Animation> anim = it.next();
 			if(anim.getValue().time_cast <= match.getGameTime())
 			{
-				it.remove();
 				//System.out.println(time +" Casting "+anim.getValue().entity.getDtClass().getDtName()+"("+anim.getKey()+")");
-				castedAnimations.add(anim.getKey());
+				castedAnimations.add(anim.getValue());
+				castedActiveAnimations.put(anim.getKey(), anim.getValue());
+				it.remove();
 			}
 		}
-		System.out.println(activeAnimations.size());
 	}
 	
 	public Animation getAnimation(Entity e){
-		return activeAnimations.get(e.getHandle());
+		return currentAnimations.get(e.getHandle());
 	}
 
 	public Animation getAnimation(int handle){
-		return activeAnimations.get(handle);
+		return currentAnimations.get(handle);
 	}
 	
-	public List<Integer> getStartedAnimations(){
+	public List<Animation> getStartedAnimations(){
 		return startedAnimations;
 	}
 	
-	public List<Integer> getCastedAnimations(){
+	public List<Animation> getCastedAnimations(){
 		return castedAnimations;
 	}
 	
-	public List<Integer> getStoppedAnimations(){
+	public List<Animation> getStoppedAnimations(){
 		return stoppedAnimations;
 	}
 	
-	public List<Integer> getCancelledAnimations(){
+	public List<Animation> getCancelledAnimations(){
 		return cancelledAnimations;
 	}
 }

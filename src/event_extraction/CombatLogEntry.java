@@ -8,6 +8,7 @@ import java.text.MessageFormat;
 import skadistats.clarity.model.GameEvent;
 import skadistats.clarity.model.GameEventDescriptor;
 import skadistats.clarity.model.StringTable;
+import utils.ConstantMapper;
 
 public class CombatLogEntry {
 
@@ -113,7 +114,7 @@ public class CombatLogEntry {
     }
     
     public String toString(){
-    	String time = "["+ (int)(getTimestampRaw()/60)+":"+(int)(getTimestampRaw()%60)+"."+(int)((getTimestampRaw()*1000)%1000)+ "]";
+    	String time = ConstantMapper.formatTime(getTimestampRaw());
     	switch(getType()) {
         case 0:
             return MessageFormat.format("{0} {1} hits {2}{3} for {4} damage{5}\n",

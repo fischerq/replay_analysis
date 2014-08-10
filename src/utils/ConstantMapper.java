@@ -1,11 +1,6 @@
 package utils;
 
 public class ConstantMapper {
-	public static String formatTime(double time){
-		int seconds = (int) (time%60);
-		int minutes = (int) ((time/60));
-		return minutes+":"+seconds;
-	}
 	
 	public static String heroName(int id){
 		switch(id){
@@ -1106,13 +1101,20 @@ public class ConstantMapper {
 		
 		case 116:
 			return "Dire Ranged Creep";
+		case 117:
+			return "Dire Mega Ranged Creep";
 		case 118:
 			return "Radiant Ranged Creep";
+		case 119:
+			return "Radiant Mega Ranged Creep";
 		case 120:
 			return "Dire Melee Creep";
+		case 121:
+			return "Dire Mega Melee Creep";
 		case 122:
 			return "Radiant Melee Creep";
-			
+		case 123:
+			return "Radiant Mega Melee Creep";
 		case 124:
 			return "Radiant Tower T1 Top";
 		case 125:
@@ -1267,6 +1269,8 @@ public class ConstantMapper {
 			return "Necronomicon Archer Lvl 2";
 		case 213:
 			return "Necronomicon Archer Lvl 3";
+		case 214:
+			return "Observer Ward";
 		case 215:
 			return "Sentry Ward";
 		case 216:
@@ -1284,6 +1288,24 @@ public class ConstantMapper {
 			return "Attack";
 		default:
 			return ""+action;
+		}
+	}
+	
+	public static String formatTime(double time){
+		return "["+ (int)(time/60)+":"+(int)(time%60)+"."+(int)((time*1000)%1000)+ "]";
+	}
+	
+	public static double replay_tick = 0.066;
+	
+	public static boolean isMelee(int attack_capabilities){
+		switch(attack_capabilities){
+		case 1:
+			return true;
+		case 2:
+			return false;
+		default:
+			System.out.println("Unknown attack capability: "+attack_capabilities);
+			return false;
 		}
 	}
 }

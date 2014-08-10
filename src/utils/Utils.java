@@ -29,6 +29,13 @@ public class Utils {
 	    return pos;
 	}
 	
+	public static Vector2f getDirection(double angle){
+		double radian = angle /360.0 *2*Math.PI;
+		Vector2f vec = new Vector2f();
+		vec.x = (float) Math.cos(radian);
+		vec.y = (float) Math.sin(radian);
+		return vec;
+	}
 	public static List<Replay> findReplays(File root)
 	{
 		List<Replay> results = new LinkedList<Replay>();

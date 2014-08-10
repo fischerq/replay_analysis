@@ -3,6 +3,7 @@ package database;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 
 import utils.Replay;
@@ -18,7 +19,29 @@ public class Database {
 	    
 	}
 	
-	public void open(){
+	private void writeConstants(SQLiteStatement insert_statement, Map<String, Integer> constantMap){
+    	for(Map.Entry<String, Integer> e : constantMap.entrySet()){
+    		try {
+				insert_statement.bind(1,e.getValue());
+				insert_statement.bind(2,e.getKey());
+	    		insert_statement.step();
+	    		insert_statement.reset();
+    		} catch (SQLiteException e1) {
+				e1.printStackTrace();
+			}
+    	}
+	}
+
+	public void open_read(){
+		try {
+			db.open(false);
+		} catch (SQLiteException e) {
+			System.out.println("Failed when opening DB connection");
+			db = null;
+		}
+	}
+	
+	public void open_write(){
 		try {
 			db.open(true);
 		} catch (SQLiteException e) {
@@ -27,13 +50,28 @@ public class Database {
 			return;
 		}
 
+		//Setup the DB
 	    try {
+			db.exec("BEGIN TRANSACTION;");
+
 	    	db.exec("CREATE TABLE IF NOT EXISTS Replays (id integer primary key);");
-	    	db.exec("CREATE TABLE IF NOT EXISTS Players (player_id integer primary key, name text);");
-	    	db.exec("CREATE TABLE IF NOT EXISTS Units (unit_id integer primary key, type text, team integer, player_id integer);");
-			db.exec("CREATE TABLE IF NOT EXISTS Paths (path_id integer primary key, replay_id integer, unit_id integer);");
-			db.exec("CREATE TABLE IF NOT EXISTS PathNodes (node_id integer primary key, path integer, x integer, y integer, t real, duration real);");
-			db.exec("CREATE TABLE IF NOT EXISTS Events (event_id integer primary key, type integer, actor_unit integer, affected_unit integer, value text);");
+	    	db.exec("CREATE TABLE IF NOT EXISTS Players (player_id integer primary key, name text, replay_id integer);");
+	    	db.exec("CREATE TABLE IF NOT EXISTS Units (unit_id integer primary key, type integer, team integer, controlled_by_player integer, replay_id integer);");
+
+	    	db.exec("CREATE TABLE IF NOT EXISTS UnitTypeMap (type_id integer primary key, name text);");
+	    	writeConstants(db.prepare("INSERT OR IGNORE INTO UnitTypeMap(type_id, name) VALUES(?, ?);"), Constants.unitTypes);
+	    	
+	    	db.exec("CREATE TABLE IF NOT EXISTS TeamMap (team_id integer primary key, name text);");
+	    	writeConstants(db.prepare("INSERT OR IGNORE INTO TeamMap(team_id, name) VALUES(?, ?);"), Constants.teams);
+	    	
+			db.exec("CREATE TABLE IF NOT EXISTS Paths (path_id integer primary key, unit_id integer);");
+			db.exec("CREATE TABLE IF NOT EXISTS PathNodes (node_id integer primary key, path_id integer, t real, x integer, y integer, rotation real);");
+			db.exec("CREATE TABLE IF NOT EXISTS Events (event_id integer primary key, type integer, actor_unit integer, affected_unit integer, value text, replay_id integer);");
+			db.exec("CREATE TABLE IF NOT EXISTS EventTypes (type_id integer primary key, name text);");
+			writeConstants(db.prepare("INSERT OR IGNORE INTO EventTypes(type_id, name) VALUES(?, ?);"), Constants.eventTypes);
+
+			db.exec("COMMIT TRANSACTION;");
+			
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 		}
@@ -43,12 +81,12 @@ public class Database {
 		db.dispose();
 	}
 	
-	public boolean replayExists(Replay r){
+	public boolean replayExists(int id){
 		SQLiteStatement get_replay;
 		boolean result = false;
 		try {
 			get_replay = db.prepare("SELECT * FROM Replays WHERE id =?;");
-			get_replay.bind(1, r.id);
+			get_replay.bind(1, id);
 			result = get_replay.step();
 			get_replay.dispose();
 		} catch (SQLiteException e) {
@@ -57,7 +95,7 @@ public class Database {
 		return result;			
 	}
 	
-	public void storePaths(Replay replay, List<path_recognition.Path> paths){
+	public int storePath(int unit, Path path){
 		try {
 			db.exec("BEGIN TRANSACTION;");
 			if(replayExists(replay)){

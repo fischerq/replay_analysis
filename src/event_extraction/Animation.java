@@ -2,6 +2,7 @@ package event_extraction;
 
 import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
+import utils.ConstantMapper;
 
 public class Animation {
 	public Entity entity;
@@ -9,6 +10,7 @@ public class Animation {
 	public int sequence_index;
 	public int activity;
 	public double time_cast;
+	public double cast_point;
 	
 	public Animation(Entity temp_ent, Match match){
 		if(temp_ent.getProperty("m_iType") == null)
@@ -24,13 +26,17 @@ public class Animation {
 		else
 			activity = temp_ent.getProperty("m_Activity");
 		entity = match.getEntities().getByHandle((Integer)temp_ent.getProperty("m_hEntity"));
-		if(temp_ent.getProperty("m_flCastPoint") == null)
-			time_cast= match.getGameTime();
-		else
-			time_cast = match.getGameTime() + (Float)temp_ent.getProperty("m_flCastPoint");
-		
-    //	String time = "["+ (int)(match.getGameTime()/60)+":"+(int)(match.getGameTime()%60)+"."+(int)((match.getGameTime()*1000)%1000)+ "]";
-
-	//	System.out.println(time+" Created Animation: "+entity.getDtClass().getDtName()+"("+(Integer)temp_ent.getProperty("m_hEntity")+") "+activity+" "+type+" "+sequence_index+" "+(Float)temp_ent.getProperty("m_flCastPoint"));
+		if(temp_ent.getProperty("m_flCastPoint") == null){
+			time_cast = match.getGameTime();
+			cast_point = 0;
+		}
+		else{
+			time_cast = match.getGameTime() + (Float)temp_ent.getProperty("m_flCastPoint") - ConstantMapper.replay_tick/4;
+			cast_point = (Float)temp_ent.getProperty("m_flCastPoint");
+		}
+    	}
+	
+	public String toString(){
+		return "Animation: "+entity.getDtClass().getDtName()+"("+entity.getHandle()+") "+ConstantMapper.animationAction(activity)+" "+type+" "+sequence_index+" "+cast_point+ " "+ConstantMapper.formatTime(time_cast);
 	}
 }

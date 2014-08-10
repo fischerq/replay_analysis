@@ -34,7 +34,7 @@ public class EventExtraction {
 	    DisplayWindow window = new DisplayWindow();
 	    //window.open("Event extraction");
 	    Database db = new Database(database_file);
-        db.open();
+        db.open_write();
 	    
         Match match = new Match();        
         Match match_old = new Match();        
@@ -45,7 +45,7 @@ public class EventExtraction {
         for(Replay replay : replays){
         	events = new EventRecognition();
             events.setDatabase(db);
-        	if(db.replayExists(replay) && !rebuild_db){
+        	if(db.replayExists(replay.id) && !rebuild_db){
         		System.out.println("Skipping "+replay.id+" (exists)");
         		continue;	
         	}

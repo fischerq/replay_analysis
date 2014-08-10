@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.vecmath.Vector2f;
+
 import com.rits.cloning.Cloner;
 
 import database.Database;
@@ -22,6 +24,7 @@ import skadistats.clarity.model.ReceiveProp;
 import skadistats.clarity.model.StringTable;
 import utils.ConstantMapper;
 import utils.Encoder;
+import utils.Utils;
 
 
 public class EventRecognition {
@@ -39,11 +42,13 @@ public class EventRecognition {
 	private int handle_tracked = -1;
 	private Entity last_ent = null;
 	
+	private double[] lastpos;
 	
 	private static int attacker = 0;
 	private static int target = 1;
 	
 	public void analyseTick(Match match, Match match_old) {
+		//System.out.println(ConstantMapper.formatTime(match.getReplayTime())+" Tick");
 		current_match = match;
 		old_match = match_old;
 		
@@ -55,12 +60,27 @@ public class EventRecognition {
                 combatlog_descriptor
             );
 		
+		doPrints();
+		
 		animations.updateAnimations(match);
+		
+		for(Animation a : animations.getStartedAnimations()){
+			//System.out.println("Started "+a.toString());
+		}
+		for(Animation a : animations.getCastedAnimations()){
+			//System.out.println("Casted "+a.toString());
+		}
+		for(Animation a : animations.getCancelledAnimations()){
+			//System.out.println("Cancelled "+a.toString());
+		}
+		for(Animation a : animations.getStoppedAnimations()){
+			//System.out.println("Stopped "+a.toString());
+		}
 		
 		//DT_DOTAFogOfWarWasVisible
 		//System.out.println(player_resource.toString());
-		if(doPrints())
-			return;
+		//if(doPrints())
+		//	return;
 		
 		
 		//System.out.println("Tick");
@@ -72,6 +92,8 @@ public class EventRecognition {
             }
             CombatLogEntry cle = new CombatLogEntry(g);
             //System.out.println(cle.toString());
+            if(true)
+            	continue;
             boolean found = false;
             for(LinkedList<CombatLogEntry> group : grouped_cles){
             	CombatLogEntry group_entry = group.get(0);
@@ -86,6 +108,8 @@ public class EventRecognition {
             	grouped_cles.add(new_group);
             }
 		}
+		if(true)
+			return;
 		 for (LinkedList<CombatLogEntry> group : grouped_cles) {
 			 CombatLogEntry firstEntry = group.get(0);
              //System.out.println("Times replay "+match.getReplayTime()+" game "+match.getGameTime()+" raw "+cle.getTimestampRaw()+" timestamp "+cle.getTimestamp());
@@ -188,6 +212,45 @@ public class EventRecognition {
 	}
 	
 	public boolean doPrints(){
+		/*Iterator<Entity> it = current_match.getEntities().getAllByDtName("DT_DOTA_BaseNPC_Creep_Lane");
+		while(it.hasNext()){
+			Entity e = it.next();
+			System.out.println(e.getProperty("m_iAttackCapabilities")+ " "+e.getProperty("m_iMaxHealth"));
+		}*/
+		
+		/*Iterator<Entity> it = current_match.getEntities().getAllByDtName("DT_DOTA_Unit_Hero_Zuus");
+		while(it.hasNext()){
+			Entity e = it.next();
+			if(lastpos != null){
+				double[] pos = Utils.getPosition(e);
+				if(pos[0] != lastpos[0] ||pos[1] != lastpos[1])
+				{
+					double len = Math.sqrt((pos[0]-lastpos[0])*(pos[0]-lastpos[0]) + (pos[1]-lastpos[1])*(pos[1]-lastpos[1]));
+					System.out.println("("+(pos[0]-lastpos[0])/len+", "+(pos[1]-lastpos[1])/len+"): "+e.getProperty("m_angRotation[1]"));
+				}
+					
+			}
+			lastpos = Utils.getPosition(e);
+		}*/
+		/*Iterator<Entity> it2 = current_match.getEntities().getAllByDtName("DT_DOTA_BaseNPC_Creep_Lane");
+		while(it2.hasNext()){
+			Entity e = it2.next();
+			System.out.println((int)e.getProperty("m_iTeamNum")+" "+(int)e.getProperty("m_iTaggedAsVisibleByTeam"));
+			//Globals.add_percent();
+		}*/
+		/*Iterator<Entity> it3 = current_match.getEntities().getAllByDtName("DT_DOTA_BaseNPC_Creep_Lane");
+		while(it3.hasNext()){
+			Entity e = it3.next();
+			System.out.println((int)e.getProperty("m_iUnitNameIndex")+" "+(int)e.getProperty("m_iAttackCapabilities")+" "+(int)e.getProperty("m_iTeamNum"));
+			Globals.add_percent((int)e.getProperty("m_iUnitNameIndex"));	
+		}*/
+		Iterator<Entity> it3 = current_match.getEntities().getAllByDtName("DT_DOTA_NPC_Observer_Ward");
+		while(it3.hasNext()){
+			Entity e = it3.next();
+//			System.out.println((int)e.getProperty("m_iUnitNameIndex"));
+			Globals.add_percent((int)e.getProperty("m_iUnitNameIndex"));	
+		}
+		
 		return true;
 	}
 	private boolean shouldGroupCLEs(CombatLogEntry a, CombatLogEntry b){
@@ -378,8 +441,8 @@ public class EventRecognition {
 	public void finish() {
 		// TODO Auto-generated method stub
 		//Globals.print_names();
-		//Globals.print_percent();
-		Globals.print_classes();
+		Globals.print_percent();
+		//Globals.print_classes();
 	}
 
 
