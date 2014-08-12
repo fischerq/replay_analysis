@@ -1,5 +1,6 @@
 package utils;
 import org.jfree.chart.*;
+import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.statistics.*;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -47,6 +48,27 @@ public class Statistics {
 	        false, // tooltips
 	        false // urls
         );
+		ChartWindow window = new ChartWindow(description, chart);
+	}
+	
+	public static void displayLine(String description, String series_name, String xAxis, String yAxis, double[][] data){
+	    XYSeriesCollection dataset = new XYSeriesCollection();
+	    XYSeries series = new XYSeries(series_name);
+	    for (int i = 0; i < data.length; i++) {
+	        series.add(data[i][0], data[i][1]);
+	    }
+	    dataset.addSeries(series);
+		
+		JFreeChart chart = ChartFactory.createXYLineChart(
+	        description, // chart title
+	        xAxis, // x axis label
+	        yAxis, // y axis label
+	        dataset,
+	        PlotOrientation.VERTICAL,
+	        true, // include legend
+	        false, // tooltips
+	        false // urls
+	    );
 		ChartWindow window = new ChartWindow(description, chart);
 	}
 	

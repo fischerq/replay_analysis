@@ -1,7 +1,6 @@
 package data_extraction;
 
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -18,7 +17,6 @@ import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
 import skadistats.clarity.model.GameEvent;
 import skadistats.clarity.model.GameEventDescriptor;
-import skadistats.clarity.model.ReceiveProp;
 import utils.ConstantMapper;
 
 
@@ -49,12 +47,14 @@ public class Extraction {
 		wrotePlayers = false;
 		
 		trackedClasses = new HashSet<String>();
-		for(String unit : Constants.unitTypes.keySet()){
+		/*for(String unit : Constants.unitTypes.keySet()){
 			trackedClasses.add(ConstantMapper.DTClassForName(unit));
-		}
+		}*/
+		trackedClasses.add(ConstantMapper.DTClassForName("Zeus"));
 	}
 	
 	public void analyseTick(Match match, Match match_old) {
+		db.startTransaction();
 		if(!wroteTeams)
 			wroteTeams = replay.tryWriteTeams(match);
 		
@@ -66,8 +66,8 @@ public class Extraction {
 		current_match = match;
 		old_match = match_old;
 		
-		if(true)
-			return;
+		//if(true)
+		//	return;
 		doPrints();
 
 		
@@ -91,19 +91,19 @@ public class Extraction {
 		
 		processCombatLog();
 		 
-		 
-		 
+		db.stopTransaction();
 	}
 	
 	private boolean doPrints(){
-		Iterator<Entity> it = current_match.getEntities().getAllByDtName("DT_DOTAPlayer");
+		/*Iterator<Entity> it = current_match.getEntities().getAllByDtName("DT_DOTAPlayer");
 		System.out.println("Tick");
 		while(it.hasNext()){
 			Entity e = it.next();
 			System.out.println(e.toString());
 			//System.out.println("creep "+(Integer)e.getProperty("m_hOwnerEntity"));
 		}
-				
+		*/
+		
 		/*Iterator<Entity> it = current_match.getEntities().getAllByDtName("DT_DOTA_BaseNPC_Creep_Lane");
 		while(it.hasNext()){
 			Entity e = it.next();

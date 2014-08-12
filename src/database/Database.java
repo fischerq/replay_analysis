@@ -1,6 +1,8 @@
 package database;
 
 import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import com.almworks.sqlite4java.SQLiteConnection;
@@ -9,17 +11,21 @@ import com.almworks.sqlite4java.SQLiteStatement;
 
 public class Database {
 	private SQLiteConnection db;
-	private SQLiteStatement insertReplay;
-	private SQLiteStatement insertTeam;
-	private SQLiteStatement insertPlayer;
-	private SQLiteStatement insertUnit;
-	private SQLiteStatement insertTimeSeries;
-	private SQLiteStatement insertTimeSeriesNode;
-	private SQLiteStatement insertEvent;
+	private SQLiteStatement insertReplay = null;
+	private SQLiteStatement insertTeam = null;
+	private SQLiteStatement insertPlayer = null;
+	private SQLiteStatement insertUnit = null;
+	private SQLiteStatement insertTimeSeries = null;
+	private SQLiteStatement insertTimeSeriesNode = null;
+	private SQLiteStatement insertEvent = null;
+	
+	private SQLiteStatement getUnit = null;
+	private SQLiteStatement getTimeSeries = null;
+	private SQLiteStatement getNodes = null;
+	
 	
 	public Database(String file){
 		db = new SQLiteConnection(new File(file));
-	    
 	}
 	
 	private void writeConstants(SQLiteStatement insert_statement, Map<String, Integer> constantMap){
@@ -41,6 +47,14 @@ public class Database {
 		} catch (SQLiteException e) {
 			System.out.println("Failed when opening DB connection");
 			db = null;
+			return;
+		}	
+		try{
+			getUnit = db.prepare("SELECT UnitTypeMap.name, team, controlled_by_player, illusion FROM Units, UnitTypeMap WHERE Units.type = UnitTypeMap.type_id AND unit_id = ?;");
+			getTimeSeries = db.prepare("SELECT timeseries_id, TimeSeriesTypeMap.name FROM TimeSeries, TimeSeriesTypeMap WHERE TimeSeries.type = TimeSeriesTypeMap.type_id  AND TimeSeries.unit_id = ?;");
+			getNodes = db.prepare("SELECT time, value FROM TimeSeriesNodes WHERE timeseries_id = ? ORDER BY time;");
+		} catch (SQLiteException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -253,5 +267,37 @@ public class Database {
 			e.printStackTrace();
 		}
 		stopTransaction();
+	}
+	
+	public Unit getUnit(int id){
+		try {
+			getUnit.bind(1, id);
+			getUnit.step();
+			String unitType = getUnit.columnString(0);
+			int team = getUnit.columnInt(1);
+			int controlledByPlayer = getUnit.columnInt(2);
+			boolean illusion = (getUnit.columnInt(3) == 1);
+			getUnit.reset();
+			
+			getTimeSeries.bind(1, id);
+			List<TimeSeries> timeSeries = new LinkedList<TimeSeries>();
+			while(getTimeSeries.step()){
+				int seriesID = getTimeSeries.columnInt(0);
+				String seriesType = getTimeSeries.columnString(1);
+				List<TimeSeriesNode> nodes = new LinkedList<TimeSeriesNode>();
+				getNodes.bind(1, seriesID);
+				while(getNodes.step()){
+					nodes.add(new TimeSeriesNode(getNodes.columnDouble(0), getNodes.columnDouble(1)));
+				}
+				getNodes.reset();
+				timeSeries.add(new TimeSeries(seriesType, nodes));
+			}
+			getTimeSeries.reset();
+			
+			return new Unit(unitType, null, null, illusion, timeSeries);
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 }

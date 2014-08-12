@@ -1315,6 +1315,8 @@ public class ConstantMapper {
 			return true;
 		case 1:
 			return false;
+		case 2:
+			return false;
 		default:
 			System.out.println("unknown lifeState: "+lifeState);
 			return false;
