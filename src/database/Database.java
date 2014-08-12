@@ -67,7 +67,7 @@ public class Database {
 	    	db.exec("INSERT INTO Players(player_id) VALUES (0)");
 	    	db.exec("DELETE FROM Players WHERE Players.player_id = 0;");	    	
 	    	
-	    	db.exec("CREATE TABLE IF NOT EXISTS Units (unit_id integer primary key, type integer, team integer, controlled_by_player integer, replay_id integer);");
+	    	db.exec("CREATE TABLE IF NOT EXISTS Units (unit_id integer primary key, type integer, team integer, controlled_by_player integer, illusion integer, replay_id integer);");
 	    	//Also reserve unit 0 for empty fields
 	    	db.exec("INSERT INTO Units(unit_id) VALUES (0)");
 	    	db.exec("DELETE FROM Units WHERE Units.unit_id = 0;");	    	
@@ -81,9 +81,9 @@ public class Database {
 			db.exec("CREATE TABLE IF NOT EXISTS TimeSeries (timeseries_id integer primary key, type integer, unit_id integer);");
 	    	db.exec("CREATE TABLE IF NOT EXISTS TimeSeriesTypeMap (type_id integer primary key, name text);");
 	    	writeConstants(db.prepare("INSERT OR IGNORE INTO TimeSeriesTypeMap(type_id, name) VALUES(?, ?);"), Constants.timeSeries);
-	    	db.exec("CREATE TABLE IF NOT EXISTS TimeSeriesNodes (node_id integer primary key, timeseries_id integer, t real, value real);");
+	    	db.exec("CREATE TABLE IF NOT EXISTS TimeSeriesNodes (node_id integer primary key, timeseries_id integer, time real, value real);");
 			
-	    	db.exec("CREATE TABLE IF NOT EXISTS Events (event_id integer primary key, type integer, actor_unit integer, affected_unit integer, value text, replay_id integer);");
+	    	db.exec("CREATE TABLE IF NOT EXISTS Events (event_id integer primary key, time real, type integer, actor_unit integer, affected_unit integer, value text, replay_id integer);");
 			db.exec("CREATE TABLE IF NOT EXISTS EventTypeMap (type_id integer primary key, name text);");
 			writeConstants(db.prepare("INSERT OR IGNORE INTO EventTypeMap(type_id, name) VALUES(?, ?);"), Constants.eventTypes);
 
@@ -97,10 +97,10 @@ public class Database {
 			insertReplay = db.prepare("INSERT INTO Replays(id) VALUES(?);");
 			insertTeam = db.prepare("INSERT INTO Teams(name, tag, side, replay_id) VALUES(?, ?, ?, ?);");
 			insertPlayer = db.prepare("INSERT INTO Players(name, hero, team_id) VALUES(?, ?, ?);");
-			insertUnit = db.prepare("INSERT INTO Units(type, team, controlled_by_player, replay_id) VALUES(?, ?, ?, ?);");
-			insertTimeSeriesNode = db.prepare("INSERT INTO TimeSeriesNodes(timeseries_id, t, value) VALUES(?, ?, ?);");
+			insertUnit = db.prepare("INSERT INTO Units(type, team, controlled_by_player, illusion, replay_id) VALUES(?, ?, ?, ?, ?);");
 			insertTimeSeries = db.prepare("INSERT INTO TimeSeries(type, unit_id) VALUES(?, ?);");
-			insertEvent = db.prepare("INSERT INTO Events(type, actor_unit, affected_unit, value, replay_id) VALUES(?, ?, ?, ?, ?);");
+			insertTimeSeriesNode = db.prepare("INSERT INTO TimeSeriesNodes(timeseries_id, time, value) VALUES(?, ?, ?);");
+			insertEvent = db.prepare("INSERT INTO Events(time, type, actor_unit, affected_unit, value, replay_id) VALUES(?, ?, ?, ?, ?, ?);");
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 		}
@@ -165,12 +165,12 @@ public class Database {
 		}
 	}
 	
-	public int createUnit(String unit_name, String team, int player_id, int replay){
+	public int createUnit(String unit_name, String team, int player_id, boolean illusion, int replay){
 		try {
-			insertUnit.bind(1, Constants.unitTypes.get(unit_name)).bind(2, Constants.teams.get(team)).bind(3, player_id).bind(4, replay);
+			insertUnit.bind(1, Constants.unitTypes.get(unit_name)).bind(2, Constants.teams.get(team)).bind(3, player_id).bind(4, illusion? 1: 0).bind(5, replay);
 			insertUnit.step();
 			insertUnit.reset();
-			return (int) db.getLastInsertId();
+			return ((int) db.getLastInsertId());
 			
 		} catch (SQLiteException e) {
 			e.printStackTrace();
@@ -212,9 +212,9 @@ public class Database {
 		}
 	}
 	
-	public int createEvent(int replay_id, String type, int actor_unit, int affected_unit, String value){
+	public int createEvent(int replay_id, double time, String type, int actor_unit, int affected_unit, String value){
 		try {
-			insertEvent.bind(1, Constants.eventTypes.get(type)).bind(2, actor_unit).bind(3, affected_unit).bind(4, value).bind(5, replay_id);
+			insertEvent.bind(1, time).bind(2, Constants.eventTypes.get(type)).bind(3, actor_unit).bind(4, affected_unit).bind(5, value).bind(6, replay_id);
 			insertEvent.step();
 			insertEvent.reset();
 			return (int) db.getLastInsertId();
@@ -242,7 +242,7 @@ public class Database {
 	public void deleteReplay(int id){
 		startTransaction();
 		try {
-			db.exec("DELETE FROM Replays WHERE id ="+id+";");
+			db.exec("DELETE FROM Replays WHERE Replays.id ="+id+";");
 			db.exec("DELETE FROM Players WHERE EXISTS (SELECT * FROM Teams WHERE Teams.replay_id ="+id+" AND Teams.team_id = Players.team_id);");
 			db.exec("DELETE FROM Teams WHERE replay_id ="+id+";");
 			db.exec("DELETE FROM TimeSeriesNodes WHERE EXISTS (SELECT * FROM Units, TimeSeries WHERE Units.replay_id = "+id+" AND Units.unit_id = TimeSeries.unit_id AND TimeSeriesNodes.timeseries_id = TimeSeries.timeseries_id );");

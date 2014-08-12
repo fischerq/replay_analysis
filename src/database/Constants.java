@@ -272,9 +272,10 @@ public class Constants {
         current_map = new HashMap<String, Integer>();
         put("PositionX");
         put("PositionY");
-        put("Rotation");
+        put("Orientation");
         put("Health");
         put("Mana");
+        put("Control");
         timeSeries = Collections.unmodifiableMap(current_map);
     }
 }

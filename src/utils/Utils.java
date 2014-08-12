@@ -8,6 +8,7 @@ import java.util.List;
 import javax.vecmath.Vector2f;
 
 
+import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
 
 
@@ -18,6 +19,14 @@ public class Utils {
 	public static boolean isAlive(Entity e){
 		int lifeState = e.getProperty("m_iLifeState");
 		return lifeState == 0; 
+	}
+	
+	public static boolean isIllusion(Entity e){
+		return e.getDtClass().getPropertyIndex("m_hReplicatingOtherHeroModel") != null && (Integer)e.getProperty("m_hReplicatingOtherHeroModel") != 2097151;
+	}
+	
+	public static double getTime(Match m){
+		return m.getGameTime();
 	}
 	
 	public static double[] getPosition(Entity e){
