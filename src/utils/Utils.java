@@ -15,6 +15,11 @@ public class Utils {
 
 	static int MAX_COORD_INTEGER = 16384;
 	
+	public static boolean isAlive(Entity e){
+		int lifeState = e.getProperty("m_iLifeState");
+		return lifeState == 0; 
+	}
+	
 	public static double[] getPosition(Entity e){
 		int cell_x = e.getProperty("m_cellX");
 		int cell_y = e.getProperty("m_cellY");
@@ -41,6 +46,8 @@ public class Utils {
 		List<Replay> results = new LinkedList<Replay>();
 		
 	    File[] files = root.listFiles(); 
+	    if(files == null)
+	    	return results;
 	    
 	    for (File file : files) {
 	        if (file.isFile()) {

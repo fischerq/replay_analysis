@@ -224,20 +224,20 @@ public class Constants {
     static {
         current_map = new HashMap<String, Integer>();
         put("Spawn");
+        put("Death");
         
         put("DealDamage");
         put("Heal");
-        put("GainModifier");
-        put("LoseModifier");
+        put("ModifierGain");
+        put("ModifierLoss");
         put("Kill");
-        put("UseAbility");
-        put("UseItem");
-        put("GainGold");
-        put("GainExperience");
-        put("PurchaseItem");
+        put("AbilityUse");
+        put("ItemUse");
+        put("GoldGain");
+        put("ExperienceGain");
+        put("ItemPurchase");
         put("AddItem");
         put("LoseItem");
-        put("Die");
         
         put("ChangeVisibility");
 

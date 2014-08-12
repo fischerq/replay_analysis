@@ -1297,15 +1297,43 @@ public class ConstantMapper {
 	
 	public static double replay_tick = 0.066;
 	
-	public static boolean isMelee(int attack_capabilities){
-		switch(attack_capabilities){
+	public static boolean isMelee(int attackCapabilities){
+		switch(attackCapabilities){
 		case 1:
 			return true;
 		case 2:
 			return false;
 		default:
-			System.out.println("Unknown attack capability: "+attack_capabilities);
+			System.out.println("Unknown attack capability: "+attackCapabilities);
 			return false;
+		}
+	}
+	
+	public static boolean isAlive(int lifeState){
+		switch(lifeState){
+		case 0:
+			return true;
+		case 1:
+			return false;
+		default:
+			System.out.println("unknown lifeState: "+lifeState);
+			return false;
+		}
+	}
+	
+	public static String team(int teamNum){
+		switch(teamNum){
+		case 0:
+			return "Unassigned";
+		case 1:
+			return "Spectator";
+		case 2:
+			return "Radiant";
+		case 3:
+			return "Dire";
+		default:
+			System.out.println("unknown teamNum: "+teamNum);
+			return "";
 		}
 	}
 }

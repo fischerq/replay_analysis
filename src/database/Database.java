@@ -1,12 +1,7 @@
 package database;
 
 import java.io.File;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-
-
-import utils.Replay;
 
 import com.almworks.sqlite4java.SQLiteConnection;
 import com.almworks.sqlite4java.SQLiteException;
@@ -63,7 +58,7 @@ public class Database {
 			db.exec("BEGIN TRANSACTION;");
 
 	    	db.exec("CREATE TABLE IF NOT EXISTS Replays (id integer primary key);");
-	    	db.exec("CREATE TABLE IF NOT EXISTS Teams (team_id integer primary key, name text, side integer, replay_id integer);");
+	    	db.exec("CREATE TABLE IF NOT EXISTS Teams (team_id integer primary key, name text, tag text, side integer, replay_id integer);");
 	    	db.exec("CREATE TABLE IF NOT EXISTS SideMap (side_id integer primary key, name text);");
 	    	writeConstants(db.prepare("INSERT OR IGNORE INTO SideMap(side_id, name) VALUES(?, ?);"), Constants.sides);
 	    	
@@ -89,8 +84,8 @@ public class Database {
 	    	db.exec("CREATE TABLE IF NOT EXISTS TimeSeriesNodes (node_id integer primary key, timeseries_id integer, t real, value real);");
 			
 	    	db.exec("CREATE TABLE IF NOT EXISTS Events (event_id integer primary key, type integer, actor_unit integer, affected_unit integer, value text, replay_id integer);");
-			db.exec("CREATE TABLE IF NOT EXISTS EventTypes (type_id integer primary key, name text);");
-			writeConstants(db.prepare("INSERT OR IGNORE INTO EventTypes(type_id, name) VALUES(?, ?);"), Constants.eventTypes);
+			db.exec("CREATE TABLE IF NOT EXISTS EventTypeMap (type_id integer primary key, name text);");
+			writeConstants(db.prepare("INSERT OR IGNORE INTO EventTypeMap(type_id, name) VALUES(?, ?);"), Constants.eventTypes);
 
 			db.exec("COMMIT TRANSACTION;");
 			
@@ -100,8 +95,8 @@ public class Database {
 	    
 		try {
 			insertReplay = db.prepare("INSERT INTO Replays(id) VALUES(?);");
-			insertTeam = db.prepare("INSERT INTO Teams(name, side_id, replay_id) VALUES(?, ?, ?);");
-			insertPlayer = db.prepare("INSERT INTO Players(name, hero, team_id) VALUES(?, ?, ?, ?);");
+			insertTeam = db.prepare("INSERT INTO Teams(name, tag, side, replay_id) VALUES(?, ?, ?, ?);");
+			insertPlayer = db.prepare("INSERT INTO Players(name, hero, team_id) VALUES(?, ?, ?);");
 			insertUnit = db.prepare("INSERT INTO Units(type, team, controlled_by_player, replay_id) VALUES(?, ?, ?, ?);");
 			insertTimeSeriesNode = db.prepare("INSERT INTO TimeSeriesNodes(timeseries_id, t, value) VALUES(?, ?, ?);");
 			insertTimeSeries = db.prepare("INSERT INTO TimeSeries(type, unit_id) VALUES(?, ?);");
@@ -144,9 +139,9 @@ public class Database {
 		}
 	}
 	
-	public int createTeam(String name, String side, int replay_id){
+	public int createTeam(String name, String tag, String side, int replay_id){
 		try {
-			insertTeam.bind(1, name).bind(2, Constants.sides.get(side)).bind(3, replay_id);
+			insertTeam.bind(1, name).bind(2, tag).bind(3, Constants.sides.get(side)).bind(4, replay_id);
 			insertTeam.step();
 			insertTeam.reset();
 			return (int) db.getLastInsertId();
@@ -245,6 +240,18 @@ public class Database {
 	}
 	
 	public void deleteReplay(int id){
-		//TODO
+		startTransaction();
+		try {
+			db.exec("DELETE FROM Replays WHERE id ="+id+";");
+			db.exec("DELETE FROM Players WHERE EXISTS (SELECT * FROM Teams WHERE Teams.replay_id ="+id+" AND Teams.team_id = Players.team_id);");
+			db.exec("DELETE FROM Teams WHERE replay_id ="+id+";");
+			db.exec("DELETE FROM TimeSeriesNodes WHERE EXISTS (SELECT * FROM Units, TimeSeries WHERE Units.replay_id = "+id+" AND Units.unit_id = TimeSeries.unit_id AND TimeSeriesNodes.timeseries_id = TimeSeries.timeseries_id );");
+			db.exec("DELETE FROM TimeSeries WHERE EXISTS (SELECT * FROM Units WHERE Units.replay_id ="+id+" AND TimeSeries.unit_id = Units.unit_id);");
+			db.exec("DELETE FROM Units WHERE replay_id ="+id+";");
+			db.exec("DELETE FROM Events WHERE replay_id ="+id+";");
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}
+		stopTransaction();
 	}
 }

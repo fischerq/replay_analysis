@@ -17,7 +17,7 @@ import utils.Utils;
 
 
 public class DataExtraction {
-	private static boolean rebuild_db = false;
+	private static boolean rebuild_db = true;
 	
 	public static void main(String[] args) {
 	    String database_file = "data/analysis_mine.sqlite";
