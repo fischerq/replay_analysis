@@ -10,20 +10,54 @@ import skadistats.clarity.model.Entity;
 import utils.ConstantMapper;
 import utils.Utils;
 
+class Interval{
+	public double min;
+	public double max;
+	
+	public Interval(double min, double max){
+		this.min = min;
+		this.max = max;
+	}
+	
+	public static Interval rounded(int value){
+		return new Interval(value-0.5, value+0.5);
+	}
+	
+	public static Interval floored(int value){
+		return new Interval(value, value+0.999);
+	}
+	
+	public static Interval intersection(Interval a, Interval b){
+		if(a.min > b.max || a.max < b.min )
+			return null;
+		else
+			return new Interval(Math.max(a.min, b.min), Math.min(a.max, b.max));
+	}
+	
+	public String toString(){
+		return "["+min+", "+max+"]";
+	}
+}
+
 class DataPoint{
 	public double time;
 	public double value;
+	public Interval intervalValues;
+	public Interval derivativeInterval;
 	
-	public DataPoint(double t, double v){
+	public DataPoint(double t, double v, Interval deQuantized){
 		time = t;
 		value = v;
+		intervalValues = deQuantized;
+		derivativeInterval = null;
+	}
+	
+	public String toString(){
+		return time+": V="+value+intervalValues.toString()+" D "+(derivativeInterval==null?"[]":derivativeInterval.toString());
 	}
 }
 
 public class TrackedUnit {
-	
-	private static double epsilon = 0.0001;
-	
 	private int handle;
 	private int unitID;
 	private boolean created;
@@ -46,6 +80,10 @@ public class TrackedUnit {
 		controlID = 0;
 		trackedTimeSeries = new HashMap<String, Integer>();
 		lastWrittenNode = new HashMap<String, DataPoint>();
+	}
+	
+	public int getID(){
+		return unitID;
 	}
 	
 	public boolean update(Match match, Match oldMatch){
@@ -75,6 +113,9 @@ public class TrackedUnit {
 					int controlSeries = db.createTimeSeries("Control", unitID);
 					trackedTimeSeries.put("Control", controlSeries);
 					db.addTimeSeriesNode(controlSeries, creationTime, controlID);
+					DataPoint dp = new DataPoint(creationTime, controlID, new Interval(controlID, controlID));
+					dp.derivativeInterval = new Interval(0, 0);
+					lastWrittenNode.put("Control", dp);
 				}
 				updateTimeSeries(match, oldMatch);
 			}
@@ -120,7 +161,7 @@ public class TrackedUnit {
 		case "Orientation":
 			return e.getDtClass().getPropertyIndex("m_angRotation[1]") != null;
 		case "Health":
-			return e.getDtClass().getPropertyIndex("iHealth") != null || e.getDtClass().getPropertyIndex("m_iHealthPercentage") != null;
+			return e.getDtClass().getPropertyIndex("m_iHealth") != null || e.getDtClass().getPropertyIndex("m_iHealthPercentage") != null;
 		case "Mana":
 			return e.getDtClass().getPropertyIndex("m_flMana") != null;
 		case "Control":
@@ -133,64 +174,88 @@ public class TrackedUnit {
 	
 	private void pushTimeSeries(Match match){
 		for(Map.Entry<String, Integer> entry : trackedTimeSeries.entrySet()){
-			double time = Utils.getTime(match);
-			double value = getTimeSeriesValue(entry.getKey(), match.getEntities().getByHandle(handle), match);
-			db.addTimeSeriesNode(entry.getValue(), time, value);
-			lastWrittenNode.put(entry.getKey(), new DataPoint(time, value));
+			DataPoint node =  getTimeSeriesValue(entry.getKey(), match);
+			db.addTimeSeriesNode(entry.getValue(), node.time, node.value);
+			lastWrittenNode.put(entry.getKey(), node);
 		}
 	}
 	
 	private void updateTimeSeries(Match match, Match old){
 		for(Map.Entry<String, Integer> entry : trackedTimeSeries.entrySet()){
-			double timeOld = Utils.getTime(old);
-			DataPoint lastNode = lastWrittenNode.get(entry.getKey()); 
-			if(lastNode.time == timeOld)
+			DataPoint lastNode = lastWrittenNode.get(entry.getKey());
+			DataPoint nodeOld = getTimeSeriesValue(entry.getKey(), old);
+			DataPoint nodeNow = getTimeSeriesValue(entry.getKey(), match);
+
+			if(lastNode.time == nodeOld.time){
+				if(lastNode.derivativeInterval == null){
+					double deltaT = nodeNow.time - nodeOld.time;
+					lastNode.derivativeInterval = new Interval((nodeNow.intervalValues.min - nodeOld.intervalValues.max)/deltaT, (nodeNow.intervalValues.max - nodeOld.intervalValues.min)/deltaT);
+				}
+				else{
+					System.out.println("Sth strange happened");
+				}
 				continue;
+			}
 			else{
-				double valueOld = getTimeSeriesValue(entry.getKey(), old.getEntities().getByHandle(handle), old);
-				double derivativePrev = (valueOld - lastNode.value)/(timeOld - lastNode.time);
-				
-				double timeNow = Utils.getTime(match);
-				double valueNow = getTimeSeriesValue(entry.getKey(), match.getEntities().getByHandle(handle), match);
-				double derivativeNew = (valueNow - valueOld)/(timeNow - timeOld);
-				if(Math.abs(derivativePrev - derivativeNew) > epsilon){
-					if(entry.getKey() == "Mana")System.out.println("Writing node "+entry.getKey()+" "+derivativePrev +" "+derivativeNew);
-					db.addTimeSeriesNode(entry.getValue(), timeOld, valueOld);
-					lastWrittenNode.put(entry.getKey(), new DataPoint(timeOld, valueOld));
+				double mergedDeltaT = nodeNow.time - lastNode.time;
+				Interval mergedDerivativeInterval = new Interval((nodeNow.intervalValues.min - lastNode.intervalValues.max)/mergedDeltaT,
+																(nodeNow.intervalValues.max - lastNode.intervalValues.min)/mergedDeltaT);
+				Interval updatedDerivativeInterval = Interval.intersection(lastNode.derivativeInterval, mergedDerivativeInterval);
+				if(updatedDerivativeInterval == null){
+					/*if(entry.getKey() == "Mana")
+						System.out.println("Writing Mana node.\n\t"+lastNode.toString()+"\n\t"+nodeOld.toString()+"\n\t"+nodeNow.toString());*/
+					db.addTimeSeriesNode(entry.getValue(), nodeOld.time, nodeOld.value);
+					double deltaT = nodeNow.time - nodeOld.time;
+					nodeOld.derivativeInterval = new Interval((nodeNow.intervalValues.min - nodeOld.intervalValues.max)/deltaT, (nodeNow.intervalValues.max - nodeOld.intervalValues.min)/deltaT);
+					lastWrittenNode.put(entry.getKey(), nodeOld);
+				}
+				else{
+					lastNode.derivativeInterval = mergedDerivativeInterval;
 				}
 			}
 		}
 	}
 	
-	private double getTimeSeriesValue(String type, Entity e, Match match){
+	private DataPoint getTimeSeriesValue(String type, Match match){
+		Entity e = match.getEntities().getByHandle(handle);
+		double time = Utils.getTime(match);
 		double[] position = null;
+		
 		switch(type){
 		case "PositionX":
 			position = Utils.getPosition(e);
-			return position[0];
+			return new DataPoint(time, position[0], Interval.rounded((int) position[0]));
 		case "PositionY":
 			position = Utils.getPosition(e);
-			return position[1];
+			return new DataPoint(time, position[1], Interval.rounded((int) position[1]));
 		case "Orientation":
-			return (Float)e.getProperty("m_angRotation[1]")/360.0;
+			double orientation = (Float)e.getProperty("m_angRotation[1]")/360.0;
+			return new DataPoint(time, orientation, new Interval(orientation, orientation));
 		case "Health":
-			if(e.getProperty("m_iHealthPercentage") != null){
-				return Math.floor((Integer)e.getProperty("m_iHealthPercentage")/127.0*(Integer)e.getProperty("m_iMaxHealth"));
+			if(e.getDtClass().getPropertyIndex("m_iHealthPercentage") != null){
+				double healthPercent = (Integer)e.getProperty("m_iMaxHealth")/127.0;
+				double health = Math.floor((Integer)e.getProperty("m_iHealthPercentage")*healthPercent);
+				return new DataPoint(time, health, new Interval(health-0.5*healthPercent, health+0.5*healthPercent));
 			}
-			else 
-				return (Integer)e.getProperty("m_iHealthPercentage");
+			else {
+				int health = (Integer)e.getProperty("m_iHealth");
+				return new DataPoint(time, health, Interval.rounded(health));
+			}
 		case "Mana":
-			return (Float)e.getProperty("m_flMana");
+			int mana = (int) Math.floor((Float)e.getProperty("m_flMana"));
+			return new DataPoint(time, mana, Interval.rounded(mana));
 		case "Control":
+			int dbID;
 			if((Integer)e.getProperty("m_hOwnerEntity") == 2097151)
-			return 0;
+				dbID = 0;
 			else{
 				int playerID = match.getEntities().getByHandle((Integer)e.getProperty("m_hOwnerEntity")).getProperty("m_iPlayerID");
-				return replay.getPlayerID(playerID);
+				dbID = replay.getPlayerID(playerID);
 			} 
+			return new DataPoint(time, dbID, new Interval(dbID, dbID));
 		default:
 			System.out.println("Unknown TimeSeries: "+type);
-			return 0;
+			return null;
 		}
 	}
 }

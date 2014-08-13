@@ -8,6 +8,8 @@ import java.util.TreeMap;
 
 import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
+import utils.ConstantMapper;
+import utils.Utils;
 
 public class AnimationTracker {
 	private Map<Integer, Animation> currentAnimations = new TreeMap<Integer,Animation>();
@@ -29,9 +31,16 @@ public class AnimationTracker {
 			if(e.getDtClass().getDtName().equals("DT_TEUnitAnimation")){
 				if(currentAnimations.containsKey(handle))
 				{}//	System.out.println("Overriding Animation for "+handle);
+				/*if(e.getProperty("m_Activity")== null)
+					continue;*/
 				Animation new_anim = new Animation(e, match);
 				currentAnimations.put(handle, new_anim);
 				startedAnimations.add(new_anim);
+				if(new_anim.type == 0 && new_anim.activity == 436){
+					//System.out.println(ConstantMapper.formatTime(Utils.getTime(match))+" "+new_anim.entity.toString());
+					//Globals.countInt(new_anim.activity);
+				}
+					//System.out.println(new_anim.activity+" "+new_anim.entity.getDtClass().getDtName());
 			}
 			else if(e.getDtClass().getDtName().equals("DT_TEUnitAnimationEnd")){
 				//String time = "["+ (int)(match.getGameTime()/60)+":"+(int)(match.getGameTime()%60)+"."+(int)((match.getGameTime()*1000)%1000)+ "]";

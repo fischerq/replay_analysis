@@ -24,8 +24,7 @@ public class DataExtraction {
 	    
 	    List<Replay> replays = Utils.findReplays(new File("data/replays/meine"));
 	    
-	    Database db = new Database(database_file);
-        db.open_write();
+	    Database db = new Database(database_file, true);
 	    
         Match match = new Match();        
         Match match_old = new Match();        
@@ -44,6 +43,24 @@ public class DataExtraction {
         	}
         	
         	db.createReplay(replay.id);
+        	
+        	try {
+				TickIterator iterMetaData = Clarity.tickIteratorForFile(replay.filename, Profile.ENTITIES);
+				Match metaMatch = new Match();
+				boolean found = false;
+	        	while(!found){
+	        		Tick t = iterMetaData.next();
+	        		t.apply(metaMatch);
+	        		if((double)(Float)metaMatch.getGameRulesProxy().getProperty("dota_gamerules_data.m_flGameStartTime") != 0.0){
+	        			Utils.setStartTime((Float)metaMatch.getGameRulesProxy().getProperty("dota_gamerules_data.m_flGameStartTime"));
+	        			found = true;
+	        		}
+	        	}
+	        	
+        	} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+        	
         	
             TickIterator iter;
             TickIterator iter_old;

@@ -6,30 +6,30 @@ import java.util.TreeMap;
 
 public class Globals {
 	public static Map<Integer, TreeMap<String, Integer>> found_unit_names = new HashMap<Integer, TreeMap<String, Integer>>();
-	public static Map<Integer, Integer> found_percents = new HashMap<Integer, Integer>();
-	public static Map<String, Integer> classes = new HashMap<String, Integer>();
+	public static Map<Integer, Integer> foundInts = new HashMap<Integer, Integer>();
+	public static Map<String, Integer> foundStrings = new HashMap<String, Integer>();
 	
-	public static void add_class(String class_){
-		if(classes.containsKey(class_))
-			classes.put(class_, classes.get(class_)+1);
+	public static void countString(String string){
+		if(foundStrings.containsKey(string))
+			foundStrings.put(string, foundStrings.get(string)+1);
 		else
-			classes.put(class_, 1);
+			foundStrings.put(string, 1);
 	}
- 	public static void add_percent(int percent){
-		if(found_percents.containsKey(percent))
-			found_percents.put(percent, found_percents.get(percent)+1);
+ 	public static void countInt(int percent){
+		if(foundInts.containsKey(percent))
+			foundInts.put(percent, foundInts.get(percent)+1);
 		else
-			found_percents.put(percent, 1);
+			foundInts.put(percent, 1);
 	}
 	
-	public static void print_percent(){
-		for(Map.Entry<Integer, Integer> e : found_percents.entrySet()){
+	public static void printCountedInts(){
+		for(Map.Entry<Integer, Integer> e : foundInts.entrySet()){
 			System.out.println(e.getKey()+": "+e.getValue());
 		}
 	}
 	
-	public static void print_classes(){
-		for(Map.Entry<String, Integer> e : classes.entrySet()){
+	public static void printCountedStrings(){
+		for(Map.Entry<String, Integer> e : foundStrings.entrySet()){
 			System.out.println(e.getKey()+": "+e.getValue());
 		}
 	}

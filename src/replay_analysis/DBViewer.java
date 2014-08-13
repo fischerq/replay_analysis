@@ -8,8 +8,7 @@ import database.Unit;
 public class DBViewer {
 	private static String dbFile = "data/analysis_mine.sqlite";
 	public static void main(String[] args) {
-		Database db = new Database(dbFile);
-		db.open_read();
+		Database db = new Database(dbFile, false);
 		Unit u1 = db.getUnit(1);
 		
 		for(TimeSeries s : u1.timeSeries){

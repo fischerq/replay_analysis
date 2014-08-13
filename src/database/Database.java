@@ -24,8 +24,20 @@ public class Database {
 	private SQLiteStatement getNodes = null;
 	
 	
-	public Database(String file){
+	public Database(String file, boolean write){
 		db = new SQLiteConnection(new File(file));
+		try {
+			db.open(write);
+			db.exec("PRAGMA synchronous=OFF");
+			db.exec("PRAGMA temp_store=MEMORY");
+			db.exec("PRAGMA journal_mode=TRUNCATE");
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}
+		if(write)
+			open_write();
+		else
+			open_read();
 	}
 	
 	private void writeConstants(SQLiteStatement insert_statement, Map<String, Integer> constantMap){
@@ -41,14 +53,7 @@ public class Database {
     	}
 	}
 
-	public void open_read(){
-		try {
-			db.open(false);
-		} catch (SQLiteException e) {
-			System.out.println("Failed when opening DB connection");
-			db = null;
-			return;
-		}	
+	private void open_read(){
 		try{
 			getUnit = db.prepare("SELECT UnitTypeMap.name, team, controlled_by_player, illusion FROM Units, UnitTypeMap WHERE Units.type = UnitTypeMap.type_id AND unit_id = ?;");
 			getTimeSeries = db.prepare("SELECT timeseries_id, TimeSeriesTypeMap.name FROM TimeSeries, TimeSeriesTypeMap WHERE TimeSeries.type = TimeSeriesTypeMap.type_id  AND TimeSeries.unit_id = ?;");
@@ -58,15 +63,7 @@ public class Database {
 		}
 	}
 	
-	public void open_write(){
-		try {
-			db.open(true);
-		} catch (SQLiteException e) {
-			System.out.println("Failed when opening DB connection");
-			db = null;
-			return;
-		}
-
+	private void open_write(){
 		//Setup the DB
 	    try {
 			db.exec("BEGIN TRANSACTION;");

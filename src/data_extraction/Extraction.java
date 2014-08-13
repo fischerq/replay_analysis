@@ -17,7 +17,9 @@ import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
 import skadistats.clarity.model.GameEvent;
 import skadistats.clarity.model.GameEventDescriptor;
+import skadistats.clarity.model.StringTable;
 import utils.ConstantMapper;
+import utils.Utils;
 
 
 public class Extraction {
@@ -27,14 +29,14 @@ public class Extraction {
 	private boolean wroteTeams;
 	private boolean wrotePlayers;
 	
-	private Map<Integer, TrackedUnit> units = new HashMap<Integer, TrackedUnit>();
-	private Set<Integer> ignoredUnits = new HashSet<Integer>();
 	private Set<String> trackedClasses;
+	private Map<Integer, TrackedUnit> units;
 	
-	private AnimationTracker animations = new AnimationTracker();
+	private AnimationTracker animations;
+	private Set<Integer> attackingUnits;
+	//private Set<> rangedAttacks;
 	
-	
-	private Match current_match = null;
+	private Match currentMatch = null;
 	private Match old_match = null;
 		
 	private static int attacker = 0;
@@ -51,6 +53,13 @@ public class Extraction {
 			trackedClasses.add(ConstantMapper.DTClassForName(unit));
 		}*/
 		trackedClasses.add(ConstantMapper.DTClassForName("Zeus"));
+		//trackedClasses.add(ConstantMapper.DTClassForName("Nature's Prophet"));
+		//trackedClasses.add(ConstantMapper.DTClassForName("Radiant Siege Creep"));
+		
+		animations = new AnimationTracker();
+		units = new HashMap<Integer, TrackedUnit>();
+		
+		attackingUnits = new HashSet<Integer>();
 	}
 	
 	public void analyseTick(Match match, Match match_old) {
@@ -63,29 +72,18 @@ public class Extraction {
 		}
 		
 		//System.out.println(ConstantMapper.formatTime(match.getReplayTime())+" Tick");
-		current_match = match;
+		currentMatch = match;
 		old_match = match_old;
 		
 		//if(true)
 		//	return;
 		doPrints();
+		
+		attackingUnits.clear();
 
+		updateAndProcessAnimations();
 		
-		
-		animations.updateAnimations(match);
-		
-		for(Animation a : animations.getStartedAnimations()){
-			//System.out.println("Started "+a.toString());
-		}
-		for(Animation a : animations.getCastedAnimations()){
-			//System.out.println("Casted "+a.toString());
-		}
-		for(Animation a : animations.getCancelledAnimations()){
-			//System.out.println("Cancelled "+a.toString());
-		}
-		for(Animation a : animations.getStoppedAnimations()){
-			//System.out.println("Stopped "+a.toString());
-		}
+		processProjectiles();
 		
 		updateUnits();
 		
@@ -95,6 +93,14 @@ public class Extraction {
 	}
 	
 	private boolean doPrints(){
+		/*Iterator<Entity> it = current_match.getEntities().getAllByDtName("DT_DOTAGamerulesProxy");
+		Entity rules = it.next();
+		System.out.println(rules.getProperty("dota_gamerules_data.m_fGameTime")+" "+rules.getProperty("dota_gamerules_data.m_flPreGameStartTime")+" "+rules.getProperty("dota_gamerules_data.m_flGameStartTime"));
+		*/
+		
+/*		for(StringTable t : currentMatch.getStringTables().byName.values()){
+			System.out.println(t.getName()+" "+t.getNameByIndex(0));
+		}*/
 		/*Iterator<Entity> it = current_match.getEntities().getAllByDtName("DT_DOTAPlayer");
 		System.out.println("Tick");
 		while(it.hasNext()){
@@ -160,7 +166,7 @@ public class Extraction {
 	
 	private void updateUnits(){
 		for(String dtClass : trackedClasses){
-			Iterator<Entity> it = current_match.getEntities().getAllByDtName(dtClass);
+			Iterator<Entity> it = currentMatch.getEntities().getAllByDtName(dtClass);
 			while(it.hasNext()){
 				Entity e = it.next();
 				if(!units.containsKey(e.getHandle()))
@@ -169,20 +175,98 @@ public class Extraction {
 		}
 		
 		for(TrackedUnit u : units.values())
-			u.update(current_match, old_match);
+			u.update(currentMatch, old_match);
+	}
+	
+	private void updateAndProcessAnimations(){
+		animations.updateAnimations(currentMatch);
+		//Specifically ignored walking animation (activity 0)
+		for(Animation a : animations.getStartedAnimations()){
+			/* NOTE Check specific animation activity numbers here
+			 * if(a.activity == 426)
+				System.out.println(ConstantMapper.formatTime(Utils.getTime(current_match))+" "+a.entity.getDtClass().getDtName());
+			*/
+			if(units.get(a.entity.getHandle()) == null)
+				continue;
+			if(a.activity == 438)
+				System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+a.entity.getDtClass().getDtName());
+			if(a.activity != 0)
+				db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "StartAnimation", units.get(a.entity.getHandle()).getID(), 0, ConstantMapper.animationAction(a.activity));
+			//System.out.println("Started "+a.toString());
+		}
+		for(Animation a : animations.getCastedAnimations()){
+			if(units.get(a.entity.getHandle()) == null)
+				continue;
+			if(a.activity != 0)
+				db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "CastAnimation", units.get(a.entity.getHandle()).getID(), 0, ConstantMapper.animationAction(a.activity));
+			if(a.activity == 424 || a.activity == 425 || a.activity == 426)
+				attackingUnits.add(a.entity.getHandle());
+			//System.out.println("Casted "+a.toString());
+		}
+		for(Animation a : animations.getCancelledAnimations()){
+			if(units.get(a.entity.getHandle()) == null)
+				continue;
+			if(a.activity != 0)
+				db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "CancelAnimation", units.get(a.entity.getHandle()).getID(), 0, ConstantMapper.animationAction(a.activity));
+			//System.out.println("Cancelled "+a.toString());
+		}
+		for(Animation a : animations.getStoppedAnimations()){
+			if(units.get(a.entity.getHandle()) == null)
+				continue;
+			if(a.activity != 0)
+				db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "StopAnimation", units.get(a.entity.getHandle()).getID(), 0, ConstantMapper.animationAction(a.activity));
+			//System.out.println("Stopped "+a.toString());
+		}
+	}
+	
+	private void processProjectiles(){
+		StringTable particleEffectNames = currentMatch.getStringTables().forName("ParticleEffectNames");
+		for(Entity e : currentMatch.getTempEntities().tempEntities){
+			Globals.countString(e.getDtClass().getDtName());
+			/*if(e.getDtClass().getDtName().equals("DT_TEEffectDispatch")){
+				System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+e.toString());//
+			//if(e.getDtClass().getPropertyIndex("m_EffectData.m_iEffectName") != null)
+				System.out.println(currentMatch.getStringTables().forName("EffectDispatch").getNameByIndex((Integer)e.getProperty("m_EffectData.m_iEffectName")));
+			}*/
+			if(e.getDtClass().getDtName().equals("DT_TEDOTAProjectile")){
+				//System.out.println(e.toString());
+				if(e.getProperty("m_hSource") == null || e.getProperty("m_hTarget") == null)
+					continue;//Skip broken particles
+				//System.out.print(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hSource")).getDtClass().getDtName());
+				//System.out.println(" to "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hTarget")).getDtClass().getDtName());
+				String projectileName = "";
+				if(e.getProperty("m_iParticleSystem") != null)
+					projectileName = particleEffectNames.getNameByIndex((int)e.getProperty("m_iParticleSystem"));
+				else{
+					System.out.println(currentMatch.getTempEntities().tempEntities.size());
+//					System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hSource")).getDtClass().getDtName()+" to "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hTarget")).getDtClass().getDtName());
+				}
+				if(e.getProperty("m_bIsAttack") != null || ConstantMapper.isAttack(projectileName)){
+					//System.out.println("Attack");
+				}
+				else{
+					System.out.print(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+projectileName+" "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hSource")).getDtClass().getDtName());
+					System.out.println(" to "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hTarget")).getDtClass().getDtName());
+					
+				}
+				
+				
+				//what does source attachment
+			}
+		}
 	}
 	
 	private void processCombatLog(){
-		GameEventDescriptor combatlog_descriptor = current_match.getGameEventDescriptors().forName("dota_combatlog");
+		GameEventDescriptor combatlog_descriptor = currentMatch.getGameEventDescriptors().forName("dota_combatlog");
 		if(combatlog_descriptor == null)
 			return;
 		CombatLogEntry.init(
-                current_match.getStringTables().forName("CombatLogNames"),
+                currentMatch.getStringTables().forName("CombatLogNames"),
                 combatlog_descriptor
             );
 		
 		List<LinkedList<CombatLogEntry>> grouped_cles = new LinkedList<LinkedList<CombatLogEntry>>();
-				for (GameEvent g : current_match.getGameEvents()) {
+				for (GameEvent g : currentMatch.getGameEvents()) {
 					 if (g.getEventId() != combatlog_descriptor.getEventId()) {
 						 //System.out.println("Strange event id "+g.getEventId()+" "+g.getName());
 						 continue;
@@ -338,7 +422,7 @@ public class Extraction {
 		List<Entity> candidates = new LinkedList<Entity>();
 		List<Entity> unit_candidates = new LinkedList<Entity>();
 		String unitName = ConstantMapper.unitName(combatlog_name);
-		Iterator<Entity> it = current_match.getEntities().getAllByDtName(ConstantMapper.DTClassForName(unitName));
+		Iterator<Entity> it = currentMatch.getEntities().getAllByDtName(ConstantMapper.DTClassForName(unitName));
 		while(it.hasNext()){
 			Entity e = it.next();
 			boolean unit_ok = true;
@@ -490,9 +574,8 @@ public class Extraction {
 	}
 	
 	public void finish() {
-		// TODO Auto-generated method stub
 		//Globals.print_names();
-		Globals.print_percent();
-		//Globals.print_classes();
+		Globals.printCountedInts();
+		Globals.printCountedStrings();
 	}
 }

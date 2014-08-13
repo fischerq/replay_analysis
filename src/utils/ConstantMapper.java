@@ -1284,10 +1284,45 @@ public class ConstantMapper {
 	
 	public static String animationAction(int action){
 		switch(action){
+		case 0:
+			return "Walking";
 		case 424:
-			return "Attack";
+			return "AttackDefault";
+		case 425:
+			return "AttackVariant";
+		case 426:
+			return "AttackSpecial";//Example: Jinada hit
+		case 431:
+			return "AbilitySlot1";
+		case 432:
+			return "AbilitySlot2";
+		case 433:
+			return "AbilitySlot3";
+		case 434:
+			return "AbilitySlot4";
+		case 435:
+			return "AbilitySlot5";
+		case 436:
+			return "AbilitySlot6";
+		case 438:
+			return "AbilitySpecial";//Known cases: Start of sandking's sandstorm from walking
 		default:
+			//System.out.println("Animation: "+action);
 			return ""+action;
+		}
+	}
+	
+	public static String animationType(int type){
+		switch(type){
+		case 0:
+			return "?";
+		case 1:
+			return "Attack?";
+		case 2:
+			return "AbilityUse";
+		default:
+			//System.out.println("Animation: "+action);
+			return ""+type;
 		}
 	}
 	
@@ -1333,9 +1368,45 @@ public class ConstantMapper {
 			return "Radiant";
 		case 3:
 			return "Dire";
+		case 4:
+			return "Neutral";
 		default:
 			System.out.println("unknown teamNum: "+teamNum);
 			return "";
+		}
+	}
+
+	public static boolean isAttack(String projectileName) {
+		switch(projectileName){
+		case "ranged_goodguy":
+		case "ranged_badguy":
+		case "ranged_siege_good":
+		case "ranged_siege_bad":
+		case "ranged_tower_good":
+		case "ranged_tower_bad":
+			
+		case "furion_base_attack":
+		case "zuus_base_attack":
+		case "windrunner_base_attack":
+		case "nevermore_base_attack":
+		case "vengeful_base_attack":
+		case "viper_base_attack":
+		case "viper_poison_attack":
+		case "mirana_base_attack":
+
+		case "dragon_knight_elder_dragon_corrosive":
+		case "dragon_knight_elder_dragon_fire":
+		case "dragon_knight_elder_dragon_frost":
+		
+		case "black_drake_attack":
+		case "black_dragon_attack":
+		case "thunderlizard_base_attack":
+		case "satyr_trickster_projectile":
+		case "necronomicon_archer_projectile":
+		case "desolator_projectile":
+			return true;
+		default:
+			return false;
 		}
 	}
 }

@@ -25,6 +25,7 @@ public class Animation {
 			activity = 0;
 		else
 			activity = temp_ent.getProperty("m_Activity");
+		
 		entity = match.getEntities().getByHandle((Integer)temp_ent.getProperty("m_hEntity"));
 		if(temp_ent.getProperty("m_flCastPoint") == null){
 			time_cast = match.getGameTime();
@@ -34,7 +35,7 @@ public class Animation {
 			time_cast = match.getGameTime() + (Float)temp_ent.getProperty("m_flCastPoint") - ConstantMapper.replay_tick/4;
 			cast_point = (Float)temp_ent.getProperty("m_flCastPoint");
 		}
-    	}
+    }
 	
 	public String toString(){
 		return "Animation: "+entity.getDtClass().getDtName()+"("+entity.getHandle()+") "+ConstantMapper.animationAction(activity)+" "+type+" "+sequence_index+" "+cast_point+ " "+ConstantMapper.formatTime(time_cast);

@@ -14,7 +14,8 @@ import skadistats.clarity.model.Entity;
 
 public class Utils {
 
-	static int MAX_COORD_INTEGER = 16384;
+	private static int MAX_COORD_INTEGER = 16384;
+	private static double gameStartTime = 0;
 	
 	public static boolean isAlive(Entity e){
 		int lifeState = e.getProperty("m_iLifeState");
@@ -25,8 +26,11 @@ public class Utils {
 		return e.getDtClass().getPropertyIndex("m_hReplicatingOtherHeroModel") != null && (Integer)e.getProperty("m_hReplicatingOtherHeroModel") != 2097151;
 	}
 	
+	public static void setStartTime(double time){
+		gameStartTime = time;
+	}
 	public static double getTime(Match m){
-		return m.getGameTime();
+		return m.getGameTime() - gameStartTime;
 	}
 	
 	public static double[] getPosition(Entity e){
