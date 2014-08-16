@@ -236,15 +236,23 @@ public class Constants {
         put("GoldGain");
         put("ExperienceGain");
         put("ItemPurchase");
-        put("AddItem");
-        put("LoseItem");
+        put("ItemAddition");
+        put("ItemLoss");
         
-        put("ChangeVisibility");
+        put("VisionGain");
+        put("VisionLoss");
 
-        put("StartAnimation");
-        put("CastAnimation");
-        put("StopAnimation");
-        put("CancelAnimation");
+        put("AnimationStart");
+        put("AnimationCast");
+        put("AnimationStop");
+        put("AnimationCancel");
+        
+        put("LinearProjectileCreation");
+        put("LinearProjectileRemoval");
+        
+        put("TrackingProjectileCreation");
+        put("TrackingProjectileHit");
+        put("TrackingProjectileDodge");
 
         eventTypes = Collections.unmodifiableMap(current_map);
     }
@@ -277,5 +285,61 @@ public class Constants {
         put("Mana");
         put("Control");
         timeSeries = Collections.unmodifiableMap(current_map);
+    }
+        
+    public static final Map<String, Integer> eventArguments;
+    static {
+        current_map = new HashMap<String, Integer>();
+        put("Unit");
+        put("ActingUnit");
+        put("AffectedUnit");
+        put("Amount");
+        put("Modifier");
+        put("Ability");
+        put("Item");
+        put("Action");
+        put("Projectile");
+        put("Index");
+        put("PositionX");
+        put("PositionY");
+        put("VelocityX");
+        put("VelocityY");
+        put("Target");
+        put("Side");
+        put("Player");
+        eventArguments = Collections.unmodifiableMap(current_map);
+    }
+    
+    
+    public static final Map<String, Integer> actions;
+    static {
+        current_map = new HashMap<String, Integer>();
+		put("Walking");
+		put("AttackDefault");
+		put("AttackVariant");
+		put("AttackSpecial");
+		put("AbilitySlot1");
+		put("AbilitySlot2");
+		put("AbilitySlot3");
+		put("AbilitySlot4");
+		put("AbilitySlot5");
+		put("AbilitySlot6");
+		put("AbilitySpecial");
+        actions = Collections.unmodifiableMap(current_map);
+    }
+    
+    public static final Map<String, Integer> projectiles;
+    static {
+        current_map = new HashMap<String, Integer>();
+        put("Attack");
+		put("Sacred Arrow");
+		put("Breathe Fire");
+		put("Wave of Terror");
+		put("Shackleshot");
+		put("Powershot");
+		put("Shuriken Toss");
+		put("Magic Missile");
+        put("Unknown");
+        projectiles = Collections.unmodifiableMap(current_map);
     }
 }

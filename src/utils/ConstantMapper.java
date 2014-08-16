@@ -1376,8 +1376,17 @@ public class ConstantMapper {
 		}
 	}
 
-	public static boolean isAttack(String projectileName) {
+	public static boolean isAttackProjectile(String projectileName) {
 		switch(projectileName){
+		case "Attack":
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	public static String projectileForParticle(String particleName) {
+		switch(particleName){
 		case "ranged_goodguy":
 		case "ranged_badguy":
 		case "ranged_siege_good":
@@ -1402,11 +1411,29 @@ public class ConstantMapper {
 		case "black_dragon_attack":
 		case "thunderlizard_base_attack":
 		case "satyr_trickster_projectile":
+		case "gnoll_base_attack":
+		case "ghost_base_attack":
 		case "necronomicon_archer_projectile":
 		case "desolator_projectile":
-			return true;
+			return "Attack";
+		
+		case "mirana_spell_arrow":
+			return "Sacred Arrow";
+		case "dragon_knight_breathe_fire":
+			return "Breathe Fire";
+		case "vengeful_wave_of_terror":
+			return "Wave of Terror";
+		case "windrunner_shackleshot":
+			return "Shackleshot";
+		case "windrunner_spell_powershot_sparrowhawk":
+			return "Powershot";
+		case "bounty_hunter_suriken_toss":
+			return "Shuriken Toss";
+		case "vengeful_magic_missle":
+			return "Magic Missile";
 		default:
-			return false;
+			System.out.println("Unknown particle-projectile: "+particleName);
+			return "Unknown";
 		}
 	}
 }

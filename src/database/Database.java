@@ -18,6 +18,10 @@ public class Database {
 	private SQLiteStatement insertTimeSeries = null;
 	private SQLiteStatement insertTimeSeriesNode = null;
 	private SQLiteStatement insertEvent = null;
+	private SQLiteStatement insertIntArgument = null;
+	private SQLiteStatement insertRealArgument = null;
+	private SQLiteStatement insertTextArgument = null;
+	private SQLiteStatement insertEventCausality = null;
 	
 	private SQLiteStatement getUnit = null;
 	private SQLiteStatement getTimeSeries = null;
@@ -94,9 +98,16 @@ public class Database {
 	    	writeConstants(db.prepare("INSERT OR IGNORE INTO TimeSeriesTypeMap(type_id, name) VALUES(?, ?);"), Constants.timeSeries);
 	    	db.exec("CREATE TABLE IF NOT EXISTS TimeSeriesNodes (node_id integer primary key, timeseries_id integer, time real, value real);");
 			
-	    	db.exec("CREATE TABLE IF NOT EXISTS Events (event_id integer primary key, time real, type integer, actor_unit integer, affected_unit integer, value text, replay_id integer);");
+	    	db.exec("CREATE TABLE IF NOT EXISTS Events (event_id integer primary key, time real, type integer, replay_id integer);");
 			db.exec("CREATE TABLE IF NOT EXISTS EventTypeMap (type_id integer primary key, name text);");
 			writeConstants(db.prepare("INSERT OR IGNORE INTO EventTypeMap(type_id, name) VALUES(?, ?);"), Constants.eventTypes);
+			db.exec("CREATE TABLE IF NOT EXISTS EventIntArguments (intargument_id integer primary key, event_id integer, argument integer, value integer);");
+			db.exec("CREATE TABLE IF NOT EXISTS EventRealArguments (realargument_id integer primary key, event_id integer, argument integer, value real);");
+			db.exec("CREATE TABLE IF NOT EXISTS EventTextArguments (stringargument_id integer primary key, event_id integer, argument integer, value text);");
+			db.exec("CREATE TABLE IF NOT EXISTS EventArgumentMap (argument_id integer primary key, name text);");
+			writeConstants(db.prepare("INSERT OR IGNORE INTO EventArgumentMap(argument_id, name) VALUES(?, ?);"), Constants.eventArguments);
+			db.exec("CREATE TABLE IF NOT EXISTS EventCausalities (causality_id integer primary key, cause integer, effect integer);");
+			
 
 			db.exec("COMMIT TRANSACTION;");
 			
@@ -111,7 +122,11 @@ public class Database {
 			insertUnit = db.prepare("INSERT INTO Units(type, team, controlled_by_player, illusion, replay_id) VALUES(?, ?, ?, ?, ?);");
 			insertTimeSeries = db.prepare("INSERT INTO TimeSeries(type, unit_id) VALUES(?, ?);");
 			insertTimeSeriesNode = db.prepare("INSERT INTO TimeSeriesNodes(timeseries_id, time, value) VALUES(?, ?, ?);");
-			insertEvent = db.prepare("INSERT INTO Events(time, type, actor_unit, affected_unit, value, replay_id) VALUES(?, ?, ?, ?, ?, ?);");
+			insertEvent = db.prepare("INSERT INTO Events(time, type, replay_id) VALUES(?, ?, ?);");
+			insertIntArgument = db.prepare("INSERT INTO EventIntArguments(event_id, argument, value) VALUES(?, ?, ?);");
+			insertRealArgument = db.prepare("INSERT INTO EventRealArguments(event_id, argument, value) VALUES(?, ?, ?);");
+			insertTextArgument = db.prepare("INSERT INTO EventTextArguments(event_id, argument, value) VALUES(?, ?, ?);");
+			insertEventCausality = db.prepare("INSERT INTO EventCausalities (cause, effect) VALUES(?, ?);");
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 		}
@@ -223,9 +238,9 @@ public class Database {
 		}
 	}
 	
-	public int createEvent(int replay_id, double time, String type, int actor_unit, int affected_unit, String value){
+	public int createEvent(int replay_id, double time, String type){
 		try {
-			insertEvent.bind(1, time).bind(2, Constants.eventTypes.get(type)).bind(3, actor_unit).bind(4, affected_unit).bind(5, value).bind(6, replay_id);
+			insertEvent.bind(1, time).bind(2, Constants.eventTypes.get(type)).bind(3, replay_id);
 			insertEvent.step();
 			insertEvent.reset();
 			return (int) db.getLastInsertId();
@@ -233,6 +248,46 @@ public class Database {
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 			return 0;
+		}
+	}
+	
+	public void addEventIntArgument(int event_id, String argument, int value){
+		try {
+			insertIntArgument.bind(1, event_id).bind(2, Constants.eventArguments.get(argument)).bind(3, value);
+			insertIntArgument.step();
+			insertIntArgument.reset();			
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void addEventRealArgument(int event_id, String argument, double value){
+		try {
+			insertRealArgument.bind(1, event_id).bind(2, Constants.eventArguments.get(argument)).bind(3, value);
+			insertRealArgument.step();
+			insertRealArgument.reset();			
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void addEventTextArgument(int event_id, String argument, String value){
+		try {
+			insertTextArgument.bind(1, event_id).bind(2, Constants.eventArguments.get(argument)).bind(3, value);
+			insertTextArgument.step();
+			insertTextArgument.reset();			
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void addEventCausality(int cause, int effect){
+		try {
+			insertEventCausality.bind(1, cause).bind(2, effect);
+			insertEventCausality.step();
+			insertEventCausality.reset();		
+		} catch (SQLiteException e) {
+			e.printStackTrace();
 		}
 	}
 	

@@ -26,14 +26,11 @@ public class Extraction {
 
 	private ReplayData replay;
 	private Database db;
-	private boolean wroteTeams;
-	private boolean wrotePlayers;
 	
-	private Set<String> trackedClasses;
-	private Map<Integer, TrackedUnit> units;
-	
+	private UnitTracker units;
 	private AnimationTracker animations;
 	private Set<Integer> attackingUnits;
+	private ProjectileTracker projectiles;
 	//private Set<> rangedAttacks;
 	
 	private Match currentMatch = null;
@@ -45,47 +42,33 @@ public class Extraction {
 	public Extraction(int id, Database db){
 		this.db = db;
 		replay = new ReplayData(id, db);
-		wroteTeams = false;
-		wrotePlayers = false;
-		
-		trackedClasses = new HashSet<String>();
-		/*for(String unit : Constants.unitTypes.keySet()){
-			trackedClasses.add(ConstantMapper.DTClassForName(unit));
-		}*/
-		trackedClasses.add(ConstantMapper.DTClassForName("Zeus"));
-		//trackedClasses.add(ConstantMapper.DTClassForName("Nature's Prophet"));
-		//trackedClasses.add(ConstantMapper.DTClassForName("Radiant Siege Creep"));
-		
+				
+		units = new UnitTracker(replay, db);
 		animations = new AnimationTracker();
-		units = new HashMap<Integer, TrackedUnit>();
+
+		projectiles = new ProjectileTracker(replay, db, units);
 		
 		attackingUnits = new HashSet<Integer>();
 	}
 	
-	public void analyseTick(Match match, Match match_old) {
+	public void analyseTick(Match match, Match matchOld) {
 		db.startTransaction();
-		if(!wroteTeams)
-			wroteTeams = replay.tryWriteTeams(match);
-		
-		if(wroteTeams && !wrotePlayers){
-			wrotePlayers = replay.writePlayers(match, db);
-		}
-		
+
 		//System.out.println(ConstantMapper.formatTime(match.getReplayTime())+" Tick");
 		currentMatch = match;
-		old_match = match_old;
+		old_match = matchOld;
 		
 		//if(true)
 		//	return;
 		doPrints();
 		
 		attackingUnits.clear();
+		
+		units.update(match, matchOld);
 
 		updateAndProcessAnimations();
 		
 		processProjectiles();
-		
-		updateUnits();
 		
 		processCombatLog();
 		 
@@ -93,22 +76,26 @@ public class Extraction {
 	}
 	
 	private boolean doPrints(){
+		/*for(Map.Entry<Integer, GameEventDescriptor> dsc : currentMatch.getGameEventDescriptors().byId.entrySet()){
+			System.out.println(dsc.getKey()+" "+dsc.getValue().getName());
+		}*/
+		
 		/*Iterator<Entity> it = current_match.getEntities().getAllByDtName("DT_DOTAGamerulesProxy");
 		Entity rules = it.next();
 		System.out.println(rules.getProperty("dota_gamerules_data.m_fGameTime")+" "+rules.getProperty("dota_gamerules_data.m_flPreGameStartTime")+" "+rules.getProperty("dota_gamerules_data.m_flGameStartTime"));
 		*/
 		
-/*		for(StringTable t : currentMatch.getStringTables().byName.values()){
+		/*for(StringTable t : currentMatch.getStringTables().byName.values()){
 			System.out.println(t.getName()+" "+t.getNameByIndex(0));
 		}*/
-		/*Iterator<Entity> it = current_match.getEntities().getAllByDtName("DT_DOTAPlayer");
+		/*Iterator<Entity> it = currentMatch.getEntities().getAllByDtName("DT_DOTAPlayer");
 		System.out.println("Tick");
 		while(it.hasNext()){
 			Entity e = it.next();
 			System.out.println(e.toString());
 			//System.out.println("creep "+(Integer)e.getProperty("m_hOwnerEntity"));
-		}
-		*/
+		}*/
+		
 		
 		/*Iterator<Entity> it = current_match.getEntities().getAllByDtName("DT_DOTA_BaseNPC_Creep_Lane");
 		while(it.hasNext()){
@@ -163,20 +150,7 @@ public class Extraction {
 */		
 		return true;
 	}
-	
-	private void updateUnits(){
-		for(String dtClass : trackedClasses){
-			Iterator<Entity> it = currentMatch.getEntities().getAllByDtName(dtClass);
-			while(it.hasNext()){
-				Entity e = it.next();
-				if(!units.containsKey(e.getHandle()))
-					units.put(e.getHandle(), new TrackedUnit(e, replay, db));
-			}
-		}
-		
-		for(TrackedUnit u : units.values())
-			u.update(currentMatch, old_match);
-	}
+
 	
 	private void updateAndProcessAnimations(){
 		animations.updateAnimations(currentMatch);
@@ -186,74 +160,53 @@ public class Extraction {
 			 * if(a.activity == 426)
 				System.out.println(ConstantMapper.formatTime(Utils.getTime(current_match))+" "+a.entity.getDtClass().getDtName());
 			*/
-			if(units.get(a.entity.getHandle()) == null)
+			if(!units.exists(a.entity.getHandle()))
 				continue;
 			if(a.activity == 438)
 				System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+a.entity.getDtClass().getDtName());
-			if(a.activity != 0)
-				db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "StartAnimation", units.get(a.entity.getHandle()).getID(), 0, ConstantMapper.animationAction(a.activity));
+			if(a.activity != 0){
+				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "AnimationStart");
+				db.addEventIntArgument(eventID, "Unit", units.getUnitID(a.entity.getHandle()));
+				db.addEventIntArgument(eventID, "Action", Constants.actions.get(ConstantMapper.animationAction(a.activity)));
+			}
 			//System.out.println("Started "+a.toString());
 		}
 		for(Animation a : animations.getCastedAnimations()){
-			if(units.get(a.entity.getHandle()) == null)
+			if(!units.exists(a.entity.getHandle()))
 				continue;
-			if(a.activity != 0)
-				db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "CastAnimation", units.get(a.entity.getHandle()).getID(), 0, ConstantMapper.animationAction(a.activity));
-			if(a.activity == 424 || a.activity == 425 || a.activity == 426)
+			if(a.activity != 0){
+				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "AnimationCast");
+				db.addEventIntArgument(eventID, "Unit", units.getUnitID(a.entity.getHandle()));
+				db.addEventIntArgument(eventID, "Action", Constants.actions.get(ConstantMapper.animationAction(a.activity)));
+			}
+			if(Utils.isAttack(a))
 				attackingUnits.add(a.entity.getHandle());
 			//System.out.println("Casted "+a.toString());
 		}
 		for(Animation a : animations.getCancelledAnimations()){
-			if(units.get(a.entity.getHandle()) == null)
+			if(!units.exists(a.entity.getHandle()))
 				continue;
-			if(a.activity != 0)
-				db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "CancelAnimation", units.get(a.entity.getHandle()).getID(), 0, ConstantMapper.animationAction(a.activity));
+			if(a.activity != 0){
+				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "AnimationCancel");
+				db.addEventIntArgument(eventID, "Unit", units.getUnitID(a.entity.getHandle()));
+				db.addEventIntArgument(eventID, "Action", Constants.actions.get(ConstantMapper.animationAction(a.activity)));			
+			}
 			//System.out.println("Cancelled "+a.toString());
 		}
 		for(Animation a : animations.getStoppedAnimations()){
-			if(units.get(a.entity.getHandle()) == null)
+			if(!units.exists(a.entity.getHandle()))
 				continue;
-			if(a.activity != 0)
-				db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "StopAnimation", units.get(a.entity.getHandle()).getID(), 0, ConstantMapper.animationAction(a.activity));
+			if(a.activity != 0){
+				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "AnimationStop");
+				db.addEventIntArgument(eventID, "Unit", units.getUnitID(a.entity.getHandle()));
+				db.addEventIntArgument(eventID, "Action", Constants.actions.get(ConstantMapper.animationAction(a.activity)));
+			}
 			//System.out.println("Stopped "+a.toString());
 		}
 	}
 	
 	private void processProjectiles(){
-		StringTable particleEffectNames = currentMatch.getStringTables().forName("ParticleEffectNames");
-		for(Entity e : currentMatch.getTempEntities().tempEntities){
-			Globals.countString(e.getDtClass().getDtName());
-			/*if(e.getDtClass().getDtName().equals("DT_TEEffectDispatch")){
-				System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+e.toString());//
-			//if(e.getDtClass().getPropertyIndex("m_EffectData.m_iEffectName") != null)
-				System.out.println(currentMatch.getStringTables().forName("EffectDispatch").getNameByIndex((Integer)e.getProperty("m_EffectData.m_iEffectName")));
-			}*/
-			if(e.getDtClass().getDtName().equals("DT_TEDOTAProjectile")){
-				//System.out.println(e.toString());
-				if(e.getProperty("m_hSource") == null || e.getProperty("m_hTarget") == null)
-					continue;//Skip broken particles
-				//System.out.print(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hSource")).getDtClass().getDtName());
-				//System.out.println(" to "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hTarget")).getDtClass().getDtName());
-				String projectileName = "";
-				if(e.getProperty("m_iParticleSystem") != null)
-					projectileName = particleEffectNames.getNameByIndex((int)e.getProperty("m_iParticleSystem"));
-				else{
-					System.out.println(currentMatch.getTempEntities().tempEntities.size());
-//					System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hSource")).getDtClass().getDtName()+" to "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hTarget")).getDtClass().getDtName());
-				}
-				if(e.getProperty("m_bIsAttack") != null || ConstantMapper.isAttack(projectileName)){
-					//System.out.println("Attack");
-				}
-				else{
-					System.out.print(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+projectileName+" "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hSource")).getDtClass().getDtName());
-					System.out.println(" to "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hTarget")).getDtClass().getDtName());
-					
-				}
-				
-				
-				//what does source attachment
-			}
-		}
+		projectiles.updateProjectiles(currentMatch);
 	}
 	
 	private void processCombatLog(){
@@ -264,127 +217,127 @@ public class Extraction {
                 currentMatch.getStringTables().forName("CombatLogNames"),
                 combatlog_descriptor
             );
-		
+		//System.out.println("CLE id: "+combatlog_descriptor.getEventId());
 		List<LinkedList<CombatLogEntry>> grouped_cles = new LinkedList<LinkedList<CombatLogEntry>>();
-				for (GameEvent g : currentMatch.getGameEvents()) {
-					 if (g.getEventId() != combatlog_descriptor.getEventId()) {
-						 //System.out.println("Strange event id "+g.getEventId()+" "+g.getName());
-						 continue;
-		            }
-		            CombatLogEntry cle = new CombatLogEntry(g);
-		            //System.out.println(cle.toString());
-		            if(true)
-		            	continue;
-		            boolean found = false;
-		            for(LinkedList<CombatLogEntry> group : grouped_cles){
-		            	CombatLogEntry group_entry = group.get(0);
-		            	if(shouldGroupCLEs(cle, group_entry)){
-		            		group.add(cle);
-		            		found = true;
-		            	}
-		            }
-		            if(!found){
-		            	LinkedList<CombatLogEntry> new_group = new LinkedList<CombatLogEntry>();
-		            	new_group.add(cle);
-		            	grouped_cles.add(new_group);
-		            }
-				}
-				 for (LinkedList<CombatLogEntry> group : grouped_cles) {
-					 CombatLogEntry firstEntry = group.get(0);
-		             //System.out.println("Times replay "+match.getReplayTime()+" game "+match.getGameTime()+" raw "+cle.getTimestampRaw()+" timestamp "+cle.getTimestamp());
-					 //System.out.println("Group size "+group.size()+" "+firstEntry.getType()+" "+firstEntry.getTargetName());
-					 if(group.size() == 1){
-						 Event e = new Event();
-						 CombatLogEntry cle = firstEntry;
-						 switch(firstEntry.getType()) {
-						 	case 0:
-				            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
-				                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
-				                 e.action = cle.getInflictorName();
-				                 e.value = cle.getValue();
-				                 break;
-						 	case 1:
-				            	//Heal
-				            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
-				                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
-				                 e.action = cle.getInflictorName();
-				                 e.value = cle.getValue();
-				                 break;
-				             case 2:
-				            	 //Buff add
-				            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
-				                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
-				                 e.action = cle.getInflictorName();
-				                 //e.value = cle.getValue();
-				                 
-				                 break;
-				             case 3:
-				            	 //Buff loss
-				            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
-				                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
-				                 e.action = cle.getInflictorName();
-				                 //e.value = cle.getValue();
-				                 break;
-				             case 4:
-				            	 //unit Kill
-				            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
-				                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
-				                 //e.action = cle.getInflictorName();
-				                 //e.value = cle.getValue();
-				                 break;
-				             case 5:
-				            	 //Ability use
-				            	 e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
-				                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
-				                 e.action = ConstantMapper.abilityName(cle.getInflictorName());
-				                 //e.value = cle.getValue();
-				            	 break;
-				             case 6:
-				            	 //Item use
-				            	 e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
-				                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
-				                 e.action = ConstantMapper.itemName(cle.getInflictorName());
-				                 //e.value = cle.getValue();
-				            	 break;
-				             case 8:
-				            	 //Gold gain
-				            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle.isAttackerIllusion());
-				                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
-				                 //e.action = cle.getInflictorName();
-				                 e.value = cle.getValue();
-			
-				            	 break;
-				             case 9:
-				            	 //Gamestate change
-				            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle.isAttackerIllusion());
-				                 //e.affected_unit = findUnit(cle.getTargetName(), cle.isTargetIllusion());
-				                 //e.action = cle.getInflictorName();
-				                 e.value = cle.getValue();
-				            	 break;
-				             case 10:
-				            	 //EXP gain
-				            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle.isAttackerIllusion());
-				                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
-				                 //e.action = cle.getInflictorName();
-				                 e.value = cle.getValue();
-				            	 break;
-				             case 11:
-				            	 //item purchase
-				            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle.isAttackerIllusion());
-				                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
-				                 //e.action = cle.getInflictorName();
-				                 e.action = ConstantMapper.itemName(cle.getValueName());
-			
-				            	 break;
-				             default:
-				            	 System.out.format(MessageFormat.format("\nUNKNOWN: {0}\n", cle.toString()));
-				                 break;
-						 }
-					 }
-					 else{
-						 //System.out.println("Skipping group "+group.size());
-					 }
+		for (GameEvent g : currentMatch.getGameEvents()) {
+			 if (g.getEventId() != combatlog_descriptor.getEventId()) {
+				 //System.out.println("Strange event id "+g.getEventId()+" "+g.getName());
+				 continue;
+            }
+            CombatLogEntry cle = new CombatLogEntry(g);
+            //System.out.println(cle.toString());
+            if(true)
+            	continue;
+            boolean found = false;
+            for(LinkedList<CombatLogEntry> group : grouped_cles){
+            	CombatLogEntry group_entry = group.get(0);
+            	if(shouldGroupCLEs(cle, group_entry)){
+            		group.add(cle);
+            		found = true;
+            	}
+            }
+            if(!found){
+            	LinkedList<CombatLogEntry> new_group = new LinkedList<CombatLogEntry>();
+            	new_group.add(cle);
+            	grouped_cles.add(new_group);
+            }
+		}
+		 for (LinkedList<CombatLogEntry> group : grouped_cles) {
+			 CombatLogEntry firstEntry = group.get(0);
+             //System.out.println("Times replay "+match.getReplayTime()+" game "+match.getGameTime()+" raw "+cle.getTimestampRaw()+" timestamp "+cle.getTimestamp());
+			 //System.out.println("Group size "+group.size()+" "+firstEntry.getType()+" "+firstEntry.getTargetName());
+			 if(group.size() == 1){
+				 Event e = new Event();
+				 CombatLogEntry cle = firstEntry;
+				 switch(firstEntry.getType()) {
+				 	case 0:
+		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
+		                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 e.action = cle.getInflictorName();
+		                 e.value = cle.getValue();
+		                 break;
+				 	case 1:
+		            	//Heal
+		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
+		                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 e.action = cle.getInflictorName();
+		                 e.value = cle.getValue();
+		                 break;
+		             case 2:
+		            	 //Buff add
+		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
+		                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 e.action = cle.getInflictorName();
+		                 //e.value = cle.getValue();
+		                 
+		                 break;
+		             case 3:
+		            	 //Buff loss
+		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
+		                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 e.action = cle.getInflictorName();
+		                 //e.value = cle.getValue();
+		                 break;
+		             case 4:
+		            	 //unit Kill
+		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
+		                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 //e.action = cle.getInflictorName();
+		                 //e.value = cle.getValue();
+		                 break;
+		             case 5:
+		            	 //Ability use
+		            	 e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
+		                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 e.action = ConstantMapper.abilityName(cle.getInflictorName());
+		                 //e.value = cle.getValue();
+		            	 break;
+		             case 6:
+		            	 //Item use
+		            	 e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
+		                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 e.action = ConstantMapper.itemName(cle.getInflictorName());
+		                 //e.value = cle.getValue();
+		            	 break;
+		             case 8:
+		            	 //Gold gain
+		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle.isAttackerIllusion());
+		                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 //e.action = cle.getInflictorName();
+		                 e.value = cle.getValue();
+	
+		            	 break;
+		             case 9:
+		            	 //Gamestate change
+		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle.isAttackerIllusion());
+		                 //e.affected_unit = findUnit(cle.getTargetName(), cle.isTargetIllusion());
+		                 //e.action = cle.getInflictorName();
+		                 e.value = cle.getValue();
+		            	 break;
+		             case 10:
+		            	 //EXP gain
+		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle.isAttackerIllusion());
+		                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 //e.action = cle.getInflictorName();
+		                 e.value = cle.getValue();
+		            	 break;
+		             case 11:
+		            	 //item purchase
+		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle.isAttackerIllusion());
+		                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 //e.action = cle.getInflictorName();
+		                 e.action = ConstantMapper.itemName(cle.getValueName());
+	
+		            	 break;
+		             default:
+		            	 System.out.format(MessageFormat.format("\nUNKNOWN: {0}\n", cle.toString()));
+		                 break;
 				 }
+			 }
+			 else{
+				 //System.out.println("Skipping group "+group.size());
+			 }
+		 }
 	}
 	
 	private boolean shouldGroupCLEs(CombatLogEntry a, CombatLogEntry b){
@@ -565,12 +518,12 @@ public class Extraction {
 			}
 		}
 		
-		if(!units.containsKey(handle)){
+		if(!units.exists(handle)){
 		//	units.put(handle, new TrackedUnit(handle, ConstantMapper.unitName(combatlog_name)));
 			System.out.println("Reference to unknown unit?");
 		}
 		//System.out.println("Found unit");
-		return units.get(handle);
+		return null;//nullunits.getUnitID(handle);
 	}
 	
 	public void finish() {

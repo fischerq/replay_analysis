@@ -1,9 +1,9 @@
 package database;
 
+import java.util.List;
+
 public class Event {
-	public int type = -1;
-	public Unit acting_unit = null;
-	public Unit affected_unit = null;
-	public String action = "";
-	public double value = 0;
+	public double time;
+	public String type;
+	public List<EventArgumentInterface> arguments;
 }

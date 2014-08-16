@@ -99,11 +99,13 @@ public class TrackedUnit {
 		
 		if(created){
 			if(aliveNow && !aliveOld){
-				db.createEvent(replay.getReplayID(), Utils.getTime(match), "Spawn", 0, unitID, "");
+				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "Spawn");
+				db.addEventIntArgument(eventID, "Unit", unitID);
 				pushTimeSeries(match);
 			}
 			else if(!aliveNow && aliveOld){				
-				db.createEvent(replay.getReplayID(), Utils.getTime(match), "Death", 0, unitID, "");
+				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "Death");
+				db.addEventIntArgument(eventID, "Unit", unitID);
 				pushTimeSeries(match);
 			}
 			else if(aliveNow && aliveOld){
@@ -118,6 +120,7 @@ public class TrackedUnit {
 					lastWrittenNode.put("Control", dp);
 				}
 				updateTimeSeries(match, oldMatch);
+				checkVisibility(match, oldMatch);
 			}
 		}
 		else{
@@ -132,7 +135,8 @@ public class TrackedUnit {
 							controlID,
 							Utils.isIllusion(e),
 							replay.getReplayID());
-				db.createEvent(replay.getReplayID(), Utils.getTime(match), "Spawn", 0, unitID, "");
+				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "Spawn");
+				db.addEventIntArgument(eventID, "Unit", unitID);
 				creationTime = Utils.getTime(match);
 				ownerHandle = (Integer)e.getProperty("m_hOwnerEntity");
 				createTimeSeries(e);
@@ -140,6 +144,42 @@ public class TrackedUnit {
 			}
 		}
 		return true;
+	}
+	
+	private void checkVisibility(Match match, Match oldMatch){
+		int visibilityNow = match.getEntities().getByHandle(handle).getProperty("m_iTaggedAsVisibleByTeam");
+		int visibilityOld = oldMatch.getEntities().getByHandle(handle).getProperty("m_iTaggedAsVisibleByTeam");
+		boolean[] radiantVision = new boolean[2];
+		boolean[] direVision = new boolean[2];
+		radiantVision[0] = ((visibilityNow>>2) & 1) > 0;
+		radiantVision[1] = ((visibilityOld>>2) & 1) > 0;
+		direVision[0] = ((visibilityNow>>3) & 1) > 0;
+		direVision[1] = ((visibilityOld>>3) & 1) > 0;
+		if(radiantVision[0] && !radiantVision[1]){
+			System.out.println("radiant gained vision of "+unitID);
+			int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "VisionGain");
+			db.addEventIntArgument(eventID, "Side", Constants.sides.get("Radiant"));
+			db.addEventIntArgument(eventID, "Unit", unitID);
+		}
+		else if(!radiantVision[0] && radiantVision[1]){
+			System.out.println("radiant lost vision of "+unitID);
+			int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "VisionLoss");
+			db.addEventIntArgument(eventID, "Side", Constants.sides.get("Radiant"));
+			db.addEventIntArgument(eventID, "Unit", unitID);
+		}
+		if(direVision[0] && !direVision[1]){
+			System.out.println("dire gained vision of "+unitID);
+			int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "VisionGain");
+			db.addEventIntArgument(eventID, "Side", Constants.sides.get("Dire"));
+			db.addEventIntArgument(eventID, "Unit", unitID);
+		}
+		else if(!direVision[0] && direVision[1]){
+
+			System.out.println("dire lost vision of "+unitID);
+			int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "VisionLoss");
+			db.addEventIntArgument(eventID, "Side", Constants.sides.get("Dire"));
+			db.addEventIntArgument(eventID, "Unit", unitID);
+		}	
 	}
 	
 	private void createTimeSeries(Entity e){

@@ -7,6 +7,8 @@ import java.util.List;
 
 import javax.vecmath.Vector2f;
 
+import data_extraction.Animation;
+
 
 import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
@@ -24,6 +26,10 @@ public class Utils {
 	
 	public static boolean isIllusion(Entity e){
 		return e.getDtClass().getPropertyIndex("m_hReplicatingOtherHeroModel") != null && (Integer)e.getProperty("m_hReplicatingOtherHeroModel") != 2097151;
+	}
+	
+	public static boolean isAttack(Animation a){
+		return a.activity == 424 || a.activity == 425 || a.activity == 426;
 	}
 	
 	public static void setStartTime(double time){
