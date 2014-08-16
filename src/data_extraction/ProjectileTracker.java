@@ -48,7 +48,7 @@ public class ProjectileTracker {
 	
 	public void updateProjectiles(Match match){
 		StringTable particleEffectNames = match.getStringTables().forName("ParticleEffectNames");
-		for(Entity e : match.getTempEntities().tempEntities){
+		for(Entity e : match.getTempEntities().getAll()){
 			//Globals.countString(e.getDtClass().getDtName());
 			/*if(e.getDtClass().getDtName().equals("DT_TEEffectDispatch")){
 				System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+e.toString());//
@@ -105,7 +105,7 @@ public class ProjectileTracker {
 		//Process usermessages
 		for (UserMessage um : match.getUserMessages()) {
 			int eventID;
-			Globals.countString(um.getName());
+			//Globals.countString(um.getName());
 			switch(um.getName()){
 			case "CDOTAUserMsg_CreateLinearProjectile":
 				int entityHandle = match.getEntities().getByIndex((Integer)um.getProperty("entindex")).getHandle();

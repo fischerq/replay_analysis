@@ -268,6 +268,8 @@ public class Constants {
     public static final Map<String, Integer> teams;
     static {
         current_map = new HashMap<String, Integer>();
+		put("Unassigned");
+		put("Spectator");
         put("Neutral");
         put("Radiant");
         put("Dire");

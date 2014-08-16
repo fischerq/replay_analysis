@@ -156,26 +156,21 @@ public class TrackedUnit {
 		direVision[0] = ((visibilityNow>>3) & 1) > 0;
 		direVision[1] = ((visibilityOld>>3) & 1) > 0;
 		if(radiantVision[0] && !radiantVision[1]){
-			System.out.println("radiant gained vision of "+unitID);
 			int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "VisionGain");
 			db.addEventIntArgument(eventID, "Side", Constants.sides.get("Radiant"));
 			db.addEventIntArgument(eventID, "Unit", unitID);
 		}
 		else if(!radiantVision[0] && radiantVision[1]){
-			System.out.println("radiant lost vision of "+unitID);
 			int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "VisionLoss");
 			db.addEventIntArgument(eventID, "Side", Constants.sides.get("Radiant"));
 			db.addEventIntArgument(eventID, "Unit", unitID);
 		}
 		if(direVision[0] && !direVision[1]){
-			System.out.println("dire gained vision of "+unitID);
 			int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "VisionGain");
 			db.addEventIntArgument(eventID, "Side", Constants.sides.get("Dire"));
 			db.addEventIntArgument(eventID, "Unit", unitID);
 		}
 		else if(!direVision[0] && direVision[1]){
-
-			System.out.println("dire lost vision of "+unitID);
 			int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "VisionLoss");
 			db.addEventIntArgument(eventID, "Side", Constants.sides.get("Dire"));
 			db.addEventIntArgument(eventID, "Unit", unitID);

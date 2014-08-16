@@ -24,26 +24,16 @@ public class AnimationTracker {
 		stoppedAnimations.clear();
 		cancelledAnimations.clear();
 		castedAnimations.clear();
-		for(Entity e : match.getTempEntities().tempEntities){
+		for(Entity e : match.getTempEntities().getAll()){
 			if(e == null || !e.getDtClass().getDtName().equals("DT_TEUnitAnimation")&&!e.getDtClass().getDtName().equals("DT_TEUnitAnimationEnd") )
 				continue;
 			int handle = (Integer)e.getProperty("m_hEntity");
 			if(e.getDtClass().getDtName().equals("DT_TEUnitAnimation")){
-				if(currentAnimations.containsKey(handle))
-				{}//	System.out.println("Overriding Animation for "+handle);
-				/*if(e.getProperty("m_Activity")== null)
-					continue;*/
 				Animation new_anim = new Animation(e, match);
 				currentAnimations.put(handle, new_anim);
 				startedAnimations.add(new_anim);
-				if(new_anim.type == 0 && new_anim.activity == 436){
-					//System.out.println(ConstantMapper.formatTime(Utils.getTime(match))+" "+new_anim.entity.toString());
-					//Globals.countInt(new_anim.activity);
-				}
-					//System.out.println(new_anim.activity+" "+new_anim.entity.getDtClass().getDtName());
 			}
 			else if(e.getDtClass().getDtName().equals("DT_TEUnitAnimationEnd")){
-				//String time = "["+ (int)(match.getGameTime()/60)+":"+(int)(match.getGameTime()%60)+"."+(int)((match.getGameTime()*1000)%1000)+ "]";
 				//if(e.getProperty("m_bSnap")!=null &&(boolean)e.getProperty("m_bSnap"))
 				//	System.out.println("Snap: "+handle+" "+getAnimation(handle)+" "+castedActiveAnimations.get(handle));
 				if(castedActiveAnimations.containsKey(handle))
