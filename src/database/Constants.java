@@ -309,6 +309,7 @@ public class Constants {
         put("Target");
         put("Side");
         put("Player");
+        put("Cooldown");
         eventArguments = Collections.unmodifiableMap(current_map);
     }
     

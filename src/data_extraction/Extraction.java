@@ -30,7 +30,7 @@ public class Extraction {
 	private UnitTracker units;
 	private AnimationTracker animations;
 	private Set<Integer> attackingUnits;
-	private ProjectileTracker projectiles;
+	private StuffTracker projectiles;
 	//private Set<> rangedAttacks;
 	
 	private Match currentMatch = null;
@@ -46,7 +46,7 @@ public class Extraction {
 		units = new UnitTracker(replay, db);
 		animations = new AnimationTracker();
 
-		projectiles = new ProjectileTracker(replay, db, units);
+		projectiles = new StuffTracker(replay, db, units);
 		
 		attackingUnits = new HashSet<Integer>();
 	}
@@ -162,8 +162,8 @@ public class Extraction {
 			*/
 			if(!units.exists(a.entity.getHandle()))
 				continue;
-			if(a.activity == 438)
-				System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+a.entity.getDtClass().getDtName());
+			/*if(a.activity == 438)
+				System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+a.entity.getDtClass().getDtName());*/
 			if(a.activity != 0){
 				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "AnimationStart");
 				db.addEventIntArgument(eventID, "Unit", units.getUnitID(a.entity.getHandle()));

@@ -1,5 +1,7 @@
 package utils;
 
+import data_extraction.Globals;
+
 public class ConstantMapper {
 	
 	public static String heroName(int id){
@@ -1431,9 +1433,186 @@ public class ConstantMapper {
 			return "Shuriken Toss";
 		case "vengeful_magic_missle":
 			return "Magic Missile";
+			
+		case "error":
+			return "Error";
 		default:
 			System.out.println("Unknown particle-projectile: "+particleName);
 			return "Unknown";
+		}
+	}
+	
+	public enum ParticleType{
+		EffectEntity,
+		AffectedUnit,
+		Redundant,
+		Cosmetic,
+		Unknown
+	}
+	
+	public static ParticleType particleType(String particle){
+		switch(particle){
+		//Shadow Fiend
+		case "nevermore_necro_souls":
+		case "nevermore_souls":
+		case "nevermore_requiemofsouls":
+		case "nevermore_wings":
+			return ParticleType.Redundant;
+		case "nevermore_shadowraze":
+			return ParticleType.EffectEntity;
+			
+			//Bounty Hunter
+		case "bounty_hunter_windwalk":
+		case "bounty_hunter_track_cast":
+		case "bounty_hunter_track_Shield":
+		case "bounty_hunter_track_trail":
+		case "bounty_hunter_track_haste":
+			return ParticleType.Redundant;
+		case "bounty_hunter_hand_R_local":
+		case "bounty_hunter_hand_L_local":
+			return ParticleType.Cosmetic;
+			
+		//Nature's Prophet
+		case "furion_force_of_nature_cast":
+		case "furion_wrath_of_nature_cast":
+			return ParticleType.Redundant;
+		case "furion_wrath_of_nature_start":
+		case "furion_wrath_of_nature":
+			return ParticleType.AffectedUnit;
+		case "Furion_Sprout":
+		case "furion_teleport":
+		case "furion_teleport_end_team":
+			return ParticleType.EffectEntity;
+			
+		//Sand King
+		case "sandking_caustic_finale_debuff":
+		case "sandking_sandstorm":
+			return ParticleType.Redundant;
+		case "sandking_caustic_finale_explode":
+		case "sandking_epicenter_tell":
+		case "sandking_epicenter":
+		case "sandking_burrowstrike":
+			return ParticleType.EffectEntity;
+			
+		//Vengeful Spirit
+		case "vengeful_negative_aura":
+		case "vengeful_nether_swap":
+		case "vengeful_nether_swap_target":
+			return ParticleType.Redundant;
+			
+		//Dragon Knight
+		case "dragon_knight_dragon_tail_knightform_iron_dragon":
+		case "dragon_knight_dragon_tail_dragonform_iron_dragon":
+		case "dragon_knight_transform_green":
+		case "dragon_knight_transform_red":
+		case "dragon_knight_transform_blue":
+			return ParticleType.Redundant;
+			
+		//Mirana
+		case "mirana_starfall_attack":
+			return ParticleType.AffectedUnit;
+		case "mirana_moonlight_cast":
+		case "mirana_moonlight_recipient":
+		case "mirana_starfall_moonray":
+		case "mirana_spell_arrow_fx":
+			return ParticleType.Redundant;
+			
+		//Zeus		
+		case "zuus_lightning_bolt_start":
+		case "zuus_thundergods_wrath_start":
+			return ParticleType.Redundant;
+		case "zuus_lightning_bolt":
+			return ParticleType.EffectEntity;
+		case "zuus_arc_lightning_head":
+		case "zuus_arc_lightning":
+		case "zuus_static_field":
+		case "zuus_thundergods_wrath":
+			return ParticleType.AffectedUnit;
+					
+		//Windranger
+		case "windrunner_shackleshot_single":
+			return ParticleType.Redundant;
+		case "windrunner_shackleshot_pair":
+		case "windrunner_shackleshot_pair_tree":
+			return ParticleType.AffectedUnit;
+			
+		//Viper
+		case "viper_viper_strike_warmup":
+		case "viper_viper_strike_beam":
+			return ParticleType.Redundant;
+			
+		//Heroes
+		case "death_tombstone":
+			return ParticleType.AffectedUnit;
+		case "hero_levelup":
+		case "respawn":
+		case "illusion_created":
+		case "illusion_killed":
+		case "aegis_respawn_timer":
+			return ParticleType.Redundant;
+		
+		//Ambient
+		case "dropped_item":
+		case "dropped_dust":
+			return ParticleType.EffectEntity;
+		case "aegis_timer":
+		case "roshan_timer":
+		case "building_damage_minor":
+		case "building_damage_major":
+			return ParticleType.Redundant;
+			
+		//Neutrals
+		case "neutral_centaur_khan_war_stomp":
+			return ParticleType.EffectEntity;
+			
+		//General:
+		case "immunity_sphere":
+		case "generic_manaburn":
+		case "generic_minibash":
+		case "chain_lightning":
+			return ParticleType.AffectedUnit;
+			
+		//Items
+		case "teleport_start":
+		case "teleport_start_ti4":
+		case "dust_of_appearance":
+		case "dust_of_appearance_debuff":
+		case "smoke_of_deceit":
+		case "magic_stick":
+		case "magic_wand":
+		case "refresher":
+		case "veil_of_discord":
+		case "necronomicon_spawn":
+		case "necronomicon_spawn_warrior":
+		case "necronomicon_warrior_last_will":
+		case "necronomicon_archer_manaburn":
+		case "necronomicon_true_sight":
+		case "pipe_of_insight_launch":
+		case "pipe_of_insight":
+		case "ward_spawn_generic":
+		case "arcane_boots":
+		case "blink_dagger_start":
+		case "blink_dagger_start_ti4":
+			return ParticleType.Redundant;
+			
+		case "blink_dagger_end":
+		case "blink_dagger_end_ti4":
+		case "teleport_end":
+		case "teleport_end_ti4":
+			return ParticleType.EffectEntity;
+			
+		case "orchid_pop":
+		case "arcane_boots_recipient":
+		case "ethereal_blade":
+			return ParticleType.AffectedUnit;
+			
+		case "":
+			return ParticleType.Unknown;
+		
+		default:
+			//System.out.println("Unhandled particle "+particle);
+			Globals.countString(particle);
+			return ParticleType.Unknown;
 		}
 	}
 }

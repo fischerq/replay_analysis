@@ -29,10 +29,10 @@ public class UnitTracker {
 		wrotePlayers = false;
 		
 		trackedClasses = new HashSet<String>();
-		for(String unit : Constants.unitTypes.keySet()){
+		/*for(String unit : Constants.unitTypes.keySet()){
 			trackedClasses.add(ConstantMapper.DTClassForName(unit));
-		}
-		//trackedClasses.add(ConstantMapper.DTClassForName("Zeus"));
+		}*/
+		trackedClasses.add(ConstantMapper.DTClassForName("Zeus"));
 		//trackedClasses.add(ConstantMapper.DTClassForName("Nature's Prophet"));
 		//trackedClasses.add(ConstantMapper.DTClassForName("Radiant Siege Creep"));
 		
