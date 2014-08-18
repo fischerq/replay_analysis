@@ -1611,7 +1611,7 @@ public class ConstantMapper {
 		
 		default:
 			//System.out.println("Unhandled particle "+particle);
-			Globals.countString(particle);
+			//Globals.countString(particle);
 			return ParticleType.Unknown;
 		}
 	}

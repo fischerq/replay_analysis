@@ -9,6 +9,8 @@ import com.almworks.sqlite4java.SQLiteConnection;
 import com.almworks.sqlite4java.SQLiteException;
 import com.almworks.sqlite4java.SQLiteStatement;
 
+import database.Unit.UnitSummary;
+
 public class Database {
 	private SQLiteConnection db;
 	private SQLiteStatement insertReplay = null;
@@ -23,9 +25,18 @@ public class Database {
 	private SQLiteStatement insertTextArgument = null;
 	private SQLiteStatement insertEventCausality = null;
 	
+	private SQLiteStatement getReplays = null;
+	private SQLiteStatement getTeams = null;
+	private SQLiteStatement getPlayers = null;
+	private SQLiteStatement getUnits = null;
 	private SQLiteStatement getUnit = null;
 	private SQLiteStatement getTimeSeries = null;
 	private SQLiteStatement getNodes = null;
+	private SQLiteStatement getEvents = null;
+	private SQLiteStatement getIntArguments = null;
+	private SQLiteStatement getRealArguments = null;
+	private SQLiteStatement getTextArguments = null;
+	
 	
 	
 	public Database(String file, boolean write){
@@ -59,9 +70,19 @@ public class Database {
 
 	private void open_read(){
 		try{
-			getUnit = db.prepare("SELECT UnitTypeMap.name, team, controlled_by_player, illusion FROM Units, UnitTypeMap WHERE Units.type = UnitTypeMap.type_id AND unit_id = ?;");
+			getReplays = db.prepare("SELECT replay_id FROM Replays;");
+			getTeams = db.prepare("SELECT team_id, Teams.name, tag, SideMap.name AS side FROM Teams, SideMap WHERE Teams.side = SideMap.side_id AND Teams.replay_id = ?;");
+			getPlayers = db.prepare("SELECT player_id, Players.name, UnitTypeMap.name AS hero FROM Players, UnitTypeMap WHERE Players.hero = UnitTypeMap.type_id AND Players.team_id = ?;");
+			getUnits = db.prepare("SELECT unit_id, UnitTypeMap.name, team, controlled_by_player, illusion FROM Units, UnitTypeMap WHERE Units.type = UnitTypeMap.type_id AND Units.replay_id = ?;");
+			getUnit = db.prepare("SELECT UnitTypeMap.name, team, controlled_by_player, illusion FROM Units, UnitTypeMap WHERE Units.type = UnitTypeMap.type_id AND Units.unit_id = ?;");
 			getTimeSeries = db.prepare("SELECT timeseries_id, TimeSeriesTypeMap.name FROM TimeSeries, TimeSeriesTypeMap WHERE TimeSeries.type = TimeSeriesTypeMap.type_id  AND TimeSeries.unit_id = ?;");
 			getNodes = db.prepare("SELECT time, value FROM TimeSeriesNodes WHERE timeseries_id = ? ORDER BY time;");
+			getEvents = db.prepare("SELECT event_id, time, EventTypeMap.name FROM Events, EventTypeMap WHERE Events.type = EventTYpeMap.type_id AND Events.replay_id = ?;");
+			getIntArguments = db.prepare("SELECT EventArgumentMap.name AS argument, value FROM EventIntArguments, EventArgumentMap WHERE EventIntArguments.argument = EventArgumentMap.argument_id AND EventIntArguments.event_id = ?;");
+			getRealArguments = db.prepare("SELECT EventArgumentMap.name AS argument, value FROM EventRealArguments, EventArgumentMap WHERE EventRealArguments.argument = EventArgumentMap.argument_id AND EventRealArguments.event_id = ?;");
+			getTextArguments = db.prepare("SELECT EventArgumentMap.name AS argument, value FROM EventTextArguments, EventArgumentMap WHERE EventTextArguments.argument = EventArgumentMap.argument_id AND EventTextArguments.event_id = ?;");
+
+			
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 		}
@@ -72,7 +93,7 @@ public class Database {
 	    try {
 			db.exec("BEGIN TRANSACTION;");
 
-	    	db.exec("CREATE TABLE IF NOT EXISTS Replays (id integer primary key);");
+	    	db.exec("CREATE TABLE IF NOT EXISTS Replays (replay_id integer primary key);");
 	    	db.exec("CREATE TABLE IF NOT EXISTS Teams (team_id integer primary key, name text, tag text, side integer, replay_id integer);");
 	    	db.exec("CREATE TABLE IF NOT EXISTS SideMap (side_id integer primary key, name text);");
 	    	writeConstants(db.prepare("INSERT OR IGNORE INTO SideMap(side_id, name) VALUES(?, ?);"), Constants.sides);
@@ -116,7 +137,7 @@ public class Database {
 		}
 	    
 		try {
-			insertReplay = db.prepare("INSERT INTO Replays(id) VALUES(?);");
+			insertReplay = db.prepare("INSERT INTO Replays(replay_id) VALUES(?);");
 			insertTeam = db.prepare("INSERT INTO Teams(name, tag, side, replay_id) VALUES(?, ?, ?, ?);");
 			insertPlayer = db.prepare("INSERT INTO Players(name, hero, team_id) VALUES(?, ?, ?);");
 			insertUnit = db.prepare("INSERT INTO Units(type, team, controlled_by_player, illusion, replay_id) VALUES(?, ?, ?, ?, ?);");
@@ -295,7 +316,7 @@ public class Database {
 		SQLiteStatement getReplay;
 		boolean result = false;
 		try {
-			getReplay = db.prepare("SELECT * FROM Replays WHERE id =?;");
+			getReplay = db.prepare("SELECT * FROM Replays WHERE replay_id =?;");
 			getReplay.bind(1, id);
 			result = getReplay.step();
 			getReplay.dispose();
@@ -321,7 +342,55 @@ public class Database {
 		stopTransaction();
 	}
 	
-	public Unit getUnit(int id){
+	public List<Integer> getReplays(){
+		List<Integer> replays = new LinkedList<Integer>();
+		try {
+			while(getReplays.step()){
+				replays.add(getReplays.columnInt(0));
+			}
+			getReplays.reset();
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}
+		return replays;
+	}
+	
+	public Replay getReplay(int id){
+		List<Team> teams = new LinkedList<Team>();
+		try {
+			getTeams.bind(1, id);
+			while(getTeams.step()){
+				int teamID = getTeams.columnInt(0);
+				List<Player> players = new LinkedList<Player>();
+				getPlayers.bind(1, teamID);
+				while(getPlayers.step()){
+					players.add(new Player(getPlayers.columnInt(0), getPlayers.columnString(1), getPlayers.columnString(2)));
+				}
+				getPlayers.reset();
+				teams.add(new Team(teamID, getTeams.columnString(1), getTeams.columnString(2), getTeams.columnString(3), players));
+			}
+			getTeams.reset();
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}
+		return new Replay(id, teams);
+	}
+	
+	public List<UnitSummary> getUnits(Replay replay){
+		List<UnitSummary> units = new LinkedList<UnitSummary>();
+		try {
+			getUnits.bind(1, replay.id);
+			while(getUnits.step()){
+				units.add(new UnitSummary(getUnits.columnInt(0), getUnits.columnString(1), getUnits.columnInt(2), getUnits.columnInt(3), getUnits.columnInt(4)==1));
+			}
+			getUnits.reset();
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}		
+		return units;
+	}
+	
+	public Unit getUnit(int id, Replay replay){
 		try {
 			getUnit.bind(1, id);
 			getUnit.step();
@@ -346,10 +415,42 @@ public class Database {
 			}
 			getTimeSeries.reset();
 			
-			return new Unit(unitType, null, null, illusion, timeSeries);
+			return new Unit(unitType, replay.teamByIndex.get(team), controlledByPlayer == 0?null:replay.playerByIndex.get(controlledByPlayer), illusion, timeSeries);
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	public List<Event> getEvents(Replay replay){
+		List<Event> events = new LinkedList<Event>();
+		try {
+			getEvents.bind(1, replay.id);
+			while(getEvents.step()){
+				int eventID = getEvents.columnInt(0);
+				List<EventArgumentInterface> arguments =  new  LinkedList<EventArgumentInterface>();
+				
+				getIntArguments.bind(1, eventID);
+				while(getIntArguments.step())
+					arguments.add(new EventArgument<Integer>(getIntArguments.columnString(0), getIntArguments.columnInt(1)));
+				getIntArguments.reset();
+				
+				getRealArguments.bind(1, eventID);
+				while(getRealArguments.step())
+					arguments.add(new EventArgument<Double>(getRealArguments.columnString(0), getRealArguments.columnDouble(1)));
+				getRealArguments.reset();
+				
+				getTextArguments.bind(1, eventID);
+				while(getTextArguments.step())
+					arguments.add(new EventArgument<String>(getTextArguments.columnString(0), getTextArguments.columnString(1)));
+				getTextArguments.reset();
+				
+				events.add(new Event(getEvents.columnDouble(1), getEvents.columnString(2), arguments));
+			}
+			getEvents.reset();
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+		}
+		return events;
 	}
 }

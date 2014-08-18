@@ -16,4 +16,20 @@ public class Unit {
 		illusion = i;
 		timeSeries = ts;
 	}
+	
+	public static class UnitSummary{
+		public int index;
+		public String type;
+		public int teamIndex;
+		public int controlledByPlayerIndex;
+		public boolean illusion;	
+		
+		public UnitSummary(int index, String type, int teamIndex, int controlIndex, boolean illusion){
+			this.index = index;
+			this.type = type;
+			this.teamIndex = teamIndex;
+			this.controlledByPlayerIndex = controlIndex;
+			this.illusion = illusion;
+		}
+	}
 }

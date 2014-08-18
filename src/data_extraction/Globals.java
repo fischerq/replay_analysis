@@ -5,9 +5,10 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class Globals {
-	public static Map<Integer, TreeMap<String, Integer>> found_unit_names = new HashMap<Integer, TreeMap<String, Integer>>();
-	public static Map<Integer, Integer> foundInts = new HashMap<Integer, Integer>();
-	public static Map<String, Integer> foundStrings = new HashMap<String, Integer>();
+	public static Map<Integer, TreeMap<String, Integer>> found_unit_names = new TreeMap<Integer, TreeMap<String, Integer>>();
+	public static Map<Integer, Integer> foundInts = new TreeMap<Integer, Integer>();
+	public static Map<String, Integer> foundStrings = new TreeMap<String, Integer>();
+	public static int counter = 0;
 	
 	public static void countString(String string){
 		if(foundStrings.containsKey(string))
@@ -22,6 +23,15 @@ public class Globals {
 			foundInts.put(percent, 1);
 	}
 	
+ 	public static void count(){
+ 		counter++;
+ 	}
+ 	
+ 	public static void printCounter(){
+ 		System.out.println("Counter: "+counter);
+ 	}
+ 	
+ 	
 	public static void printCountedInts(){
 		for(Map.Entry<Integer, Integer> e : foundInts.entrySet()){
 			System.out.println(e.getKey()+": "+e.getValue());

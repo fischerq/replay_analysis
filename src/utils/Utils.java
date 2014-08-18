@@ -84,4 +84,26 @@ public class Utils {
 	    
 	    return results;	    
 	}
+	
+	public static List<String> findFiles(File root, String extension)
+	{
+		List<String> results = new LinkedList<String>();
+		
+	    File[] files = root.listFiles(); 
+	    if(files == null)
+	    	return results;
+	    
+	    for (File file : files) {
+	        if (file.isFile()) {
+	            if(file.getName().endsWith(extension))
+	            {
+	            	results.add(file.getAbsolutePath());
+	            }
+	        } else if (file.isDirectory()) {
+	            results.addAll(findFiles(file, extension));
+	        }
+	    }
+	    
+	    return results;	    
+	}
 }

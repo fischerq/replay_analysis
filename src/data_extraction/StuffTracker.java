@@ -24,7 +24,7 @@ public class StuffTracker {
 	private Map<Integer, Projectile> currentTrackingProjectiles;
 	private Map<Integer, Projectile> currentAttacks;
 	//private Map<Integer, Effect> unitEffects;
-	private Map<Integer, Effect> currentParticles;
+	private Map<Integer, Particle> currentParticles;
 	
 	
 	private int nextIndex;
@@ -37,6 +37,7 @@ public class StuffTracker {
 		currentLinearProjectiles = new HashMap<Integer, Projectile>();
 		currentTrackingProjectiles = new HashMap<Integer, Projectile>();
 		currentAttacks = new HashMap<Integer, Projectile>();
+		currentParticles = new HashMap<Integer, Particle>();
 		nextIndex = 0;
 	}
 	
@@ -49,11 +50,11 @@ public class StuffTracker {
 	public void updateProjectiles(Match match){
 		StringTable particleEffectNames = match.getStringTables().forName("ParticleEffectNames");
 		for(Entity e : match.getTempEntities().getAll()){
-			//Globals.countString(e.getDtClass().getDtName());
 			/*if(e.getDtClass().getDtName().equals("DT_TEEffectDispatch")){
-				System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+e.toString());//
+				System.out.println(ConstantMapper.formatTime(Utils.getTime(match))+" "+e.toString());
 			//if(e.getDtClass().getPropertyIndex("m_EffectData.m_iEffectName") != null)
-				System.out.println(currentMatch.getStringTables().forName("EffectDispatch").getNameByIndex((Integer)e.getProperty("m_EffectData.m_iEffectName")));
+				System.out.println(match.getStringTables().forName("EffectDispatch").getNameByIndex((Integer)e.getProperty("m_EffectData.m_iEffectName")));
+				System.out.println(match.getEntities().getByIndex((Integer)e.getProperty("m_EffectData.entindex")).getDtClass().getDtName());
 			}*/
 			if(e.getDtClass().getDtName().equals("DT_TEDOTAProjectile")){
 				//System.out.println(e.toString());
@@ -72,7 +73,6 @@ public class StuffTracker {
 				if(e.getProperty("m_iParticleSystem") != null)
 					projectileName = ConstantMapper.projectileForParticle(particleEffectNames.getNameByIndex((int)e.getProperty("m_iParticleSystem")));
 				else{
-					//TODO map to attack
 					isAttack = true;
 					projectileName = "Attack";
 					//System.out.println(match.getTempEntities().tempEntities.size());
@@ -150,7 +150,7 @@ public class StuffTracker {
 			case "CDOTAUserMsg_ParticleManager":
 				//System.out.println("Particle "+um.toString());
 				int index = um.getProperty("index");
-
+				Globals.countString((String)um.getProperty("type"));
 				switch((String)um.getProperty("type")){
 				case "DOTA_PARTICLE_MANAGER_EVENT_CREATE"://LOTS
 					UserMessage create = (UserMessage)um.getProperty("create_particle");
@@ -168,15 +168,26 @@ public class StuffTracker {
 					ParticleType type = ConstantMapper.particleType(particleName);
 					if(handleParticle(type))
 						handleEffect(type, um);
-//					currentParticles.put(index, new Particle());
+					currentParticles.put(index, new Particle(create));
+					Globals.countInt(index);
+					Globals.countInt(index);
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_UPDATE"://LOTS
+					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_UPDATE_ENT"://LOTS
+					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_UPDATE_ORIENTATION":
+					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_SHOULD_DRAW":
+					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_DESTROY_INVOLVING":
+					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_DESTROY":
+					//System.out.println("Release "+um);
+					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_RELEASE"://LOTS
+					currentParticles.remove(index);
+					Globals.countInt(index);
 					break;
 				default:
 					break;
