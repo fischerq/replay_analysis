@@ -254,6 +254,9 @@ public class Constants {
         put("TrackingProjectileHit");
         put("TrackingProjectileDodge");
 
+        put("PlayerClick");
+        put("Ping");
+        put("SelectUnits");
         eventTypes = Collections.unmodifiableMap(current_map);
     }
     
@@ -344,5 +347,23 @@ public class Constants {
 		put("Magic Missile");
         put("Unknown");
         projectiles = Collections.unmodifiableMap(current_map);
+    }
+    
+    public static final Map<String, Integer> clickTypes;
+    static {
+        current_map = new HashMap<String, Integer>();
+        put("MoveGround");
+        put("MoveUnit");
+        put("AttackGround");
+        put("AttackUnit");
+        put("CastGround");
+        put("CastUnit");
+        put("CastTree");
+        put("DropItem");
+        put("GiveItem");
+        put("PickupItem");
+        put("PickRune");
+        put("RepositionItem");
+        clickTypes = Collections.unmodifiableMap(current_map);
     }
 }

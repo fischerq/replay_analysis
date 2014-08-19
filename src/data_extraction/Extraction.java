@@ -530,5 +530,6 @@ public class Extraction {
 		//Globals.print_names();
 		Globals.printCountedInts();
 		Globals.printCountedStrings();
+		Globals.printCounter();
 	}
 }

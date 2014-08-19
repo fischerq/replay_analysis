@@ -3,16 +3,11 @@ package replay_analysis;
 import java.io.File;
 import java.util.List;
 
-import javax.swing.Icon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
-import utils.Statistics;
 import utils.Utils;
 import database.Database;
-import database.TimeSeries;
-import database.Unit;
-import db_viewer.DBSelectionWindow;
 import db_viewer.DatabaseWindow;
 
 public class DBViewer {

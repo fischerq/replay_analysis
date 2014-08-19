@@ -1615,4 +1615,36 @@ public class ConstantMapper {
 			return ParticleType.Unknown;
 		}
 	}
+	
+	public static String clickType(int orderType){
+		switch(orderType){
+		case 1:
+			return "MoveGround";
+		case 2:
+			return "MoveUnit";
+		case 3:
+			return "AttackGround";
+		case 4:
+			return "AttackUnit";
+		case 5:
+			return "CastGround";
+		case 6:
+			return "CastUnit";
+		case 7:
+		 	return "CastTree";
+		case 12:
+			return "DropItem";
+		case 13:
+			return "GiveItem";
+		case 14:
+			return "PickupItem";
+		case 15:
+			return "PickRune";
+		case 19:
+			return "RepositionItem";
+		default:
+			System.out.println("Unknown orderType "+orderType);
+			return "";
+		}
+	}
 }

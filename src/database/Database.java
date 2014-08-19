@@ -329,7 +329,7 @@ public class Database {
 	public void deleteReplay(int id){
 		startTransaction();
 		try {
-			db.exec("DELETE FROM Replays WHERE Replays.id ="+id+";");
+			db.exec("DELETE FROM Replays WHERE Replays.replay_id ="+id+";");
 			db.exec("DELETE FROM Players WHERE EXISTS (SELECT * FROM Teams WHERE Teams.replay_id ="+id+" AND Teams.team_id = Players.team_id);");
 			db.exec("DELETE FROM Teams WHERE replay_id ="+id+";");
 			db.exec("DELETE FROM TimeSeriesNodes WHERE EXISTS (SELECT * FROM Units, TimeSeries WHERE Units.replay_id = "+id+" AND Units.unit_id = TimeSeries.unit_id AND TimeSeriesNodes.timeseries_id = TimeSeries.timeseries_id );");

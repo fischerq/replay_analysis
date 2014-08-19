@@ -25,9 +25,11 @@ public class StuffTracker {
 	private Map<Integer, Projectile> currentAttacks;
 	//private Map<Integer, Effect> unitEffects;
 	private Map<Integer, Particle> currentParticles;
+	private Map<Integer, OverheadEvent> overheadEvents;
 	
 	
 	private int nextIndex;
+	
 	
 	public StuffTracker(ReplayData replay, Database db, UnitTracker units){
 		this.db = db;
@@ -38,7 +40,9 @@ public class StuffTracker {
 		currentTrackingProjectiles = new HashMap<Integer, Projectile>();
 		currentAttacks = new HashMap<Integer, Projectile>();
 		currentParticles = new HashMap<Integer, Particle>();
+		overheadEvents = new HashMap<Integer, OverheadEvent>();
 		nextIndex = 0;
+		
 	}
 	
 	private int getProjectileIndex(){
@@ -48,6 +52,11 @@ public class StuffTracker {
 	}
 	
 	public void updateProjectiles(Match match){
+		//Update existing projectiles
+		
+		
+		
+		
 		StringTable particleEffectNames = match.getStringTables().forName("ParticleEffectNames");
 		for(Entity e : match.getTempEntities().getAll()){
 			/*if(e.getDtClass().getDtName().equals("DT_TEEffectDispatch")){
@@ -70,8 +79,11 @@ public class StuffTracker {
 				//System.out.println(" to "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hTarget")).getDtClass().getDtName());
 				String projectileName = "";
 				boolean isAttack = false;
-				if(e.getProperty("m_iParticleSystem") != null)
+				if(e.getProperty("m_iParticleSystem") != null){
 					projectileName = ConstantMapper.projectileForParticle(particleEffectNames.getNameByIndex((int)e.getProperty("m_iParticleSystem")));
+					Globals.countInt((int)e.getProperty("m_iParticleSystem"));
+
+				}
 				else{
 					isAttack = true;
 					projectileName = "Attack";
@@ -126,6 +138,7 @@ public class StuffTracker {
 				db.addEventRealArgument(eventID, "VelocityX", (Float)velocity.getProperty("x"));
 				db.addEventRealArgument(eventID, "VelocityY", (Float)velocity.getProperty("y"));
 				currentLinearProjectiles.put((Integer)um.getProperty("handle"), new Projectile(projectileIndex, 0));
+
 				break;
 			case "CDOTAUserMsg_DestroyLinearProjectile":
 				if(currentLinearProjectiles.containsKey((Integer)um.getProperty("handle"))){
@@ -147,10 +160,16 @@ public class StuffTracker {
 						db.addEventIntArgument(eventID, "Unit", 0);
 				}
 				break;
+			case "CDOTAUserMsg_OverheadEvent":
+				OverheadEvent ev = new OverheadEvent(um, match);
+				overheadEvents.put(ev.target_entity.getHandle(), ev);
+				break;
 			case "CDOTAUserMsg_ParticleManager":
 				//System.out.println("Particle "+um.toString());
 				int index = um.getProperty("index");
 				Globals.countString((String)um.getProperty("type"));
+
+				
 				switch((String)um.getProperty("type")){
 				case "DOTA_PARTICLE_MANAGER_EVENT_CREATE"://LOTS
 					UserMessage create = (UserMessage)um.getProperty("create_particle");
@@ -169,8 +188,8 @@ public class StuffTracker {
 					if(handleParticle(type))
 						handleEffect(type, um);
 					currentParticles.put(index, new Particle(create));
-					Globals.countInt(index);
-					Globals.countInt(index);
+					//Globals.countInt(index);
+					//Globals.countInt(index);
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_UPDATE"://LOTS
 					break;
@@ -179,6 +198,7 @@ public class StuffTracker {
 				case "DOTA_PARTICLE_MANAGER_EVENT_UPDATE_ORIENTATION":
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_SHOULD_DRAW":
+					//System.out.println(um.toString());
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_DESTROY_INVOLVING":
 					break;
@@ -187,12 +207,42 @@ public class StuffTracker {
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_RELEASE"://LOTS
 					currentParticles.remove(index);
-					Globals.countInt(index);
+					//Globals.countInt(index);
 					break;
 				default:
 					break;
 				}
 				
+				break;
+			case "CDOTAUserMsg_SpectatorPlayerClick":
+				int clickEventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "PlayerClick");
+				Entity player = match.getEntities().getByIndex((int)um.getProperty("entindex"));
+				db.addEventIntArgument(clickEventID, "Player", replay.getPlayerID((int)player.getProperty("m_iPlayerID")));
+				if(ConstantMapper.clickType((int)um.getProperty("order_type")).equals("")){
+					System.out.println(ConstantMapper.formatTime(Utils.getTime(match))+" "+um.toString()+" "/*+player.toString()*/);
+					if(player.getProperty("m_hAssignedHero")!= null)
+						System.out.println(match.getEntities().getByHandle((int)player.getProperty("m_hAssignedHero")).getDtClass().getDtName());
+					if(match.getEntities().getByHandle((int)player.getProperty("m_hViewEntity")) != null)
+						System.out.println(match.getEntities().getByHandle((int)player.getProperty("m_hViewEntity")).getDtClass().getDtName());
+					if(um.getProperty("target_index") != null && (int)um.getProperty("order_type")!= 7){
+						Entity target = match.getEntities().getByIndex((int)um.getProperty("target_index"));
+						if(target!= null)
+							System.out.println(target.getDtClass().getDtName());
+
+					}
+				}
+				String clickType = ConstantMapper.clickType((int)um.getProperty("order_type"));
+				db.addEventIntArgument(clickEventID, "Type", Constants.clickTypes.get(clickType));
+				if(um.getProperty("target_index") != null&& (int)um.getProperty("order_type")!= 7){
+					Entity target = match.getEntities().getByIndex((int)um.getProperty("target_index"));
+					if(units.getUnitID(target.getHandle()) != 0){
+						db.addEventIntArgument(clickEventID, "Target", units.getUnitID(target.getHandle()));
+					}
+						
+				}
+				else if((int)um.getProperty("order_type")== 7)
+					db.addEventIntArgument(clickEventID, "TreeTarget", (int)um.getProperty("target_index"));
+				//TODO add clicks to attack tagets to some tracker
 				break;
 			//if(um.getName() == )
 			}

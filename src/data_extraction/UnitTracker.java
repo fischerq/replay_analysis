@@ -62,6 +62,9 @@ public class UnitTracker {
 	}
 	
 	public int getUnitID(int handle){
-		return units.get(handle).getID();
+		if(units.containsKey(handle))
+			return units.get(handle).getID();
+		else
+			return 0;
 	}
 }
