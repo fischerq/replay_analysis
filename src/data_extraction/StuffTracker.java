@@ -1,12 +1,15 @@
 package data_extraction;
 
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
+
+
 
 
 import database.Constants;
 import database.Database;
-
 import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
 import skadistats.clarity.model.StringTable;
@@ -21,7 +24,7 @@ public class StuffTracker {
 	private UnitTracker units;
 	
 	private Map<Integer, Projectile> currentLinearProjectiles;
-	private Map<Integer, Projectile> currentTrackingProjectiles;
+	private Map<Integer, LinkedList<Projectile> > currentTrackingProjectiles;
 	private Map<Integer, Projectile> currentAttacks;
 	//private Map<Integer, Effect> unitEffects;
 	private Map<Integer, Particle> currentParticles;
@@ -37,7 +40,7 @@ public class StuffTracker {
 		this.units = units;
 		
 		currentLinearProjectiles = new HashMap<Integer, Projectile>();
-		currentTrackingProjectiles = new HashMap<Integer, Projectile>();
+		currentTrackingProjectiles = new HashMap<Integer, LinkedList<Projectile>>();
 		currentAttacks = new HashMap<Integer, Projectile>();
 		currentParticles = new HashMap<Integer, Particle>();
 		overheadEvents = new HashMap<Integer, OverheadEvent>();
@@ -51,7 +54,7 @@ public class StuffTracker {
 		return result;
 	}
 	
-	public void updateProjectiles(Match match){
+	public void updateProjectiles(Match match, Match oldMatch){
 		//Update existing projectiles
 		
 		
@@ -91,7 +94,7 @@ public class StuffTracker {
 //					System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hSource")).getDtClass().getDtName()+" to "+currentMatch.getEntities().getByHandle((int)e.getProperty("m_hTarget")).getDtClass().getDtName());
 				}
 				
-				Projectile newProjectile = new Projectile(getProjectileIndex(), (int)e.getProperty("m_hSource"));
+				Projectile newProjectile = new Projectile(getProjectileIndex(), e, match, db, replay);
 				if(!projectileName.equals("Error"))
 				{
 					int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "TrackingProjectileCreation");
@@ -105,19 +108,21 @@ public class StuffTracker {
 						db.addEventIntArgument(eventID, "Target", units.getUnitID((int)e.getProperty("m_hTarget")));
 					else
 						db.addEventIntArgument(eventID, "Target", 0);
-				}
-					currentTrackingProjectiles.put((int)e.getProperty("m_hTarget"), newProjectile);
+					int targetIndex = (int)e.getProperty("m_hTarget");
+					if(!currentTrackingProjectiles.containsKey(targetIndex))
+						currentTrackingProjectiles.put(targetIndex, new LinkedList<Projectile>());
+					currentTrackingProjectiles.get(targetIndex).add(newProjectile);
 				
-				if(e.getProperty("m_bIsAttack") != null || ConstantMapper.isAttackProjectile(projectileName) || isAttack){
-					currentAttacks.put((int)e.getProperty("m_hTarget"), newProjectile);
+					if(e.getProperty("m_bIsAttack") != null || ConstantMapper.isAttackProjectile(projectileName) || isAttack){
+						currentAttacks.put((int)e.getProperty("m_hTarget"), newProjectile);
+					}
 				}
-				
 			}
 		}
 		
 		//Process usermessages
 		for (UserMessage um : match.getUserMessages()) {
-			int eventID;
+
 			//Globals.countString(um.getName());
 			switch(um.getName()){
 			case "CDOTAUserMsg_CreateLinearProjectile":
@@ -126,7 +131,7 @@ public class StuffTracker {
 				UserMessage position = um.getProperty("origin");
 				UserMessage velocity =  um.getProperty("velocity");
 				int projectileIndex = getProjectileIndex();
-				eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "LinearProjectileCreation");
+				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "LinearProjectileCreation");
 				db.addEventIntArgument(eventID, "Index", projectileIndex);
 				if(units.exists(entityHandle))
 					db.addEventIntArgument(eventID, "Unit", units.getUnitID(entityHandle));
@@ -137,13 +142,13 @@ public class StuffTracker {
 				db.addEventRealArgument(eventID, "PositionY", (Float)position.getProperty("y"));
 				db.addEventRealArgument(eventID, "VelocityX", (Float)velocity.getProperty("x"));
 				db.addEventRealArgument(eventID, "VelocityY", (Float)velocity.getProperty("y"));
-				currentLinearProjectiles.put((Integer)um.getProperty("handle"), new Projectile(projectileIndex, 0));
+				currentLinearProjectiles.put((Integer)um.getProperty("handle"), new Projectile(projectileIndex, um, match));
 
 				break;
 			case "CDOTAUserMsg_DestroyLinearProjectile":
 				if(currentLinearProjectiles.containsKey((Integer)um.getProperty("handle"))){
-					eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "LinearProjectileRemoval");
-					db.addEventIntArgument(eventID, "Index", currentLinearProjectiles.get((Integer)um.getProperty("handle")).projectileIndex);
+					int destroyLinEventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "LinearProjectileRemoval");
+					db.addEventIntArgument(destroyLinEventID, "Index", currentLinearProjectiles.get((Integer)um.getProperty("handle")).projectileIndex);
 					currentLinearProjectiles.remove((Integer)um.getProperty("handle"));
 				}
 				else
@@ -152,12 +157,21 @@ public class StuffTracker {
 			case "CDOTAUserMsg_DodgeTrackingProjectiles":
 				int handle = match.getEntities().getByIndex((Integer)um.getProperty("entindex")).getHandle();
 				if(currentTrackingProjectiles.containsKey(handle)){
-					eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "TrackingProjectileDodge");
-					db.addEventIntArgument(eventID, "Index", currentTrackingProjectiles.get(handle).projectileIndex);
-					if(units.exists(handle))
-						db.addEventIntArgument(eventID, "Unit", units.getUnitID(handle));
-					else
-						db.addEventIntArgument(eventID, "Unit", 0);
+					int dodgeEventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "TrackingProjectileDodge");
+					Iterator<Projectile> it = currentTrackingProjectiles.get(handle).iterator();
+					while(it.hasNext()){
+						Projectile p = it.next();
+						if(p.dodgeable)
+						{
+							db.addEventIntArgument(dodgeEventID, "Index", p.projectileIndex);
+						
+							if(units.exists(handle))
+								db.addEventIntArgument(dodgeEventID, "Unit", units.getUnitID(handle));
+							else
+								db.addEventIntArgument(dodgeEventID, "Unit", 0);
+							it.remove();
+						}
+					}
 				}
 				break;
 			case "CDOTAUserMsg_OverheadEvent":
@@ -232,19 +246,31 @@ public class StuffTracker {
 					}
 				}
 				String clickType = ConstantMapper.clickType((int)um.getProperty("order_type"));
-				db.addEventIntArgument(clickEventID, "Type", Constants.clickTypes.get(clickType));
-				if(um.getProperty("target_index") != null&& (int)um.getProperty("order_type")!= 7){
+				db.addEventIntArgument(clickEventID, "ClickType", Constants.clickTypes.get(clickType));
+				if(um.getProperty("target_index") != null && (int)um.getProperty("order_type")!= 7){
 					Entity target = match.getEntities().getByIndex((int)um.getProperty("target_index"));
+					if(target == null){
+						target = oldMatch.getEntities().getByIndex((int)um.getProperty("target_index"));
+					}
 					if(units.getUnitID(target.getHandle()) != 0){
 						db.addEventIntArgument(clickEventID, "Target", units.getUnitID(target.getHandle()));
 					}
 						
 				}
 				else if((int)um.getProperty("order_type")== 7)
-					db.addEventIntArgument(clickEventID, "TreeTarget", (int)um.getProperty("target_index"));
+					db.addEventIntArgument(clickEventID, "Target", (int)um.getProperty("target_index"));
 				//TODO add clicks to attack tagets to some tracker
 				break;
 			//if(um.getName() == )
+			}
+		}
+		
+		for(LinkedList<Projectile> l : currentTrackingProjectiles.values()){
+			Iterator<Projectile> it = l.iterator();
+			while(it.hasNext()){
+				Projectile p = it.next();
+				if(!p.update(match, oldMatch))
+					it.remove();
 			}
 		}
 	}

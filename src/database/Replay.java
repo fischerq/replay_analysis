@@ -14,6 +14,7 @@ public class Replay {
 		this.id = id;
 		this.teams = teams;
 		playerByIndex = new TreeMap<Integer, Player>();
+		teamByIndex = new TreeMap<Integer, Team>();
 		for(Team t:teams){
 			teamByIndex.put(t.index, t);
 			for(Player p: t.players){

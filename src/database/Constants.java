@@ -253,6 +253,7 @@ public class Constants {
         put("TrackingProjectileCreation");
         put("TrackingProjectileHit");
         put("TrackingProjectileDodge");
+        put("TrackingProjectileExpiration");
 
         put("PlayerClick");
         put("Ping");
@@ -313,6 +314,7 @@ public class Constants {
         put("Side");
         put("Player");
         put("Cooldown");
+        put("ClickType");
         eventArguments = Collections.unmodifiableMap(current_map);
     }
     

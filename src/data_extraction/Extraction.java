@@ -34,7 +34,7 @@ public class Extraction {
 	//private Set<> rangedAttacks;
 	
 	private Match currentMatch = null;
-	private Match old_match = null;
+	private Match oldMatch = null;
 		
 	private static int attacker = 0;
 	private static int target = 1;
@@ -56,7 +56,7 @@ public class Extraction {
 
 		//System.out.println(ConstantMapper.formatTime(match.getReplayTime())+" Tick");
 		currentMatch = match;
-		old_match = matchOld;
+		oldMatch = matchOld;
 		
 		//if(true)
 		//	return;
@@ -206,7 +206,7 @@ public class Extraction {
 	}
 	
 	private void processProjectiles(){
-		projectiles.updateProjectiles(currentMatch);
+		projectiles.updateProjectiles(currentMatch, oldMatch);
 	}
 	
 	private void processCombatLog(){
@@ -226,8 +226,8 @@ public class Extraction {
             }
             CombatLogEntry cle = new CombatLogEntry(g);
             //System.out.println(cle.toString());
-            if(true)
-            	continue;
+            /*if(true)
+            	continue;*/
             boolean found = false;
             for(LinkedList<CombatLogEntry> group : grouped_cles){
             	CombatLogEntry group_entry = group.get(0);
@@ -251,22 +251,23 @@ public class Extraction {
 				 CombatLogEntry cle = firstEntry;
 				 switch(firstEntry.getType()) {
 				 	case 0:
-		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
-		                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+				 		//System.out.println(group.size()+" "+firstEntry.toString());
+		            	 //+e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
+		                 //+e.affected_unit = findUnit(cle.getTargetName(), cle, target);
 		                 e.action = cle.getInflictorName();
 		                 e.value = cle.getValue();
 		                 break;
 				 	case 1:
 		            	//Heal
-		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
-		                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		            	 //+e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
+		                 //+e.affected_unit = findUnit(cle.getTargetName(), cle, target);
 		                 e.action = cle.getInflictorName();
 		                 e.value = cle.getValue();
 		                 break;
 		             case 2:
 		            	 //Buff add
-		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
-		                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		            	 //+e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
+		                 //+e.affected_unit = findUnit(cle.getTargetName(), cle, target);
 		                 e.action = cle.getInflictorName();
 		                 //e.value = cle.getValue();
 		                 
@@ -274,27 +275,27 @@ public class Extraction {
 		             case 3:
 		            	 //Buff loss
 		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
-		                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 //+e.affected_unit = findUnit(cle.getTargetName(), cle, target);
 		                 e.action = cle.getInflictorName();
 		                 //e.value = cle.getValue();
 		                 break;
 		             case 4:
 		            	 //unit Kill
 		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
-		                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 //+e.affected_unit = findUnit(cle.getTargetName(), cle, target);
 		                 //e.action = cle.getInflictorName();
 		                 //e.value = cle.getValue();
 		                 break;
 		             case 5:
 		            	 //Ability use
-		            	 e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
-		                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		            	 //+e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
+		                 //+e.affected_unit = findUnit(cle.getTargetName(), cle, target);
 		                 e.action = ConstantMapper.abilityName(cle.getInflictorName());
 		                 //e.value = cle.getValue();
 		            	 break;
 		             case 6:
 		            	 //Item use
-		            	 e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
+		            	 //+e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
 		                 //e.affected_unit = findUnit(cle.getTargetName(), cle, target);
 		                 e.action = ConstantMapper.itemName(cle.getInflictorName());
 		                 //e.value = cle.getValue();
@@ -302,7 +303,7 @@ public class Extraction {
 		             case 8:
 		            	 //Gold gain
 		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle.isAttackerIllusion());
-		                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 //+e.affected_unit = findUnit(cle.getTargetName(), cle, target);
 		                 //e.action = cle.getInflictorName();
 		                 e.value = cle.getValue();
 	
@@ -317,14 +318,14 @@ public class Extraction {
 		             case 10:
 		            	 //EXP gain
 		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle.isAttackerIllusion());
-		                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 //+e.affected_unit = findUnit(cle.getTargetName(), cle, target);
 		                 //e.action = cle.getInflictorName();
 		                 e.value = cle.getValue();
 		            	 break;
 		             case 11:
 		            	 //item purchase
 		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle.isAttackerIllusion());
-		                 e.affected_unit = findUnit(cle.getTargetName(), cle, target);
+		                 //+e.affected_unit = findUnit(cle.getTargetName(), cle, target);
 		                 //e.action = cle.getInflictorName();
 		                 e.action = ConstantMapper.itemName(cle.getValueName());
 	
@@ -422,7 +423,7 @@ public class Extraction {
 					Iterator<Entity> candidate_it = candidates.iterator();
 					while(candidate_it.hasNext()){
 						Entity e = candidate_it.next();
-						Entity old = old_match.getEntities().getByHandle(e.getHandle());
+						Entity old = oldMatch.getEntities().getByHandle(e.getHandle());
 						//System.out.println(e.toString());
 						if(old == null)
 							continue;
@@ -480,7 +481,7 @@ public class Extraction {
 			case 4:
 				if(!isAttacker){
 					for(Entity e : candidates){
-						Entity old = old_match.getEntities().getByHandle(e.getHandle());
+						Entity old = oldMatch.getEntities().getByHandle(e.getHandle());
 						if(old == null){
 							System.out.println("Couldnt find old ent");							
 							continue;

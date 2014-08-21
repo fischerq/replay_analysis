@@ -3,6 +3,8 @@ package data_extraction;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.vecmath.Vector2f;
+
 import database.Constants;
 import database.Database;
 import skadistats.clarity.match.Match;
@@ -254,15 +256,15 @@ public class TrackedUnit {
 	private DataPoint getTimeSeriesValue(String type, Match match){
 		Entity e = match.getEntities().getByHandle(handle);
 		double time = Utils.getTime(match);
-		double[] position = null;
+		Vector2f position = null;
 		
 		switch(type){
 		case "PositionX":
 			position = Utils.getPosition(e);
-			return new DataPoint(time, position[0], Interval.rounded((int) position[0]));
+			return new DataPoint(time, position.x, Interval.rounded((int) position.x));
 		case "PositionY":
 			position = Utils.getPosition(e);
-			return new DataPoint(time, position[1], Interval.rounded((int) position[1]));
+			return new DataPoint(time, position.y, Interval.rounded((int) position.y));
 		case "Orientation":
 			double orientation = (Float)e.getProperty("m_angRotation[1]")/360.0;
 			return new DataPoint(time, orientation, new Interval(orientation, orientation));

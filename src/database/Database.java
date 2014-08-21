@@ -77,10 +77,10 @@ public class Database {
 			getUnit = db.prepare("SELECT UnitTypeMap.name, team, controlled_by_player, illusion FROM Units, UnitTypeMap WHERE Units.type = UnitTypeMap.type_id AND Units.unit_id = ?;");
 			getTimeSeries = db.prepare("SELECT timeseries_id, TimeSeriesTypeMap.name FROM TimeSeries, TimeSeriesTypeMap WHERE TimeSeries.type = TimeSeriesTypeMap.type_id  AND TimeSeries.unit_id = ?;");
 			getNodes = db.prepare("SELECT time, value FROM TimeSeriesNodes WHERE timeseries_id = ? ORDER BY time;");
-			getEvents = db.prepare("SELECT event_id, time, EventTypeMap.name FROM Events, EventTypeMap WHERE Events.type = EventTYpeMap.type_id AND Events.replay_id = ?;");
-			getIntArguments = db.prepare("SELECT EventArgumentMap.name AS argument, value FROM EventIntArguments, EventArgumentMap WHERE EventIntArguments.argument = EventArgumentMap.argument_id AND EventIntArguments.event_id = ?;");
-			getRealArguments = db.prepare("SELECT EventArgumentMap.name AS argument, value FROM EventRealArguments, EventArgumentMap WHERE EventRealArguments.argument = EventArgumentMap.argument_id AND EventRealArguments.event_id = ?;");
-			getTextArguments = db.prepare("SELECT EventArgumentMap.name AS argument, value FROM EventTextArguments, EventArgumentMap WHERE EventTextArguments.argument = EventArgumentMap.argument_id AND EventTextArguments.event_id = ?;");
+			getEvents = db.prepare("SELECT event_id, time, EventTypeMap.name FROM Events, EventTypeMap WHERE Events.type = EventTypeMap.type_id AND Events.replay_id = ? ORDER BY Events.event_id;");
+			getIntArguments = db.prepare("SELECT event_id, EventArgumentMap.name AS argument, value FROM EventIntArguments, EventArgumentMap WHERE EventIntArguments.argument = EventArgumentMap.argument_id AND EventIntArguments.event_id BETWEEN ? AND ?;");
+			getRealArguments = db.prepare("SELECT event_id, EventArgumentMap.name AS argument, value FROM EventRealArguments, EventArgumentMap WHERE EventRealArguments.argument = EventArgumentMap.argument_id AND EventRealArguments.event_id BETWEEN ? AND ?;");
+			getTextArguments = db.prepare("SELECT event_id, EventArgumentMap.name AS argument, value FROM EventTextArguments, EventArgumentMap WHERE EventTextArguments.argument = EventArgumentMap.argument_id AND EventTextArguments.event_id BETWEEN ? AND ?;");
 
 			
 		} catch (SQLiteException e) {
@@ -336,6 +336,11 @@ public class Database {
 			db.exec("DELETE FROM TimeSeries WHERE EXISTS (SELECT * FROM Units WHERE Units.replay_id ="+id+" AND TimeSeries.unit_id = Units.unit_id);");
 			db.exec("DELETE FROM Units WHERE replay_id ="+id+";");
 			db.exec("DELETE FROM Events WHERE replay_id ="+id+";");
+			db.exec("DELETE FROM EventIntArguments WHERE EXISTS (SELECT * FROM Events WHERE Events.replay_id ="+id+" AND EventIntArguments.event_id = Events.event_id);");
+			db.exec("DELETE FROM EventRealArguments WHERE EXISTS (SELECT * FROM Events WHERE Events.replay_id ="+id+" AND EventRealArguments.event_id = Events.event_id);");
+			db.exec("DELETE FROM EventTextArguments WHERE EXISTS (SELECT * FROM Events WHERE Events.replay_id ="+id+" AND EventTextArguments.event_id = Events.event_id);");
+			db.exec("DELETE FROM EventCausalities WHERE EXISTS (SELECT * FROM Events WHERE Events.replay_id ="+id+" AND EventCausalities.cause = Events.event_id);");
+
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 		}
@@ -426,27 +431,41 @@ public class Database {
 		List<Event> events = new LinkedList<Event>();
 		try {
 			getEvents.bind(1, replay.id);
+			int minID = -1;
+			int maxID = -1;
 			while(getEvents.step()){
 				int eventID = getEvents.columnInt(0);
+				if(minID == -1)
+					minID = eventID;
+				maxID = eventID;
 				List<EventArgumentInterface> arguments =  new  LinkedList<EventArgumentInterface>();
 				
-				getIntArguments.bind(1, eventID);
-				while(getIntArguments.step())
-					arguments.add(new EventArgument<Integer>(getIntArguments.columnString(0), getIntArguments.columnInt(1)));
-				getIntArguments.reset();
-				
-				getRealArguments.bind(1, eventID);
-				while(getRealArguments.step())
-					arguments.add(new EventArgument<Double>(getRealArguments.columnString(0), getRealArguments.columnDouble(1)));
-				getRealArguments.reset();
-				
-				getTextArguments.bind(1, eventID);
-				while(getTextArguments.step())
-					arguments.add(new EventArgument<String>(getTextArguments.columnString(0), getTextArguments.columnString(1)));
-				getTextArguments.reset();
-				
 				events.add(new Event(getEvents.columnDouble(1), getEvents.columnString(2), arguments));
+
 			}
+			System.out.println("got Events "+events.size());
+			getIntArguments.bind(1, minID);
+			getIntArguments.bind(2, maxID);
+			while(getIntArguments.step())
+				events.get(getIntArguments.columnInt(0)-minID).arguments.add(new EventArgument<Integer>(getIntArguments.columnString(1), getIntArguments.columnInt(2)));
+
+			getIntArguments.reset();
+			System.out.println("Got ints ");
+			
+			getRealArguments.bind(1, minID);
+			getRealArguments.bind(2, maxID);
+			while(getRealArguments.step())
+				events.get(getIntArguments.columnInt(0)-minID).arguments.add(new EventArgument<Double>(getRealArguments.columnString(1), getRealArguments.columnDouble(2)));
+			getRealArguments.reset();
+			System.out.println("Got reals ");
+			
+			getTextArguments.bind(1, minID);
+			getTextArguments.bind(2, maxID);
+			while(getTextArguments.step())
+				events.get(getIntArguments.columnInt(0)-minID).arguments.add(new EventArgument<String>(getTextArguments.columnString(1), getTextArguments.columnString(2)));
+			getTextArguments.reset();
+			System.out.println("Got texts ");
+			
 			getEvents.reset();
 		} catch (SQLiteException e) {
 			e.printStackTrace();
