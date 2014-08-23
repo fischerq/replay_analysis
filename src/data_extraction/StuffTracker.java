@@ -3,7 +3,9 @@ package data_extraction;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+
 
 
 
@@ -28,7 +30,8 @@ public class StuffTracker {
 	private Map<Integer, Projectile> currentAttacks;
 	private Map<Integer, LinkedList<Particle>> unitParticles;
 	private Map<Integer, Particle> effectEntities;
-	private Map<Integer, Particle> currentParticles;
+	private Map<Integer, Particle> activeParticles;
+	private Map<String, Particle> tickParticles;
 	private Map<Integer, OverheadEvent> overheadEvents;
 	
 	
@@ -45,8 +48,9 @@ public class StuffTracker {
 		currentAttacks = new HashMap<Integer, Projectile>();
 		unitParticles = new HashMap<Integer, LinkedList<Particle>>();
 		effectEntities = new HashMap<Integer, Particle>();
-		currentParticles = new HashMap<Integer, Particle>();
+		activeParticles = new HashMap<Integer, Particle>();
 		overheadEvents = new HashMap<Integer, OverheadEvent>();
+		tickParticles = new HashMap<String, Particle>();
 		nextIndex = 0;
 		
 	}
@@ -60,7 +64,7 @@ public class StuffTracker {
 	public void updateProjectiles(Match match, Match oldMatch){
 		//Update existing projectiles
 		
-		
+		tickParticles.clear();
 		
 		
 		StringTable particleEffectNames = match.getStringTables().forName("ParticleEffectNames");
@@ -71,6 +75,7 @@ public class StuffTracker {
 				System.out.println(match.getStringTables().forName("EffectDispatch").getNameByIndex((Integer)e.getProperty("m_EffectData.m_iEffectName")));
 				System.out.println(match.getEntities().getByIndex((Integer)e.getProperty("m_EffectData.entindex")).getDtClass().getDtName());
 			}*/
+			Globals.countString(e.getDtClass().getDtName());
 			if(e.getDtClass().getDtName().equals("DT_TEDOTAProjectile")){
 				//System.out.println(e.toString());
 
@@ -123,6 +128,9 @@ public class StuffTracker {
 						currentAttacks.put((int)e.getProperty("m_hTarget"), newProjectile);
 					}
 				}
+			}
+			else if(e.getDtClass().getDtName().equals("DT_TEDotaBloodImpact")){
+				//System.out.println("Blood Impact: "+e.toString());
 			}
 		}
 		
@@ -188,7 +196,7 @@ public class StuffTracker {
 				//System.out.println("Particle "+um.toString());
 				int index = um.getProperty("index");
 				Globals.countString((String)um.getProperty("type"));
-
+				//System.out.println(ConstantMapper.formatTime(Utils.getTime(match))+" "+index+" "+(String)um.getProperty("type"));
 				
 				switch((String)um.getProperty("type")){
 				case "DOTA_PARTICLE_MANAGER_EVENT_CREATE"://LOTS
@@ -204,32 +212,33 @@ public class StuffTracker {
 					else
 						System.out.println("No entity");
 					 */
-					ParticleType type = ConstantMapper.particleType(createdParticleName);
+
 					Particle particle = new Particle(um, match);
-					currentParticles.put(index, particle);
-					if(handleParticle(type))
-						handleEffect(type, particle, match);
+					activeParticles.put(index, particle);
+
 
 					//Globals.countInt(index);
 					//Globals.countInt(index);
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_UPDATE"://LOTS
 					UserMessage update = (UserMessage)um.getProperty("update_particle");
-					if(!currentParticles.containsKey(index))
-						{}//System.out.println("updating sth nonexisting\n"+update.toString());
+					if(!activeParticles.containsKey(index)){
+						System.out.println("updating sth nonexisting\n"+update.toString());
+					}
 					else{
 						//System.out.println(currentParticles.get(index).name+": "+update.toString());
-						currentParticles.get(index).update(update);
+						activeParticles.get(index).update(update);
+						activeParticles.get(index).addMessage(um, Utils.getTime(match));
 					}
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_UPDATE_ENT"://LOTS
 					UserMessage updateEnt = (UserMessage)um.getProperty("update_particle_ent");
 					//Globals.countInt((int)updateEnt.getProperty("attachment"));
 					//System.out.println(particleEffectNames.getNameByIndex((int)updateEnt.getProperty("attachment"))+" "+particleEffectNames.getNameByIndex((int)updateEnt.getProperty("attach_type")));
-					if(!currentParticles.containsKey(index)){
+					if(!activeParticles.containsKey(index)){
 						//Create new particle
 						Particle createdParticle = new Particle(um, match, true);
-						currentParticles.put(index, createdParticle);
+						activeParticles.put(index, createdParticle);
 						int entHandle = (int)updateEnt.getProperty("entity_handle");
 						if(!unitParticles.containsKey(entHandle))
 							unitParticles.put(entHandle, new LinkedList<Particle>());
@@ -238,27 +247,43 @@ public class StuffTracker {
 						//currentParticles.get(index).update(updateEnt);
 					}
 					else{
-						System.out.println(ConstantMapper.formatTime(Utils.getTime(match))+" "+match.getEntities().getByHandle((int)updateEnt.getProperty("entity_handle")).getDtClass().getDtName()+" updating "+index+" "+(int)updateEnt.getProperty("attachment")+" "+(int)updateEnt.getProperty("attach_type")+" "+(int)updateEnt.getProperty("control_point"));//+updateEnt.toString());
+						activeParticles.get(index).addMessage(um, Utils.getTime(match));
+						//System.out.println(ConstantMapper.formatTime(Utils.getTime(match))+" "+match.getEntities().getByHandle((int)updateEnt.getProperty("entity_handle")).getDtClass().getDtName()+" updating "+index+" "+(int)updateEnt.getProperty("attachment")+" "+(int)updateEnt.getProperty("attach_type")+" "+(int)updateEnt.getProperty("control_point"));//+updateEnt.toString());
 						//System.out.println(um.toString());
 						
 					}
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_UPDATE_ORIENTATION":
+					activeParticles.get(index).addMessage(um, Utils.getTime(match));
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_SHOULD_DRAW":
+					activeParticles.get(index).addMessage(um, Utils.getTime(match));
 					//System.out.println(um.toString());
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_DESTROY_INVOLVING":
-					System.out.println("Destroy involv "+currentParticles.get(index).name);
+					if(activeParticles.get(index) != null){
+						activeParticles.get(index).addMessage(um, Utils.getTime(match));
+						//System.out.println("Destroy involv "+index+" "+activeParticles.get(index).name);
+						tickParticles.put(activeParticles.get(index).name, activeParticles.get(index));
+						activeParticles.remove(index);
+					}
+					else System.out.println("Destroying unknown involving"+index);
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_DESTROY":
-
-					System.out.println("Destroy "+currentParticles.get(index).name);
+					if(!activeParticles.containsKey(index))
+						System.out.println("Destroying unused index "+index);
+					else{
+						activeParticles.get(index).addMessage(um, Utils.getTime(match));
+						tickParticles.put(activeParticles.get(index).name, activeParticles.get(index));
+						activeParticles.remove(index);
+					}
+					activeParticles.remove(index);
 					//System.out.println("Release "+um);
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_RELEASE"://LOTS
-					System.out.println("Remove "+currentParticles.get(index).name);
-					currentParticles.remove(index);
+					activeParticles.get(index).addMessage(um, Utils.getTime(match));
+					tickParticles.put(activeParticles.get(index).name, activeParticles.get(index));
+					activeParticles.remove(index);
 					//Globals.countInt(index);
 					break;
 				default:
@@ -310,6 +335,12 @@ public class StuffTracker {
 				if(!p.update(match, oldMatch))
 					it.remove();
 			}
+		}
+		
+		for(Particle p : tickParticles.values()){
+			ParticleType type = ConstantMapper.particleType(p.name);
+			if(handleParticle(type))
+				handleEffect(type, p, match);
 		}
 	}
 	

@@ -235,6 +235,7 @@ public class Constants {
         put("ItemUse");
         put("GoldGain");
         put("ExperienceGain");
+        
         put("ItemPurchase");
         put("ItemAddition");
         put("ItemLoss");
@@ -279,6 +280,117 @@ public class Constants {
         put("Dire");
         put("Changing");
         teams = Collections.unmodifiableMap(current_map);
+    }
+    
+    public static final Map<String, Integer> items;
+    static {
+        current_map = new HashMap<String, Integer>();
+        put("Clarity");
+		put("Tango");
+		put("Healing Salve");
+		put("Smoke of Deceit");
+		put("Town Portal Scroll");
+		put("Dust of Appearance");
+		put("Courier");
+		put("Recipe: Flying Courier");
+		put("Observer Ward");
+		put("Sentry Ward");
+		put("Bottle");
+		
+		put("Iron Branch");
+		put("Gauntlets of Strength");
+		put("Slippers of Agility");
+		put("Mantle of Intelligence");
+		put("Circlet");
+		put("Belt of Strength");
+		put("Band of Elvenskin");
+		put("Robe of the Magi");
+		put("Ogre Club");
+		put("Blade of Alacrity");
+		put("Staff of Wizardry");
+		put("Ultimate Orb");
+		
+		put("Ring of Protection");
+		put("Quelling Blade");
+		put("Stout Shield");
+		put("Blades of Attack");
+		put("Quarterstaff");
+		put("Helm of Iron Will");
+		put("Javelin");
+		put("Mithril Hammer");
+
+		put("Magic Stick");
+		put("Sage's Mask");
+		put("Ring of Regeneration");
+		put("Boots of Speed");
+		put("Gloves of Haste");
+		put("Cloak");
+		put("Ghost Scepter");
+		put("Talisman of Evasion");
+		put("Blink Dagger");
+
+		put("Recipe: Magic Wand");
+		put("Magic Wand");
+		put("Recipe: Bracer");
+		put("Recipe: Wraith Band");
+		put("Recipe: Null Talisman");
+		put("Recipe: Soul Ring");
+		put("Soul Ring");
+		put("Phase Boots");
+		put("Power Treads");
+		put("Recipe: Boots of Travel");
+		put("Boots of Travel");
+		
+		put("Ring of Basilius");
+		put("Recipe: Headdress");
+		put("Ring of Aquila");
+		put("Arcane Boots");
+		put("Recipe: Drums of Endurance");
+		put("Drums of Endurance");
+
+		put("Recipe: Force Staff");
+		put("Force Staff");
+		put("Recipe: Veil of Discord");
+		put("Veil of Discord");
+		put("Recipe: Necronomicon");
+		put("Necronomicon Level 1");
+		put("Necronomicon Level 2");
+		put("Necronomicon Level 3");
+		put("Recipe: Orchid");
+		put("Orchid");
+		put("Recipe: Refresher Orb");
+		put("Refresher Orb");
+		put("Scythe of Vyse");
+		
+		put("Recipe: Crystalys");
+		put("Ethereal Blade");
+		put("Recipe: Daedalus");
+		
+		put("Recipe: Black King Bar");
+		put("Black King Bar");
+		put("Recipe: Manta");
+		put("Manta");
+		put("Recipe: Assault Cuirass");
+		put("Recipe: Heart of Tarrasque");
+		
+		put("Recipe: Sange");
+		put("Yasha");
+		put("Recipe: Maelstrom");
+		put("Recipe: Desolator");
+		put("Recipe: Mjollnir");
+		put("Mjollnir");
+	
+		put("Ring of Health");
+		put("Void Stone");
+		put("Energy Booster");
+		put("Point Booster");
+		put("Hyperstone");
+		put("Demon Edge");
+		put("Eaglesong");
+		put("Reaver");
+	
+		put("Cheese");
+        items = Collections.unmodifiableMap(current_map);
     }
     
     public static final Map<String, Integer> timeSeries;
@@ -368,4 +480,6 @@ public class Constants {
         put("RepositionItem");
         clickTypes = Collections.unmodifiableMap(current_map);
     }
+    
+    
 }

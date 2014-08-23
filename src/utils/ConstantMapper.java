@@ -672,7 +672,220 @@ public class ConstantMapper {
 	}
 	
 	public static String itemName(String combatlog_item){
-		return combatlog_item;
+		switch(combatlog_item){
+		case "item_clarity":
+			return "Clarity";
+		case "item_tango":
+			return "Tango";
+		case "item_flask":
+			return "Healing Salve";
+		case "item_smoke_of_deceit":
+			return "Smoke of Deceit";
+		case "item_tpscroll":
+			return "Town Portal Scroll";
+		case "item_dust":
+			return "Dust of Appearance";
+		case "item_courier":
+			return "Courier";
+		case "item_flying_courier":
+			return "Recipe: Flying Courier";
+		case "item_ward_observer":
+			return "Observer Ward";
+		case "item_ward_sentry":
+			return "Sentry Ward";
+		case "item_bottle":
+			return "Bottle";
+			
+		case "item_branches":
+			return "Iron Branch";
+		case "item_gauntlets":
+			return "Gauntlets of Strength";
+		case "item_slippers":
+			return "Slippers of Agility";
+		case "item_mantle":
+			return "Mantle of Intelligence";
+		case "item_circlet":
+			return "Circlet";
+		case "item_belt_of_strength":
+			return "Belt of Strength";
+		case "item_boots_of_elves":
+			return "Band of Elvenskin";
+		case "item_robe":
+			return "Robe of the Magi";
+		case "item_ogre_axe":
+			return "Ogre Club";
+		case "item_blade_of_alacrity":
+			return "Blade of Alacrity";
+		case "item_staff_of_wizardry":
+			return "Staff of Wizardry";
+		case "item_ultimate_orb":
+			return "Ultimate Orb";
+			
+		case "item_ring_of_protection":
+			return "Ring of Protection";
+		case "item_quelling_blade":
+			return "Quelling Blade";
+		case "item_stout_shield":
+			return "Stout Shield";
+		case "item_blades_of_attack":
+			return "Blades of Attack";
+		case "item_quarterstaff":
+			return "Quarterstaff";
+		case "item_helm_of_iron_will":
+			return "Helm of Iron Will";
+		case "item_javelin":
+			return "Javelin";
+		case "item_mithril_hammer":
+			return "Mithril Hammer";
+
+		case "item_magic_stick":
+			return "Magic Stick";
+		case "item_sobi_mask":
+			return "Sage's Mask";
+		case "item_ring_of_regen":
+			return "Ring of Regeneration";
+		case "item_boots":
+			return "Boots of Speed";
+		case "item_gloves":
+			return "Gloves of Haste";
+		case "item_cloak":
+			return "Cloak";
+		case "item_ghost":
+			return "Ghost Scepter";
+		case "item_talisman_of_evasion":
+			return "Talisman of Evasion";
+		case "item_blink":
+			return "Blink Dagger";
+
+		case "item_recipe_magic_wand":
+			return "Recipe: Magic Wand";
+		case "item_magic_wand":
+			return "Magic Wand";
+		case "item_recipe_bracer":
+			return "Recipe: Bracer";
+		case "item_recipe_wraith_band":
+			return "Recipe: Wraith Band";
+		case "item_recipe_null_talisman":
+			return "Recipe: Null Talisman";
+		case "item_recipe_soul_ring":
+			return "Recipe: Soul Ring";
+		case "item_soul_ring":
+			return "Soul Ring";
+		case "item_phase_boots":
+			return "Phase Boots";
+		case "item_power_treads":
+			return "Power Treads";
+		case "item_recipe_travel_boots":
+			return "Recipe: Boots of Travel";
+		case "item_travel_boots":
+			return "Boots of Travel";
+			
+		case "item_ring_of_basilius":
+			return "Ring of Basilius";
+		case "item_recipe_headdress":
+			return "Recipe: Headdress";
+		case "item_ring_of_aquila":
+			return "Ring of Aquila";
+		case "item_arcane_boots":
+			return "Arcane Boots";
+		case "item_recipe_ancient_janggo":
+			return "Recipe: Drums of Endurance";
+		case "item_ancient_janggo":
+			return "Drums of Endurance";
+
+		case "item_recipe_force_staff":
+			return "Recipe: Force Staff";
+		case "item_force_staff":
+			return "Force Staff";
+		case "item_recipe_veil_of_discord":
+			return "Recipe: Veil of Discord";
+		case "item_veil_of_discord":
+			return "Veil of Discord";
+		case "item_recipe_necronomicon":
+			return "Recipe: Necronomicon";
+		case "item_necronomicon":
+			return "Necronomicon Level 1";
+		case "item_necronomicon_2":
+			return "Necronomicon Level 2";
+		case "item_necronomicon_3":
+			return "Necronomicon Level 3";
+		case "item_recipe_orchid":
+			return "Recipe: Orchid";
+		case "item_orchid":
+			return "Orchid";
+		case "item_recipe_refresher":
+			return "Recipe: Refresher Orb";
+		case "item_refresher":
+			return "Refresher Orb";
+		case "item_sheepstick":
+			return "Scythe of Vyse";
+			
+		case "item_recipe_lesser_crit":
+			return "Recipe: Crystalys";
+		case "item_ethereal_blade":
+			return "Ethereal Blade";
+		case "item_recipe_greater_crit":
+			return "Recipe: Daedalus";
+			
+		case "item_recipe_black_king_bar":
+			return "Recipe: Black King Bar";
+		case "item_black_king_bar":
+			return "Black King Bar";
+		case "item_recipe_manta":
+			return "Recipe: Manta";
+		case "item_manta":
+			return "Manta";
+		case "item_recipe_assault":
+			return "Recipe: Assault Cuirass";
+		case "item_recipe_heart":
+			return "Recipe: Heart of Tarrasque";
+			
+		case "item_recipe_sange":
+			return "Recipe: Sange";
+		case "item_recipe_yasha":
+			return "Yasha";
+		case "item_recipe_maelstrom":
+			return "Recipe: Maelstrom";
+		case "item_recipe_desolator":
+			return "Recipe: Desolator";
+		case "item_recipe_mjollnir":
+			return "Recipe: Mjollnir";
+		case "item_mjollnir":
+			return "Mjollnir";
+		
+		case "item_ring_of_health":
+			return "Ring of Health";
+		case "item_void_stone":
+			return "Void Stone";
+		case "item_energy_booster":
+			return "Energy Booster";
+		case "item_point_booster":
+			return "Point Booster";
+		case "item_hyperstone":
+			return "Hyperstone";
+		case "item_demon_edge":
+			return "Demon Edge";
+		case "item_eagle":
+			return "Eaglesong";
+		case "item_reaver":
+			return "Reaver";
+		
+		case "item_cheese":
+			return "Cheese";
+/*
+
+		case "":
+			return "";
+		case "":
+			return "";
+		case "":
+			return "";
+		case "":
+			return "";
+	*/	default:
+			System.out.println("Unknown item "+combatlog_item);
+			return combatlog_item;
+		}
 	}
 	
 	public static String abilityName(String combatlog_ability){
@@ -1518,12 +1731,12 @@ public class ConstantMapper {
 			return ParticleType.Redundant;
 			
 		//Zeus		
+		case "zuus_arc_lightning_head":
 		case "zuus_lightning_bolt_start":
 		case "zuus_thundergods_wrath_start":
 			return ParticleType.Redundant;
 		case "zuus_lightning_bolt":
 			return ParticleType.EffectEntity;
-		case "zuus_arc_lightning_head":
 		case "zuus_arc_lightning":
 		case "zuus_static_field":
 		case "zuus_thundergods_wrath":

@@ -1,6 +1,7 @@
 package data_extraction;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 import javax.vecmath.Vector2f;
@@ -293,6 +294,48 @@ public class TrackedUnit {
 		default:
 			System.out.println("Unknown TimeSeries: "+type);
 			return null;
+		}
+	}
+
+	public void checkModifiers(Match match, Match oldMatch,
+			Map<String, LinkedList<TrackedUnit>> modifierChanges, Map<String, LinkedList<TrackedUnit>> modifierLosses) {
+		Entity e = match.getEntities().getByHandle(handle);
+		Entity eOld = oldMatch.getEntities().getByHandle(handle);
+		if(eOld == null || e == null)
+			return;
+		
+		if(e.getProperty("m_ModifierManager.m_hModifierParent") != null){
+			Entity modifierParent = match.getEntities().getByHandle((int)e.getProperty("m_ModifierManager.m_hModifierParent"));
+			Entity modifierParentOld = oldMatch.getEntities().getByHandle((int)e.getProperty("m_ModifierManager.m_hModifierParent"));
+			//System.out.println("Modifier parent: "+modifierParent.toString());
+		}
+	}
+
+	public void updateInventory(Match match, Match oldMatch) {
+		Entity e = match.getEntities().getByHandle(handle);
+		Entity eOld = oldMatch.getEntities().getByHandle(handle);
+		
+		if(eOld == null || e == null)
+			return;
+		System.out.println("Checking inventory "+e.getDtClass().getDtName());
+		Integer[] items = e.getArrayProperty(Integer.class, "m_hItems");
+		Integer[] itemsOld = eOld.getArrayProperty(Integer.class, "m_hItems");
+		if(items != null && itemsOld != null){
+			if(items.length != itemsOld.length)
+				System.out.println("Item num different?"+items.length +" "+ itemsOld.length);
+			for(int i = 0; i< items.length; ++i){
+				if(items[i] != itemsOld[i]){
+					Entity itemNew = match.getEntities().getByHandle(items[i]);
+					Entity itemOld = oldMatch.getEntities().getByHandle(itemsOld[i]);
+					if(itemNew == null)
+						System.out.println("Lost Item "+itemOld.getDtClass().getDtName());
+					else if(itemOld == null)
+						System.out.println("Got Item "+itemNew.getDtClass().getDtName());
+					else
+						System.out.println("Item changed "+itemOld.getDtClass().getDtName()+" "+itemNew.getDtClass().getDtName());
+				}
+			}
+				
 		}
 	}
 }

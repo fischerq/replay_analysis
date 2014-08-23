@@ -11,6 +11,7 @@ public class ReplayData {
 	private Database db;
 	private int id;
 	private int[] playerIDs;
+	private String[] playerHeroes;
 	private int nPlayersWritten;
 	private int radiant_id;
 	private int dire_id;
@@ -23,6 +24,10 @@ public class ReplayData {
 		playerIDs = new int[10];
 		for(int i = 0; i<10; ++i){
 			playerIDs[i] = 0;
+		}
+		playerHeroes = new String[10];
+		for(int i = 0; i<10; ++i){
+			playerHeroes[i] = "";
 		}
 		nPlayersWritten = 0;
 	}
@@ -79,9 +84,23 @@ public class ReplayData {
 				else
 					teamID = dire_id;
 				playerIDs[i] = db.createPlayer(nicks[i], ConstantMapper.heroName(selected_heroes[i]), teamID);
+				playerHeroes[i] = ConstantMapper.heroName(selected_heroes[i]);
 				nPlayersWritten++;
 			}
 		}
 		return nPlayersWritten == 10;
+	}
+	
+	int getPlayerID(String hero){
+		for(int i = 0; i < 10; ++i){
+			if(playerHeroes[i].equals(hero)){
+				return playerIDs[i];
+			}
+		}
+		System.out.println("Couldn't find player for hero "+hero);
+		for(int i = 0; i < 10; ++i){
+			System.out.println(playerHeroes[i]+": "+playerIDs[i]);
+		}
+		return -1;
 	}
 }

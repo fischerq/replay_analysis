@@ -45,7 +45,6 @@ public class Extraction {
 				
 		units = new UnitTracker(replay, db);
 		animations = new AnimationTracker();
-
 		projectiles = new StuffTracker(replay, db, units);
 		
 		attackingUnits = new HashSet<Integer>();
@@ -54,7 +53,7 @@ public class Extraction {
 	public void analyseTick(Match match, Match matchOld) {
 		db.startTransaction();
 
-		//System.out.println(ConstantMapper.formatTime(match.getReplayTime())+" Tick");
+		//System.out.println("\n\n"+ConstantMapper.formatTime(match.getReplayTime())+" Tick");
 		currentMatch = match;
 		oldMatch = matchOld;
 		
@@ -68,7 +67,9 @@ public class Extraction {
 
 		updateAndProcessAnimations();
 		
-		processProjectiles();
+		projectiles.updateProjectiles(currentMatch, oldMatch);
+		
+		
 		
 		processCombatLog();
 		 
@@ -205,10 +206,6 @@ public class Extraction {
 		}
 	}
 	
-	private void processProjectiles(){
-		projectiles.updateProjectiles(currentMatch, oldMatch);
-	}
-	
 	private void processCombatLog(){
 		GameEventDescriptor combatlog_descriptor = currentMatch.getGameEventDescriptors().forName("dota_combatlog");
 		if(combatlog_descriptor == null)
@@ -225,7 +222,7 @@ public class Extraction {
 				 continue;
             }
             CombatLogEntry cle = new CombatLogEntry(g);
-            //System.out.println(cle.toString());
+            System.out.println(cle.toString());
             /*if(true)
             	continue;*/
             boolean found = false;
@@ -327,8 +324,13 @@ public class Extraction {
 		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle.isAttackerIllusion());
 		                 //+e.affected_unit = findUnit(cle.getTargetName(), cle, target);
 		                 //e.action = cle.getInflictorName();
-		                 e.action = ConstantMapper.itemName(cle.getValueName());
-	
+		                 int purchaseID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "ItemPurchase");
+		                 String hero = ConstantMapper.unitName(cle.getTargetName());
+		                 
+		                 db.addEventIntArgument(purchaseID, "Player", replay.getPlayerID(hero));
+		                 if(Constants.items.get(ConstantMapper.itemName(cle.getValueName())) != null)
+		                	 db.addEventIntArgument(purchaseID, "Item", Constants.items.get(ConstantMapper.itemName(cle.getValueName())));
+		            	 System.out.println("spurchased item");
 		            	 break;
 		             default:
 		            	 System.out.format(MessageFormat.format("\nUNKNOWN: {0}\n", cle.toString()));
