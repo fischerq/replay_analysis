@@ -335,12 +335,11 @@ public class Database {
 			db.exec("DELETE FROM TimeSeriesNodes WHERE EXISTS (SELECT * FROM Units, TimeSeries WHERE Units.replay_id = "+id+" AND Units.unit_id = TimeSeries.unit_id AND TimeSeriesNodes.timeseries_id = TimeSeries.timeseries_id );");
 			db.exec("DELETE FROM TimeSeries WHERE EXISTS (SELECT * FROM Units WHERE Units.replay_id ="+id+" AND TimeSeries.unit_id = Units.unit_id);");
 			db.exec("DELETE FROM Units WHERE replay_id ="+id+";");
-			db.exec("DELETE FROM Events WHERE replay_id ="+id+";");
 			db.exec("DELETE FROM EventIntArguments WHERE EXISTS (SELECT * FROM Events WHERE Events.replay_id ="+id+" AND EventIntArguments.event_id = Events.event_id);");
 			db.exec("DELETE FROM EventRealArguments WHERE EXISTS (SELECT * FROM Events WHERE Events.replay_id ="+id+" AND EventRealArguments.event_id = Events.event_id);");
 			db.exec("DELETE FROM EventTextArguments WHERE EXISTS (SELECT * FROM Events WHERE Events.replay_id ="+id+" AND EventTextArguments.event_id = Events.event_id);");
 			db.exec("DELETE FROM EventCausalities WHERE EXISTS (SELECT * FROM Events WHERE Events.replay_id ="+id+" AND EventCausalities.cause = Events.event_id);");
-
+			db.exec("DELETE FROM Events WHERE replay_id ="+id+";");
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 		}
