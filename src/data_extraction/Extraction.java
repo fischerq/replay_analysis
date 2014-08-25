@@ -71,7 +71,7 @@ public class Extraction {
 		
 		
 		
-		processCombatLog();
+		//processCombatLog();
 		 
 		db.stopTransaction();
 	}

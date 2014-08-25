@@ -304,11 +304,6 @@ public class TrackedUnit {
 		if(eOld == null || e == null)
 			return;
 		
-		if(e.getProperty("m_ModifierManager.m_hModifierParent") != null){
-			Entity modifierParent = match.getEntities().getByHandle((int)e.getProperty("m_ModifierManager.m_hModifierParent"));
-			Entity modifierParentOld = oldMatch.getEntities().getByHandle((int)e.getProperty("m_ModifierManager.m_hModifierParent"));
-			//System.out.println("Modifier parent: "+modifierParent.toString());
-		}
 	}
 
 	public void updateInventory(Match match, Match oldMatch) {
@@ -317,22 +312,25 @@ public class TrackedUnit {
 		
 		if(eOld == null || e == null)
 			return;
-		System.out.println("Checking inventory "+e.getDtClass().getDtName());
-		Integer[] items = e.getArrayProperty(Integer.class, "m_hItems");
-		Integer[] itemsOld = eOld.getArrayProperty(Integer.class, "m_hItems");
+		//System.out.println("Checking inventory "+e.getDtClass().getDtName());
+		//System.out.println(e.toString());
+		Integer[] items = e.getArrayProperty(Integer.class, "m_Inventory.m_hItems");
+		Integer[] itemsOld = eOld.getArrayProperty(Integer.class, "m_Inventory.m_hItems");
 		if(items != null && itemsOld != null){
-			if(items.length != itemsOld.length)
-				System.out.println("Item num different?"+items.length +" "+ itemsOld.length);
 			for(int i = 0; i< items.length; ++i){
-				if(items[i] != itemsOld[i]){
+				//System.out.println(itemsOld[i]+" "+items[i]);
+				if(!items[i].equals(itemsOld[i])){
 					Entity itemNew = match.getEntities().getByHandle(items[i]);
 					Entity itemOld = oldMatch.getEntities().getByHandle(itemsOld[i]);
 					if(itemNew == null)
-						System.out.println("Lost Item "+itemOld.getDtClass().getDtName());
+						System.out.println("Lost Item "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName")));
 					else if(itemOld == null)
-						System.out.println("Got Item "+itemNew.getDtClass().getDtName());
+						System.out.println("Got Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName")));
 					else
-						System.out.println("Item changed "+itemOld.getDtClass().getDtName()+" "+itemNew.getDtClass().getDtName());
+						System.out.println("Item changed "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+" "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName")));
+				}
+				else{
+					
 				}
 			}
 				

@@ -671,8 +671,8 @@ public class ConstantMapper {
 		}
 	}
 	
-	public static String itemName(String combatlog_item){
-		switch(combatlog_item){
+	public static String itemName(String itemVerboseName){
+		switch(itemVerboseName){
 		case "item_clarity":
 			return "Clarity";
 		case "item_tango":
@@ -883,8 +883,8 @@ public class ConstantMapper {
 		case "":
 			return "";
 	*/	default:
-			System.out.println("Unknown item "+combatlog_item);
-			return combatlog_item;
+			System.out.println("Unknown item "+itemVerboseName);
+			return itemVerboseName;
 		}
 	}
 	
