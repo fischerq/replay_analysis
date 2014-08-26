@@ -763,10 +763,16 @@ public class ConstantMapper {
 			return "Magic Wand";
 		case "item_recipe_bracer":
 			return "Recipe: Bracer";
+		case "item_bracer":
+			return "Bracer";
 		case "item_recipe_wraith_band":
 			return "Recipe: Wraith Band";
+		case "item_wraith_band":
+			return "Wraith Band";
 		case "item_recipe_null_talisman":
 			return "Recipe: Null Talisman";
+		case "item_null_talisman":
+			return "Null Talisman";
 		case "item_recipe_soul_ring":
 			return "Recipe: Soul Ring";
 		case "item_soul_ring":
@@ -775,6 +781,8 @@ public class ConstantMapper {
 			return "Phase Boots";
 		case "item_power_treads":
 			return "Power Treads";
+		case "item_oblivion_staff":
+			return "Oblivion Staff";
 		case "item_recipe_travel_boots":
 			return "Recipe: Boots of Travel";
 		case "item_travel_boots":
@@ -813,6 +821,8 @@ public class ConstantMapper {
 			return "Recipe: Orchid";
 		case "item_orchid":
 			return "Orchid";
+		case "item_ultimate_scepter":
+			return "Aghanim's Scepter";
 		case "item_recipe_refresher":
 			return "Recipe: Refresher Orb";
 		case "item_refresher":
@@ -843,6 +853,8 @@ public class ConstantMapper {
 		case "item_recipe_sange":
 			return "Recipe: Sange";
 		case "item_recipe_yasha":
+			return "Recipe: Yasha";
+		case "item_yasha":
 			return "Yasha";
 		case "item_recipe_maelstrom":
 			return "Recipe: Maelstrom";
@@ -865,10 +877,13 @@ public class ConstantMapper {
 			return "Hyperstone";
 		case "item_demon_edge":
 			return "Demon Edge";
-		case "item_eagle":
-			return "Eaglesong";
 		case "item_reaver":
 			return "Reaver";
+		case "item_mystic_staff":
+			return "Mystic Staff";
+		case "item_eagle":
+			return "Eaglesong";
+
 		
 		case "item_cheese":
 			return "Cheese";
@@ -885,6 +900,64 @@ public class ConstantMapper {
 	*/	default:
 			System.out.println("Unknown item "+itemVerboseName);
 			return itemVerboseName;
+		}
+	}
+	
+	public static String toggleName(int state){
+		switch(state){
+		case 0:
+			return "Active";
+		case 1:
+			return "Disabled";
+		default:
+			System.out.println("Unknown toggle: "+state);
+			return "Unknown";
+		}
+	}
+	
+	public static String treadsToggle(int state){
+		switch(state){
+		case 0:
+			return "Strength";
+		case 1:
+			return "Intelligence";
+		case 2:
+			return "Agility";
+		default:
+			System.out.println("Unknown tread toggle: "+state);
+			return "Unknown";
+		}
+	}
+	
+	public static String inventorySlotName(int id){
+		switch(id){
+		case 0:
+			return "TopLeft";
+		case 1:
+			return "TopCenter";
+		case 2:
+			return "TopRight";
+		case 3:
+			return "BottomLeft";
+		case 4:
+			return "BottomCenter";
+		case 5:
+			return "BottomRight";
+		case 6:
+			return "Stash1";
+		case 7:
+			return "Stash2";
+		case 8:
+			return "Stash3";
+		case 9:
+			return "Stash4";
+		case 10:
+			return "Stash5";
+		case 11:
+			return "Stash6";
+		default:
+			System.out.println("Unknown invetory slot: "+id);
+			return "Unknown";
 		}
 	}
 	

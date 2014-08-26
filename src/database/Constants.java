@@ -239,6 +239,10 @@ public class Constants {
         put("ItemPurchase");
         put("ItemAddition");
         put("ItemLoss");
+        put("ItemMove");
+        put("ItemSwap");
+        put("ItemChargeChange");
+        put("ItemToggle");
         
         put("VisionGain");
         put("VisionLoss");
@@ -332,12 +336,16 @@ public class Constants {
 		put("Recipe: Magic Wand");
 		put("Magic Wand");
 		put("Recipe: Bracer");
+		put("Bracer");
 		put("Recipe: Wraith Band");
+		put("Wraith Band");
 		put("Recipe: Null Talisman");
+		put("Null Talisman");
 		put("Recipe: Soul Ring");
 		put("Soul Ring");
 		put("Phase Boots");
 		put("Power Treads");
+		put("Oblivion Staff");
 		put("Recipe: Boots of Travel");
 		put("Boots of Travel");
 		
@@ -358,6 +366,7 @@ public class Constants {
 		put("Necronomicon Level 3");
 		put("Recipe: Orchid");
 		put("Orchid");
+		put("Aghanim's Scepter");
 		put("Recipe: Refresher Orb");
 		put("Refresher Orb");
 		put("Scythe of Vyse");
@@ -386,11 +395,41 @@ public class Constants {
 		put("Point Booster");
 		put("Hyperstone");
 		put("Demon Edge");
-		put("Eaglesong");
 		put("Reaver");
+		put("Mystic Staff");
+		put("Eaglesong");
 	
 		put("Cheese");
         items = Collections.unmodifiableMap(current_map);
+    }
+    
+    public static final Map<String, Integer> inventorySlots;
+    static {
+        current_map = new HashMap<String, Integer>();
+        put("TopLeft");
+        put("TopCenter");
+        put("TopRight");
+        put("BottomLeft");
+        put("BottomCenter");
+        put("BottomRight");
+        put("Stash1");
+        put("Stash2");
+        put("Stash3");
+        put("Stash4");
+        put("Stash5");
+        put("Stash6");
+        inventorySlots = Collections.unmodifiableMap(current_map);
+    }
+    
+    public static final Map<String, Integer> toggleState;
+    static {
+        current_map = new HashMap<String, Integer>();
+        put("Active");
+        put("Disabled");
+        put("Strength");
+        put("Intelligence");
+        put("Agility");
+        toggleState = Collections.unmodifiableMap(current_map);
     }
     
     public static final Map<String, Integer> timeSeries;
@@ -415,6 +454,10 @@ public class Constants {
         put("Modifier");
         put("Ability");
         put("Item");
+        put("InventorySlot");
+        put("ItemSwapped");
+        put("InventorySlotSwapped");
+        put("ToggleState");
         put("Action");
         put("Projectile");
         put("Index");

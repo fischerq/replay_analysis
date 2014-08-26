@@ -319,18 +319,61 @@ public class TrackedUnit {
 		if(items != null && itemsOld != null){
 			for(int i = 0; i< items.length; ++i){
 				//System.out.println(itemsOld[i]+" "+items[i]);
+				if((int)items[i] == 2097151 && (int)itemsOld[i] == 2097151)
+					continue;
+				Entity itemNew = match.getEntities().getByHandle(items[i]);
+				Entity itemOld = oldMatch.getEntities().getByHandle(itemsOld[i]);
 				if(!items[i].equals(itemsOld[i])){
-					Entity itemNew = match.getEntities().getByHandle(items[i]);
-					Entity itemOld = oldMatch.getEntities().getByHandle(itemsOld[i]);
-					if(itemNew == null)
-						System.out.println("Lost Item "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName")));
-					else if(itemOld == null)
-						System.out.println("Got Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName")));
-					else
-						System.out.println("Item changed "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+" "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName")));
+					boolean found = false;
+					int index = -1;
+					if(itemNew == null){
+						for(int j = 0; j < items.length; ++j)
+							if(items[j].equals(itemsOld[i])){
+								found = true;
+								index = j;
+								break;
+							}
+						if(!found)
+							System.out.println(e.getDtClass().getDtName()+" Lost Item "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName")));
+						else if(index > i){
+							System.out.println(e.getDtClass().getDtName()+" Moved Item "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+" from "+i+" to "+index);
+						}
+					}
+					else if(itemOld == null){
+						for(int j = 0; j < itemsOld.length; ++j)
+							if(itemsOld[j].equals(items[i])){
+								found = true;
+								index = j;
+								break;
+							}
+						if(!found)
+							System.out.println(e.getDtClass().getDtName()+" Got Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName")));
+						else if(index > i){
+							System.out.println(e.getDtClass().getDtName()+" Moved Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))+" from "+index+" to "+i);
+						}
+					}
+					else{
+						for(int j = 0; j < items.length; ++j)
+							if(items[j].equals(itemsOld[i]) && itemsOld[j].equals(items[i])){
+								found = true;
+								index = j;
+								break;
+							}
+						if(!found)
+							System.out.println(e.getDtClass().getDtName()+" Got Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName")));
+						else if(index > i){
+							System.out.println(e.getDtClass().getDtName()+" Swapped Items "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+"("+i+") with "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))+"("+index+")");
+						}
+					}
 				}
 				else{
-					
+					if(!((Integer)itemNew.getProperty("m_iCurrentCharges")).equals((Integer)itemOld.getProperty("m_iCurrentCharges")))
+						System.out.println(e.getDtClass().getDtName()+"Charges changed: "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+": "+(Integer)itemOld.getProperty("m_iCurrentCharges")+"->"+(Integer)itemNew.getProperty("m_iCurrentCharges"));
+					if(!((Integer)itemNew.getProperty("m_bToggleState")).equals((Integer)itemOld.getProperty("m_bToggleState")))
+						System.out.println(e.getDtClass().getDtName()+"Toggle changed: "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+": "+(Integer)itemOld.getProperty("m_bToggleState")+"->"+(Integer)itemNew.getProperty("m_bToggleState"));
+					if(itemNew.getDtClass().getDtName().equals("DT_DOTA_Item_PowerTreads") && !((Integer)itemNew.getProperty("m_iStat")).equals((Integer)itemOld.getProperty("m_iStat"))){
+						System.out.println(e.getDtClass().getDtName()+"Treads toggled: "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+": "+(Integer)itemOld.getProperty("m_iStat")+"->"+(Integer)itemNew.getProperty("m_iStat"));
+					}
 				}
 			}
 				
