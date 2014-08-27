@@ -240,7 +240,6 @@ public class Constants {
         put("ItemAddition");
         put("ItemLoss");
         put("ItemMove");
-        put("ItemSwap");
         put("ItemChargeChange");
         put("ItemToggle");
         
@@ -455,8 +454,7 @@ public class Constants {
         put("Ability");
         put("Item");
         put("InventorySlot");
-        put("ItemSwapped");
-        put("InventorySlotSwapped");
+        put("InventorySlotOrigin");
         put("ToggleState");
         put("Action");
         put("Projectile");

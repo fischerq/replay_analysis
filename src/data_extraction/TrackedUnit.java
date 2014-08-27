@@ -333,10 +333,20 @@ public class TrackedUnit {
 								index = j;
 								break;
 							}
-						if(!found)
-							System.out.println(e.getDtClass().getDtName()+" Lost Item "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName")));
+						if(!found){
+							int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemLoss");
+							db.addEventIntArgument(eventID, "Unit", unitID);
+							db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+							//System.out.println(e.getDtClass().getDtName()+" Lost Item "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName")));
+						}
 						else if(index > i){
-							System.out.println(e.getDtClass().getDtName()+" Moved Item "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+" from "+i+" to "+index);
+							int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemMove");
+							db.addEventIntArgument(eventID, "Unit", unitID);
+							db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(index)));
+							db.addEventIntArgument(eventID, "InventorySlotOrigin", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+							//System.out.println(e.getDtClass().getDtName()+" Moved Item "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+" from "+i+" to "+index);
 						}
 					}
 					else if(itemOld == null){
@@ -346,10 +356,20 @@ public class TrackedUnit {
 								index = j;
 								break;
 							}
-						if(!found)
-							System.out.println(e.getDtClass().getDtName()+" Got Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName")));
+						if(!found){
+							int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemAddition");
+							db.addEventIntArgument(eventID, "Unit", unitID);
+							db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+							//System.out.println(e.getDtClass().getDtName()+" Got Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName")));
+						}
 						else if(index > i){
-							System.out.println(e.getDtClass().getDtName()+" Moved Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))+" from "+index+" to "+i);
+							int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemMove");
+							db.addEventIntArgument(eventID, "Unit", unitID);
+							db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+							db.addEventIntArgument(eventID, "InventorySlotOrigin", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(index)));
+							//System.out.println(e.getDtClass().getDtName()+" Moved Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))+" from "+index+" to "+i);
 						}
 					}
 					else{
@@ -359,20 +379,59 @@ public class TrackedUnit {
 								index = j;
 								break;
 							}
-						if(!found)
-							System.out.println(e.getDtClass().getDtName()+" Got Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName")));
+						if(!found){
+							int eventID2 = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemLoss");
+							db.addEventIntArgument(eventID2, "Unit", unitID);
+							db.addEventIntArgument(eventID2, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID2, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+	
+							int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemAddition");
+							db.addEventIntArgument(eventID, "Unit", unitID);
+							db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+	
+							System.out.println(e.getDtClass().getDtName()+" Lost&Got Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))+" for "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+"("+i+")");
+						}
 						else if(index > i){
-							System.out.println(e.getDtClass().getDtName()+" Swapped Items "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+"("+i+") with "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))+"("+index+")");
+							int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemMove");
+							db.addEventIntArgument(eventID, "Unit", unitID);
+							db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(index)));
+							db.addEventIntArgument(eventID, "InventorySlotOrigin", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+							
+							int eventID2 = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemMove");
+							db.addEventIntArgument(eventID2, "Unit", unitID);
+							db.addEventIntArgument(eventID2, "Item", Constants.items.get(ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID2, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+							db.addEventIntArgument(eventID2, "InventorySlotOrigin", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(index)));
+							//System.out.println(e.getDtClass().getDtName()+" Swapped Items "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+"("+i+") with "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))+"("+index+")");
 						}
 					}
 				}
 				else{
-					if(!((Integer)itemNew.getProperty("m_iCurrentCharges")).equals((Integer)itemOld.getProperty("m_iCurrentCharges")))
-						System.out.println(e.getDtClass().getDtName()+"Charges changed: "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+": "+(Integer)itemOld.getProperty("m_iCurrentCharges")+"->"+(Integer)itemNew.getProperty("m_iCurrentCharges"));
-					if(!((Integer)itemNew.getProperty("m_bToggleState")).equals((Integer)itemOld.getProperty("m_bToggleState")))
-						System.out.println(e.getDtClass().getDtName()+"Toggle changed: "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+": "+(Integer)itemOld.getProperty("m_bToggleState")+"->"+(Integer)itemNew.getProperty("m_bToggleState"));
+					if(!((Integer)itemNew.getProperty("m_iCurrentCharges")).equals((Integer)itemOld.getProperty("m_iCurrentCharges"))){
+						//System.out.println(e.getDtClass().getDtName()+"Charges changed: "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+": "+(Integer)itemOld.getProperty("m_iCurrentCharges")+"->"+(Integer)itemNew.getProperty("m_iCurrentCharges"));
+						int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemChargeChange");
+						db.addEventIntArgument(eventID, "Unit", unitID);
+						db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+						db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+						db.addEventIntArgument(eventID, "Amount", (Integer)itemNew.getProperty("m_iCurrentCharges"));
+					}
+					if(!((Integer)itemNew.getProperty("m_bToggleState")).equals((Integer)itemOld.getProperty("m_bToggleState"))){
+						int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemToggle");
+						db.addEventIntArgument(eventID, "Unit", unitID);
+						db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+						db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+						db.addEventIntArgument(eventID, "ToggleState", Constants.toggleState.get(ConstantMapper.toggleName((Integer)itemNew.getProperty("m_bToggleState"))));
+						//System.out.println(e.getDtClass().getDtName()+"Toggle changed: "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+": "+(Integer)itemOld.getProperty("m_bToggleState")+"->"+(Integer)itemNew.getProperty("m_bToggleState"));
+					}
 					if(itemNew.getDtClass().getDtName().equals("DT_DOTA_Item_PowerTreads") && !((Integer)itemNew.getProperty("m_iStat")).equals((Integer)itemOld.getProperty("m_iStat"))){
-						System.out.println(e.getDtClass().getDtName()+"Treads toggled: "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+": "+(Integer)itemOld.getProperty("m_iStat")+"->"+(Integer)itemNew.getProperty("m_iStat"));
+						//System.out.println(e.getDtClass().getDtName()+"Treads toggled: "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+": "+(Integer)itemOld.getProperty("m_iStat")+"->"+(Integer)itemNew.getProperty("m_iStat"));
+						int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemToggle");
+						db.addEventIntArgument(eventID, "Unit", unitID);
+						db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+						db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+						db.addEventIntArgument(eventID, "ToggleState", Constants.toggleState.get(ConstantMapper.treadsToggle((Integer)itemNew.getProperty("m_iStat"))));
 					}
 				}
 			}
