@@ -23,7 +23,7 @@ public class ReplayData {
 		dire_id = 0;
 		playerIDs = new int[10];
 		for(int i = 0; i<10; ++i){
-			playerIDs[i] = 0;
+			playerIDs[i] = -1;
 		}
 		playerHeroes = new String[10];
 		for(int i = 0; i<10; ++i){
@@ -75,7 +75,7 @@ public class ReplayData {
 		String[] nicks = player_resource.getArrayProperty(String.class, "m_iszPlayerNames");
 		
 		for(int i = 0; i < 10; ++i){
-			if(playerIDs[i] != 0)
+			if(playerIDs[i] != -1)
 				continue;
 			if(selected_heroes[i] != -1){
 				int teamID = 0;

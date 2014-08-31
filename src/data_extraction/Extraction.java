@@ -17,7 +17,6 @@ import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
 import skadistats.clarity.model.GameEvent;
 import skadistats.clarity.model.GameEventDescriptor;
-import skadistats.clarity.model.StringTable;
 import utils.ConstantMapper;
 import utils.Utils;
 
@@ -68,10 +67,8 @@ public class Extraction {
 		updateAndProcessAnimations();
 		
 		projectiles.updateProjectiles(currentMatch, oldMatch);
-		
-		
-		
-		//processCombatLog();
+				
+		processCombatLog();
 		 
 		db.stopTransaction();
 	}
@@ -168,7 +165,7 @@ public class Extraction {
 			if(a.activity != 0){
 				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "AnimationStart");
 				db.addEventIntArgument(eventID, "Unit", units.getUnitID(a.entity.getHandle()));
-				db.addEventIntArgument(eventID, "Action", Constants.actions.get(ConstantMapper.animationAction(a.activity)));
+				db.addEventIntArgument(eventID, "Action", Constants.getIndex("Actions", ConstantMapper.animationAction(a.activity)));
 			}
 			//System.out.println("Started "+a.toString());
 		}
@@ -178,7 +175,7 @@ public class Extraction {
 			if(a.activity != 0){
 				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "AnimationCast");
 				db.addEventIntArgument(eventID, "Unit", units.getUnitID(a.entity.getHandle()));
-				db.addEventIntArgument(eventID, "Action", Constants.actions.get(ConstantMapper.animationAction(a.activity)));
+				db.addEventIntArgument(eventID, "Action", Constants.getIndex("Actions", ConstantMapper.animationAction(a.activity)));
 			}
 			if(Utils.isAttack(a))
 				attackingUnits.add(a.entity.getHandle());
@@ -190,7 +187,7 @@ public class Extraction {
 			if(a.activity != 0){
 				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "AnimationCancel");
 				db.addEventIntArgument(eventID, "Unit", units.getUnitID(a.entity.getHandle()));
-				db.addEventIntArgument(eventID, "Action", Constants.actions.get(ConstantMapper.animationAction(a.activity)));			
+				db.addEventIntArgument(eventID, "Action", Constants.getIndex("Actions", ConstantMapper.animationAction(a.activity)));			
 			}
 			//System.out.println("Cancelled "+a.toString());
 		}
@@ -200,7 +197,7 @@ public class Extraction {
 			if(a.activity != 0){
 				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "AnimationStop");
 				db.addEventIntArgument(eventID, "Unit", units.getUnitID(a.entity.getHandle()));
-				db.addEventIntArgument(eventID, "Action", Constants.actions.get(ConstantMapper.animationAction(a.activity)));
+				db.addEventIntArgument(eventID, "Action", Constants.getIndex("Actions", ConstantMapper.animationAction(a.activity)));
 			}
 			//System.out.println("Stopped "+a.toString());
 		}
@@ -328,8 +325,7 @@ public class Extraction {
 		                 String hero = ConstantMapper.unitName(cle.getTargetName());
 		                 
 		                 db.addEventIntArgument(purchaseID, "Player", replay.getPlayerID(hero));
-		                 if(Constants.items.get(ConstantMapper.itemName(cle.getValueName())) != null)
-		                	 db.addEventIntArgument(purchaseID, "Item", Constants.items.get(ConstantMapper.itemName(cle.getValueName())));
+	                	 db.addEventIntArgument(purchaseID, "Item", Constants.getIndex("Items", ConstantMapper.itemName(cle.getValueName())));
 		            	 System.out.println("spurchased item");
 		            	 break;
 		             default:

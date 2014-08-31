@@ -3,15 +3,72 @@ package database;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class Constants {
-	private static Map<String, Integer> current_map = null;
+	private static HashMap<String, Integer> current_map = null;
 	private static void put(String value){
 		current_map.put(value, current_map.size());
 	}
 	
-	public static final Map<String, Integer> unitTypes;
-    static {
+	private static final Map<String, HashMap<String, Integer>> maps;
+	static{
+		Map<String, HashMap<String, Integer>> tmpMap = new HashMap<String, HashMap<String, Integer>>();
+		tmpMap.put("StringMappings", new HashMap<String, Integer>());
+		tmpMap.put("UnitTypes", getUnitTypes());
+		tmpMap.put("EventTypes", getEventTypes());
+		tmpMap.put("EventArguments", getEventArguments());
+		tmpMap.put("Sides", getSides());
+		tmpMap.put("Teams", getTeams());		
+		tmpMap.put("Items", getItems());
+		tmpMap.put("InventorySlots", getInventorySlots());
+		tmpMap.put("ToggleStates", getToggleStates());
+		tmpMap.put("TimeSeries", getTimeSeries());
+		tmpMap.put("Actions", getActions());
+		tmpMap.put("Projectiles", getProjectiles());
+		tmpMap.put("ClickTypes", getClickTypes());
+		
+		current_map = new HashMap<String, Integer>();
+		put("StringMappings");
+		put("UnitTypes");
+		put("EventTypes");
+		put("EventArguments");
+		put("Sides");
+		put("Teams");
+		put("Items");
+		put("InventorySlots");
+		put("ToggleStates");
+		put("TimeSeries");
+		put("Actions");
+		put("Projectiles");
+		put("ClickTypes");		
+		tmpMap.put("StringMappings", current_map);
+				
+		maps = Collections.unmodifiableMap(tmpMap); 
+	}
+	
+	public static int getIndex(String mapping, String string){
+		Map<String, Integer> map = maps.get(mapping);
+		if(map == null){
+			System.out.println("Unknown mapping "+mapping);
+			return -1;
+		}
+		else{
+			Integer index = map.get(string);
+			if(index == null){
+				System.out.println("Unknown string (mapping: "+mapping+"): "+string);
+				return -1;
+			}
+			else
+				return index;
+		}			
+	}
+	
+	public static Set<String> getAllValues(String mapping){
+		return maps.get(mapping).keySet();
+	}
+	
+	private static HashMap<String, Integer> getUnitTypes(){
         current_map = new HashMap<String, Integer>();
         put("Anti-Mage");
         put("Axe");
@@ -217,11 +274,10 @@ public class Constants {
         
         put("Treant");
 
-        unitTypes = Collections.unmodifiableMap(current_map);
+        return current_map;
     }
     
-    public static final Map<String, Integer> eventTypes;
-    static {
+	private static HashMap<String, Integer> getEventTypes(){
         current_map = new HashMap<String, Integer>();
         put("Spawn");
         put("Death");
@@ -262,19 +318,46 @@ public class Constants {
         put("PlayerClick");
         put("Ping");
         put("SelectUnits");
-        eventTypes = Collections.unmodifiableMap(current_map);
+        
+        return current_map;
     }
+	
+	private static HashMap<String, Integer> getEventArguments(){
+        current_map = new HashMap<String, Integer>();
+        put("Unit");
+        put("ActingUnit");
+        put("AffectedUnit");
+        put("Amount");
+        put("Modifier");
+        put("Ability");
+        put("Item");
+        put("InventorySlot");
+        put("InventorySlotOrigin");
+        put("ToggleState");
+        put("Action");
+        put("Projectile");
+        put("Index");
+        put("PositionX");
+        put("PositionY");
+        put("VelocityX");
+        put("VelocityY");
+        put("Target");
+        put("Side");
+        put("Player");
+        put("Cooldown");
+        put("ClickType");
+
+        return current_map;
+    }  
     
-    public static final Map<String, Integer> sides;
-    static {
+	private static HashMap<String, Integer> getSides(){
         current_map = new HashMap<String, Integer>();
         put("Radiant");
         put("Dire");
-        sides = Collections.unmodifiableMap(current_map);
+        return current_map;
     }
     
-    public static final Map<String, Integer> teams;
-    static {
+	private static HashMap<String, Integer> getTeams(){
         current_map = new HashMap<String, Integer>();
 		put("Unassigned");
 		put("Spectator");
@@ -282,11 +365,11 @@ public class Constants {
         put("Radiant");
         put("Dire");
         put("Changing");
-        teams = Collections.unmodifiableMap(current_map);
+
+        return current_map;
     }
     
-    public static final Map<String, Integer> items;
-    static {
+	private static HashMap<String, Integer> getItems(){
         current_map = new HashMap<String, Integer>();
         put("Clarity");
 		put("Tango");
@@ -317,8 +400,11 @@ public class Constants {
 		put("Quelling Blade");
 		put("Stout Shield");
 		put("Blades of Attack");
+		put("Chainmail");
 		put("Quarterstaff");
 		put("Helm of Iron Will");
+		put("Broadsword");
+		put("Platemail");
 		put("Javelin");
 		put("Mithril Hammer");
 
@@ -328,6 +414,7 @@ public class Constants {
 		put("Boots of Speed");
 		put("Gloves of Haste");
 		put("Cloak");
+		put("Gem of True Sight");
 		put("Ghost Scepter");
 		put("Talisman of Evasion");
 		put("Blink Dagger");
@@ -345,15 +432,18 @@ public class Constants {
 		put("Phase Boots");
 		put("Power Treads");
 		put("Oblivion Staff");
+		put("Perseverance");
 		put("Recipe: Boots of Travel");
 		put("Boots of Travel");
 		
 		put("Ring of Basilius");
 		put("Recipe: Headdress");
+		put("Headdress");
 		put("Ring of Aquila");
 		put("Arcane Boots");
 		put("Recipe: Drums of Endurance");
 		put("Drums of Endurance");
+		put("Pipe of Insight");
 
 		put("Recipe: Force Staff");
 		put("Force Staff");
@@ -371,26 +461,38 @@ public class Constants {
 		put("Scythe of Vyse");
 		
 		put("Recipe: Crystalys");
+		put("Crystalys");
 		put("Ethereal Blade");
+		put("Monkey King Bar");
 		put("Recipe: Daedalus");
+		put("Daedalus");
 		
+		put("Hood of Defiance");
 		put("Recipe: Black King Bar");
 		put("Black King Bar");
 		put("Recipe: Manta");
 		put("Manta");
 		put("Recipe: Assault Cuirass");
+		put("Assault Cuirass");
 		put("Recipe: Heart of Tarrasque");
+		put("Heart of Tarrasque");
 		
 		put("Recipe: Sange");
+		put("Sange");
+		put("Recipe: Yasha");
 		put("Yasha");
 		put("Recipe: Maelstrom");
+		put("Maelstrom");
+		put("Sange and Yasha");
 		put("Recipe: Desolator");
+		put("Desolator");
 		put("Recipe: Mjollnir");
 		put("Mjollnir");
 	
 		put("Ring of Health");
 		put("Void Stone");
 		put("Energy Booster");
+		put("Vitality Booster");
 		put("Point Booster");
 		put("Hyperstone");
 		put("Demon Edge");
@@ -399,11 +501,12 @@ public class Constants {
 		put("Eaglesong");
 	
 		put("Cheese");
-        items = Collections.unmodifiableMap(current_map);
+		put("Aegis");
+
+		return current_map;
     }
     
-    public static final Map<String, Integer> inventorySlots;
-    static {
+	private static HashMap<String, Integer> getInventorySlots(){
         current_map = new HashMap<String, Integer>();
         put("TopLeft");
         put("TopCenter");
@@ -417,22 +520,22 @@ public class Constants {
         put("Stash4");
         put("Stash5");
         put("Stash6");
-        inventorySlots = Collections.unmodifiableMap(current_map);
+
+        return current_map;
     }
     
-    public static final Map<String, Integer> toggleState;
-    static {
+	private static HashMap<String, Integer> getToggleStates(){
         current_map = new HashMap<String, Integer>();
         put("Active");
         put("Disabled");
         put("Strength");
         put("Intelligence");
         put("Agility");
-        toggleState = Collections.unmodifiableMap(current_map);
+
+        return current_map;
     }
     
-    public static final Map<String, Integer> timeSeries;
-    static {
+	private static HashMap<String, Integer> getTimeSeries(){
         current_map = new HashMap<String, Integer>();
         put("PositionX");
         put("PositionY");
@@ -440,40 +543,11 @@ public class Constants {
         put("Health");
         put("Mana");
         put("Control");
-        timeSeries = Collections.unmodifiableMap(current_map);
+        
+        return current_map;
     }
         
-    public static final Map<String, Integer> eventArguments;
-    static {
-        current_map = new HashMap<String, Integer>();
-        put("Unit");
-        put("ActingUnit");
-        put("AffectedUnit");
-        put("Amount");
-        put("Modifier");
-        put("Ability");
-        put("Item");
-        put("InventorySlot");
-        put("InventorySlotOrigin");
-        put("ToggleState");
-        put("Action");
-        put("Projectile");
-        put("Index");
-        put("PositionX");
-        put("PositionY");
-        put("VelocityX");
-        put("VelocityY");
-        put("Target");
-        put("Side");
-        put("Player");
-        put("Cooldown");
-        put("ClickType");
-        eventArguments = Collections.unmodifiableMap(current_map);
-    }
-    
-    
-    public static final Map<String, Integer> actions;
-    static {
+	private static HashMap<String, Integer> getActions(){
         current_map = new HashMap<String, Integer>();
 		put("Walking");
 		put("AttackDefault");
@@ -486,11 +560,11 @@ public class Constants {
 		put("AbilitySlot5");
 		put("AbilitySlot6");
 		put("AbilitySpecial");
-        actions = Collections.unmodifiableMap(current_map);
+
+		return current_map;
     }
     
-    public static final Map<String, Integer> projectiles;
-    static {
+	private static HashMap<String, Integer> getProjectiles(){
         current_map = new HashMap<String, Integer>();
         put("Attack");
 		put("Sacred Arrow");
@@ -501,11 +575,11 @@ public class Constants {
 		put("Shuriken Toss");
 		put("Magic Missile");
         put("Unknown");
-        projectiles = Collections.unmodifiableMap(current_map);
+
+        return current_map;
     }
     
-    public static final Map<String, Integer> clickTypes;
-    static {
+	private static HashMap<String, Integer> getClickTypes(){
         current_map = new HashMap<String, Integer>();
         put("MoveGround");
         put("MoveUnit");
@@ -519,7 +593,8 @@ public class Constants {
         put("PickupItem");
         put("PickRune");
         put("RepositionItem");
-        clickTypes = Collections.unmodifiableMap(current_map);
+        
+        return current_map;
     }
     
     

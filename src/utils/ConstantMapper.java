@@ -25,9 +25,9 @@ public class ConstantMapper {
 		case 9:
 			return "Mirana";
 		case 10:
-			return "Shadow Fiend";
-		case 11:
 			return "Morphling";
+		case 11:
+			return "Shadow Fiend";
 		case 12:
 			return "Phantom Lancer";
 		case 13:
@@ -729,10 +729,16 @@ public class ConstantMapper {
 			return "Stout Shield";
 		case "item_blades_of_attack":
 			return "Blades of Attack";
+		case "item_chainmail":
+			return "Chainmail";
 		case "item_quarterstaff":
 			return "Quarterstaff";
 		case "item_helm_of_iron_will":
 			return "Helm of Iron Will";
+		case "item_broadsword":
+			return "Broadsword";
+		case "item_platemail":
+			return "Platemail";
 		case "item_javelin":
 			return "Javelin";
 		case "item_mithril_hammer":
@@ -750,6 +756,8 @@ public class ConstantMapper {
 			return "Gloves of Haste";
 		case "item_cloak":
 			return "Cloak";
+		case "item_gem":
+			return "Gem of True Sight";
 		case "item_ghost":
 			return "Ghost Scepter";
 		case "item_talisman_of_evasion":
@@ -783,6 +791,8 @@ public class ConstantMapper {
 			return "Power Treads";
 		case "item_oblivion_staff":
 			return "Oblivion Staff";
+		case "item_pers":
+			return "Perseverance";
 		case "item_recipe_travel_boots":
 			return "Recipe: Boots of Travel";
 		case "item_travel_boots":
@@ -792,6 +802,8 @@ public class ConstantMapper {
 			return "Ring of Basilius";
 		case "item_recipe_headdress":
 			return "Recipe: Headdress";
+		case "item_headdress":
+			return "Headdress";
 		case "item_ring_of_aquila":
 			return "Ring of Aquila";
 		case "item_arcane_boots":
@@ -800,6 +812,8 @@ public class ConstantMapper {
 			return "Recipe: Drums of Endurance";
 		case "item_ancient_janggo":
 			return "Drums of Endurance";
+		case "item_pipe":
+			return "Pipe of Insight";
 
 		case "item_recipe_force_staff":
 			return "Recipe: Force Staff";
@@ -832,11 +846,19 @@ public class ConstantMapper {
 			
 		case "item_recipe_lesser_crit":
 			return "Recipe: Crystalys";
+		case "item_lesser_crit":
+			return "Crystalys";
 		case "item_ethereal_blade":
 			return "Ethereal Blade";
+		case "item_monkey_king_bar":
+			return "Monkey King Bar";
 		case "item_recipe_greater_crit":
 			return "Recipe: Daedalus";
+		case "item_greater_crit":
+			return "Daedalus";
 			
+		case "item_hood_of_defiance":
+			return "Hood of Defiance";
 		case "item_recipe_black_king_bar":
 			return "Recipe: Black King Bar";
 		case "item_black_king_bar":
@@ -847,8 +869,12 @@ public class ConstantMapper {
 			return "Manta";
 		case "item_recipe_assault":
 			return "Recipe: Assault Cuirass";
+		case "item_assault":
+			return "Assault Cuirass";
 		case "item_recipe_heart":
 			return "Recipe: Heart of Tarrasque";
+		case "item_heart":
+			return "Heart of Tarrasque";
 			
 		case "item_recipe_sange":
 			return "Recipe: Sange";
@@ -858,8 +884,14 @@ public class ConstantMapper {
 			return "Yasha";
 		case "item_recipe_maelstrom":
 			return "Recipe: Maelstrom";
+		case "item_maelstrom":
+			return "Maelstrom";
+		case "item_sange_and_yasha":
+			return "Sange and Yasha";
 		case "item_recipe_desolator":
 			return "Recipe: Desolator";
+		case "item_desolator":
+			return "Desolator";
 		case "item_recipe_mjollnir":
 			return "Recipe: Mjollnir";
 		case "item_mjollnir":
@@ -871,6 +903,8 @@ public class ConstantMapper {
 			return "Void Stone";
 		case "item_energy_booster":
 			return "Energy Booster";
+		case "item_vitality_booster":
+			return "Vitality Booster";
 		case "item_point_booster":
 			return "Point Booster";
 		case "item_hyperstone":
@@ -887,6 +921,8 @@ public class ConstantMapper {
 		
 		case "item_cheese":
 			return "Cheese";
+		case "item_aegis":
+			return "Aegis";
 /*
 
 		case "":

@@ -2,14 +2,19 @@ package data_extraction;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import javax.vecmath.Vector2f;
+
+
+
 
 import database.Constants;
 import database.Database;
 import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
+import skadistats.clarity.model.ModifierTableEntry;
 import utils.ConstantMapper;
 import utils.Utils;
 
@@ -160,28 +165,28 @@ public class TrackedUnit {
 		direVision[1] = ((visibilityOld>>3) & 1) > 0;
 		if(radiantVision[0] && !radiantVision[1]){
 			int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "VisionGain");
-			db.addEventIntArgument(eventID, "Side", Constants.sides.get("Radiant"));
+			db.addEventIntArgument(eventID, "Side", Constants.getIndex("Sides", "Radiant"));
 			db.addEventIntArgument(eventID, "Unit", unitID);
 		}
 		else if(!radiantVision[0] && radiantVision[1]){
 			int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "VisionLoss");
-			db.addEventIntArgument(eventID, "Side", Constants.sides.get("Radiant"));
+			db.addEventIntArgument(eventID, "Side", Constants.getIndex("Sides", "Radiant"));
 			db.addEventIntArgument(eventID, "Unit", unitID);
 		}
 		if(direVision[0] && !direVision[1]){
 			int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "VisionGain");
-			db.addEventIntArgument(eventID, "Side", Constants.sides.get("Dire"));
+			db.addEventIntArgument(eventID, "Side", Constants.getIndex("Sides", "Dire"));
 			db.addEventIntArgument(eventID, "Unit", unitID);
 		}
 		else if(!direVision[0] && direVision[1]){
 			int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "VisionLoss");
-			db.addEventIntArgument(eventID, "Side", Constants.sides.get("Dire"));
+			db.addEventIntArgument(eventID, "Side", Constants.getIndex("Sides", "Dire"));
 			db.addEventIntArgument(eventID, "Unit", unitID);
 		}	
 	}
 	
 	private void createTimeSeries(Entity e){
-		for(String series : Constants.timeSeries.keySet()){
+		for(String series : Constants.getAllValues("TimeSeries")){
 			if(trackSeriesForUnit(series, e)){
 				int seriesID = db.createTimeSeries(series, unitID);
 				trackedTimeSeries.put(series, seriesID);
@@ -299,10 +304,20 @@ public class TrackedUnit {
 
 	public void checkModifiers(Match match, Match oldMatch,
 			Map<String, LinkedList<TrackedUnit>> modifierChanges, Map<String, LinkedList<TrackedUnit>> modifierLosses) {
-		Entity e = match.getEntities().getByHandle(handle);
-		Entity eOld = oldMatch.getEntities().getByHandle(handle);
-		if(eOld == null || e == null)
-			return;
+		//Entity e = match.getEntities().getByHandle(handle);
+		//System.out.println("Modifiers for "+unitID+": "+e.getDtClass().getDtName());
+		List<ModifierTableEntry> modifierEntries = match.getModifiers().getAllForEntity(handle);
+		/*if(modifierEntries.size() > 0)
+			System.out.println(ConstantMapper.formatTime(Utils.getTime(match))+" modifier change for "+e.getDtClass().getDtName());*/
+		for(ModifierTableEntry modifier : modifierEntries){
+			if(modifier.hasField("modifier_class")){
+				//System.out.println(match.getStringTables().forName("ModifierNames").getNameByIndex((Integer)modifier.getField("modifier_class"))+" "+modifier.toString());
+				Globals.countString(match.getStringTables().forName("ModifierNames").getNameByIndex((Integer)modifier.getField("modifier_class")));
+				System.out.println(ConstantMapper.formatTime(match.getReplayTime())+": "+(String)modifier.getField("entry_type")+" "+(Integer)modifier.getField("index")+" "+match.getStringTables().forName("ModifierNames").getNameByIndex((Integer)modifier.getField("modifier_class"))+" "+match.getEntities().getByHandle((Integer)modifier.getField("caster")).getDtClass().getDtName());
+			}
+			else{}
+				//System.out.println(modifier.toString());
+		} 		
 		
 	}
 
@@ -336,16 +351,18 @@ public class TrackedUnit {
 						if(!found){
 							int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemLoss");
 							db.addEventIntArgument(eventID, "Unit", unitID);
-							db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
-							db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+							db.addEventIntArgument(eventID, "Item", Constants.getIndex("Items", ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+	
+							//db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID, "InventorySlot", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(i)));
 							//System.out.println(e.getDtClass().getDtName()+" Lost Item "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName")));
 						}
 						else if(index > i){
 							int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemMove");
 							db.addEventIntArgument(eventID, "Unit", unitID);
-							db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
-							db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(index)));
-							db.addEventIntArgument(eventID, "InventorySlotOrigin", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+							db.addEventIntArgument(eventID, "Item", Constants.getIndex("Items", ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID, "InventorySlot", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(index)));
+							db.addEventIntArgument(eventID, "InventorySlotOrigin", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(i)));
 							//System.out.println(e.getDtClass().getDtName()+" Moved Item "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+" from "+i+" to "+index);
 						}
 					}
@@ -359,16 +376,16 @@ public class TrackedUnit {
 						if(!found){
 							int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemAddition");
 							db.addEventIntArgument(eventID, "Unit", unitID);
-							db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))));
-							db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+							db.addEventIntArgument(eventID, "Item", Constants.getIndex("Items", ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID, "InventorySlot", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(i)));
 							//System.out.println(e.getDtClass().getDtName()+" Got Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName")));
 						}
 						else if(index > i){
 							int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemMove");
 							db.addEventIntArgument(eventID, "Unit", unitID);
-							db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))));
-							db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
-							db.addEventIntArgument(eventID, "InventorySlotOrigin", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(index)));
+							db.addEventIntArgument(eventID, "Item", Constants.getIndex("Items", ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID, "InventorySlot", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(i)));
+							db.addEventIntArgument(eventID, "InventorySlotOrigin", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(index)));
 							//System.out.println(e.getDtClass().getDtName()+" Moved Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))+" from "+index+" to "+i);
 						}
 					}
@@ -382,28 +399,28 @@ public class TrackedUnit {
 						if(!found){
 							int eventID2 = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemLoss");
 							db.addEventIntArgument(eventID2, "Unit", unitID);
-							db.addEventIntArgument(eventID2, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
-							db.addEventIntArgument(eventID2, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+							db.addEventIntArgument(eventID2, "Item", Constants.getIndex("Items", ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID2, "InventorySlot", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(i)));
 	
 							int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemAddition");
 							db.addEventIntArgument(eventID, "Unit", unitID);
-							db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))));
-							db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+							db.addEventIntArgument(eventID, "Item", Constants.getIndex("Items", ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID, "InventorySlot", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(i)));
 	
-							System.out.println(e.getDtClass().getDtName()+" Lost&Got Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))+" for "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+"("+i+")");
+							//System.out.println(e.getDtClass().getDtName()+" Lost&Got Item "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))+" for "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+"("+i+")");
 						}
 						else if(index > i){
 							int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemMove");
 							db.addEventIntArgument(eventID, "Unit", unitID);
-							db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
-							db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(index)));
-							db.addEventIntArgument(eventID, "InventorySlotOrigin", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+							db.addEventIntArgument(eventID, "Item", Constants.getIndex("Items", ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID, "InventorySlot", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(index)));
+							db.addEventIntArgument(eventID, "InventorySlotOrigin", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(i)));
 							
 							int eventID2 = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemMove");
 							db.addEventIntArgument(eventID2, "Unit", unitID);
-							db.addEventIntArgument(eventID2, "Item", Constants.items.get(ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))));
-							db.addEventIntArgument(eventID2, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
-							db.addEventIntArgument(eventID2, "InventorySlotOrigin", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(index)));
+							db.addEventIntArgument(eventID2, "Item", Constants.getIndex("Items", ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))));
+							db.addEventIntArgument(eventID2, "InventorySlot", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(i)));
+							db.addEventIntArgument(eventID2, "InventorySlotOrigin", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(index)));
 							//System.out.println(e.getDtClass().getDtName()+" Swapped Items "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+"("+i+") with "+ConstantMapper.itemName((String)itemNew.getProperty("m_iName"))+"("+index+")");
 						}
 					}
@@ -413,25 +430,25 @@ public class TrackedUnit {
 						//System.out.println(e.getDtClass().getDtName()+"Charges changed: "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+": "+(Integer)itemOld.getProperty("m_iCurrentCharges")+"->"+(Integer)itemNew.getProperty("m_iCurrentCharges"));
 						int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemChargeChange");
 						db.addEventIntArgument(eventID, "Unit", unitID);
-						db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
-						db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
+						db.addEventIntArgument(eventID, "Item", Constants.getIndex("Items", ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+						db.addEventIntArgument(eventID, "InventorySlot", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(i)));
 						db.addEventIntArgument(eventID, "Amount", (Integer)itemNew.getProperty("m_iCurrentCharges"));
 					}
 					if(!((Integer)itemNew.getProperty("m_bToggleState")).equals((Integer)itemOld.getProperty("m_bToggleState"))){
 						int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemToggle");
 						db.addEventIntArgument(eventID, "Unit", unitID);
-						db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
-						db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
-						db.addEventIntArgument(eventID, "ToggleState", Constants.toggleState.get(ConstantMapper.toggleName((Integer)itemNew.getProperty("m_bToggleState"))));
+						db.addEventIntArgument(eventID, "Item", Constants.getIndex("Items", ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+						db.addEventIntArgument(eventID, "InventorySlot", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(i)));
+						db.addEventIntArgument(eventID, "ToggleState", Constants.getIndex("ToggleStates", ConstantMapper.toggleName((Integer)itemNew.getProperty("m_bToggleState"))));
 						//System.out.println(e.getDtClass().getDtName()+"Toggle changed: "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+": "+(Integer)itemOld.getProperty("m_bToggleState")+"->"+(Integer)itemNew.getProperty("m_bToggleState"));
 					}
 					if(itemNew.getDtClass().getDtName().equals("DT_DOTA_Item_PowerTreads") && !((Integer)itemNew.getProperty("m_iStat")).equals((Integer)itemOld.getProperty("m_iStat"))){
 						//System.out.println(e.getDtClass().getDtName()+"Treads toggled: "+ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))+": "+(Integer)itemOld.getProperty("m_iStat")+"->"+(Integer)itemNew.getProperty("m_iStat"));
 						int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "ItemToggle");
 						db.addEventIntArgument(eventID, "Unit", unitID);
-						db.addEventIntArgument(eventID, "Item", Constants.items.get(ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
-						db.addEventIntArgument(eventID, "InventorySlot", Constants.inventorySlots.get(ConstantMapper.inventorySlotName(i)));
-						db.addEventIntArgument(eventID, "ToggleState", Constants.toggleState.get(ConstantMapper.treadsToggle((Integer)itemNew.getProperty("m_iStat"))));
+						db.addEventIntArgument(eventID, "Item", Constants.getIndex("Items", ConstantMapper.itemName((String)itemOld.getProperty("m_iName"))));
+						db.addEventIntArgument(eventID, "InventorySlot", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(i)));
+						db.addEventIntArgument(eventID, "ToggleState", Constants.getIndex("ToggleStates", ConstantMapper.treadsToggle((Integer)itemNew.getProperty("m_iStat"))));
 					}
 				}
 			}

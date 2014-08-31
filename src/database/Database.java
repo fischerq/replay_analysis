@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.almworks.sqlite4java.SQLiteConnection;
 import com.almworks.sqlite4java.SQLiteException;
@@ -13,6 +14,7 @@ import database.Unit.UnitSummary;
 
 public class Database {
 	private SQLiteConnection db;
+
 	private SQLiteStatement insertReplay = null;
 	private SQLiteStatement insertTeam = null;
 	private SQLiteStatement insertPlayer = null;
@@ -24,7 +26,7 @@ public class Database {
 	private SQLiteStatement insertRealArgument = null;
 	private SQLiteStatement insertTextArgument = null;
 	private SQLiteStatement insertEventCausality = null;
-	
+		
 	private SQLiteStatement getReplays = null;
 	private SQLiteStatement getTeams = null;
 	private SQLiteStatement getPlayers = null;
@@ -55,19 +57,6 @@ public class Database {
 			open_read();
 	}
 	
-	private void writeConstants(SQLiteStatement insert_statement, Map<String, Integer> constantMap){
-    	for(Map.Entry<String, Integer> e : constantMap.entrySet()){
-    		try {
-				insert_statement.bind(1,e.getValue());
-				insert_statement.bind(2,e.getKey());
-	    		insert_statement.step();
-	    		insert_statement.reset();
-    		} catch (SQLiteException e1) {
-				e1.printStackTrace();
-			}
-    	}
-	}
-
 	private void open_read(){
 		try{
 			getReplays = db.prepare("SELECT replay_id FROM Replays;");
@@ -95,8 +84,7 @@ public class Database {
 
 	    	db.exec("CREATE TABLE IF NOT EXISTS Replays (replay_id integer primary key);");
 	    	db.exec("CREATE TABLE IF NOT EXISTS Teams (team_id integer primary key, name text, tag text, side integer, replay_id integer);");
-	    	db.exec("CREATE TABLE IF NOT EXISTS SideMap (side_id integer primary key, name text);");
-	    	writeConstants(db.prepare("INSERT OR IGNORE INTO SideMap(side_id, name) VALUES(?, ?);"), Constants.sides);
+
 	    	
 	    	db.exec("CREATE TABLE IF NOT EXISTS Players (player_id integer primary key, name text, hero integer, team_id integer);");
 	    	//Ensure there is no player 0, as it is used to signal NPCs
@@ -107,29 +95,28 @@ public class Database {
 	    	//Also reserve unit 0 for empty fields
 	    	db.exec("INSERT INTO Units(unit_id) VALUES (0)");
 	    	db.exec("DELETE FROM Units WHERE Units.unit_id = 0;");	    	
-
-	    	db.exec("CREATE TABLE IF NOT EXISTS UnitTypeMap (type_id integer primary key, name text);");
-	    	writeConstants(db.prepare("INSERT OR IGNORE INTO UnitTypeMap(type_id, name) VALUES(?, ?);"), Constants.unitTypes);
-	    	
-	    	db.exec("CREATE TABLE IF NOT EXISTS TeamMap (team_id integer primary key, name text);");
-	    	writeConstants(db.prepare("INSERT OR IGNORE INTO TeamMap(team_id, name) VALUES(?, ?);"), Constants.teams);
 	    	
 			db.exec("CREATE TABLE IF NOT EXISTS TimeSeries (timeseries_id integer primary key, type integer, unit_id integer);");
-	    	db.exec("CREATE TABLE IF NOT EXISTS TimeSeriesTypeMap (type_id integer primary key, name text);");
-	    	writeConstants(db.prepare("INSERT OR IGNORE INTO TimeSeriesTypeMap(type_id, name) VALUES(?, ?);"), Constants.timeSeries);
 	    	db.exec("CREATE TABLE IF NOT EXISTS TimeSeriesNodes (node_id integer primary key, timeseries_id integer, time real, value real);");
 			
 	    	db.exec("CREATE TABLE IF NOT EXISTS Events (event_id integer primary key, time real, type integer, replay_id integer);");
-			db.exec("CREATE TABLE IF NOT EXISTS EventTypeMap (type_id integer primary key, name text);");
-			writeConstants(db.prepare("INSERT OR IGNORE INTO EventTypeMap(type_id, name) VALUES(?, ?);"), Constants.eventTypes);
 			db.exec("CREATE TABLE IF NOT EXISTS EventIntArguments (intargument_id integer primary key, event_id integer, argument integer, value integer);");
 			db.exec("CREATE TABLE IF NOT EXISTS EventRealArguments (realargument_id integer primary key, event_id integer, argument integer, value real);");
 			db.exec("CREATE TABLE IF NOT EXISTS EventTextArguments (stringargument_id integer primary key, event_id integer, argument integer, value text);");
-			db.exec("CREATE TABLE IF NOT EXISTS EventArgumentMap (argument_id integer primary key, name text);");
-			writeConstants(db.prepare("INSERT OR IGNORE INTO EventArgumentMap(argument_id, name) VALUES(?, ?);"), Constants.eventArguments);
 			db.exec("CREATE TABLE IF NOT EXISTS EventCausalities (causality_id integer primary key, cause integer, effect integer);");
 			
-
+			db.exec("CREATE TABLE IF NOT EXISTS StringMappings (mapping_id integer, entry_id, string text, PRIMARY KEY (mapping_id, entry_id));");
+			
+			Set<String> mappings = Constants.getAllValues("StringMappings");
+			SQLiteStatement insertMappingEntry = db.prepare("INSERT OR IGNORE INTO StringMappings(mapping_id, entry_id, string) VALUES(?, ?, ?);");
+			for(String mapping : mappings){
+				for(String entry : Constants.getAllValues(mapping)){
+					insertMappingEntry.bind(1, Constants.getIndex("StringMappings", mapping)).bind(2, Constants.getIndex(mapping, entry)).bind(3, entry);
+					insertMappingEntry.step();
+					insertMappingEntry.reset();
+				}
+			}
+			
 			db.exec("COMMIT TRANSACTION;");
 			
 		} catch (SQLiteException e) {
@@ -188,7 +175,7 @@ public class Database {
 	
 	public int createTeam(String name, String tag, String side, int replay_id){
 		try {
-			insertTeam.bind(1, name).bind(2, tag).bind(3, Constants.sides.get(side)).bind(4, replay_id);
+			insertTeam.bind(1, name).bind(2, tag).bind(3, Constants.getIndex("Sides", side)).bind(4, replay_id);
 			insertTeam.step();
 			insertTeam.reset();
 			return (int) db.getLastInsertId();
@@ -201,7 +188,7 @@ public class Database {
 	
 	public int createPlayer(String name, String hero, int team_id){
 		try {
-			insertPlayer.bind(1, name).bind(2, Constants.unitTypes.get(hero)).bind(3, team_id);
+			insertPlayer.bind(1, name).bind(2, Constants.getIndex("UnitTypes", hero)).bind(3, team_id);
 			insertPlayer.step();
 			insertPlayer.reset();
 			return (int) db.getLastInsertId();
@@ -214,7 +201,7 @@ public class Database {
 	
 	public int createUnit(String unit_name, String team, int player_id, boolean illusion, int replay){
 		try {
-			insertUnit.bind(1, Constants.unitTypes.get(unit_name)).bind(2, Constants.teams.get(team)).bind(3, player_id).bind(4, illusion? 1: 0).bind(5, replay);
+			insertUnit.bind(1, Constants.getIndex("UnitTypes", unit_name)).bind(2, Constants.getIndex("Teams", team)).bind(3, player_id).bind(4, illusion? 1: 0).bind(5, replay);
 			insertUnit.step();
 			insertUnit.reset();
 			return ((int) db.getLastInsertId());
@@ -228,7 +215,7 @@ public class Database {
 	public void makeUnitControlChanging(int unit_id){
 		SQLiteStatement modifyUnitControl;
 		try {
-			modifyUnitControl = db.prepare("UPDATE Units SET team ="+Constants.teams.get("Changing")+", controlled_by_player =-1 WHERE Units.unit_id = ?;");
+			modifyUnitControl = db.prepare("UPDATE Units SET team ="+Constants.getIndex("Teams", "Changing")+", controlled_by_player =-1 WHERE Units.unit_id = ?;");
 			modifyUnitControl.bind(1, unit_id);
 			modifyUnitControl.step();			
 		} catch (SQLiteException e) {
@@ -238,7 +225,7 @@ public class Database {
 	
 	public int createTimeSeries(String type, int unit_id){
 		try {
-			insertTimeSeries.bind(1, Constants.timeSeries.get(type)).bind(2, unit_id);
+			insertTimeSeries.bind(1, Constants.getIndex("TimeSeries", type)).bind(2, unit_id);
 			insertTimeSeries.step();
 			insertTimeSeries.reset();
 			return (int) db.getLastInsertId();
@@ -261,7 +248,7 @@ public class Database {
 	
 	public int createEvent(int replay_id, double time, String type){
 		try {
-			insertEvent.bind(1, time).bind(2, Constants.eventTypes.get(type)).bind(3, replay_id);
+			insertEvent.bind(1, time).bind(2, Constants.getIndex("EventTypes", type)).bind(3, replay_id);
 			insertEvent.step();
 			insertEvent.reset();
 			return (int) db.getLastInsertId();
@@ -274,7 +261,7 @@ public class Database {
 	
 	public void addEventIntArgument(int event_id, String argument, int value){
 		try {
-			insertIntArgument.bind(1, event_id).bind(2, Constants.eventArguments.get(argument)).bind(3, value);
+			insertIntArgument.bind(1, event_id).bind(2, Constants.getIndex("EventArguments", argument)).bind(3, value);
 			insertIntArgument.step();
 			insertIntArgument.reset();			
 		} catch (SQLiteException e) {
@@ -284,7 +271,7 @@ public class Database {
 	
 	public void addEventRealArgument(int event_id, String argument, double value){
 		try {
-			insertRealArgument.bind(1, event_id).bind(2, Constants.eventArguments.get(argument)).bind(3, value);
+			insertRealArgument.bind(1, event_id).bind(2, Constants.getIndex("EventArguments", argument)).bind(3, value);
 			insertRealArgument.step();
 			insertRealArgument.reset();			
 		} catch (SQLiteException e) {
@@ -294,7 +281,7 @@ public class Database {
 	
 	public void addEventTextArgument(int event_id, String argument, String value){
 		try {
-			insertTextArgument.bind(1, event_id).bind(2, Constants.eventArguments.get(argument)).bind(3, value);
+			insertTextArgument.bind(1, event_id).bind(2, Constants.getIndex("EventArguments", argument)).bind(3, value);
 			insertTextArgument.step();
 			insertTextArgument.reset();			
 		} catch (SQLiteException e) {
