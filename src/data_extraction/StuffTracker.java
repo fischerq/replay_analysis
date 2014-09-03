@@ -1,5 +1,6 @@
 package data_extraction;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -10,10 +11,15 @@ import java.util.Map;
 
 
 
+
+
+import java.util.PriorityQueue;
+
 import database.Constants;
 import database.Database;
 import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
+import skadistats.clarity.model.ModifierTableEntry;
 import skadistats.clarity.model.StringTable;
 import skadistats.clarity.model.UserMessage;
 import utils.ConstantMapper;
@@ -28,14 +34,18 @@ public class StuffTracker {
 	private Map<Integer, Projectile> currentLinearProjectiles;
 	private Map<Integer, LinkedList<Projectile> > currentTrackingProjectiles;
 	private Map<Integer, Projectile> currentAttacks;
-	private Map<Integer, LinkedList<Particle>> unitParticles;
-	private Map<Integer, Particle> effectEntities;
+	private Map<Integer, LinkedList<Integer>> unitParticles;
+
 	private Map<Integer, Particle> activeParticles;
 	private Map<String, Particle> tickParticles;
 	private Map<Integer, OverheadEvent> overheadEvents;
 	
+
+	
 	
 	private int nextIndex;
+	
+
 	
 	
 	public StuffTracker(ReplayData replay, Database db, UnitTracker units){
@@ -46,12 +56,13 @@ public class StuffTracker {
 		currentLinearProjectiles = new HashMap<Integer, Projectile>();
 		currentTrackingProjectiles = new HashMap<Integer, LinkedList<Projectile>>();
 		currentAttacks = new HashMap<Integer, Projectile>();
-		unitParticles = new HashMap<Integer, LinkedList<Particle>>();
-		effectEntities = new HashMap<Integer, Particle>();
+		unitParticles = new HashMap<Integer, LinkedList<Integer>>();
 		activeParticles = new HashMap<Integer, Particle>();
 		overheadEvents = new HashMap<Integer, OverheadEvent>();
 		tickParticles = new HashMap<String, Particle>();
 		nextIndex = 0;
+		
+
 		
 	}
 	
@@ -61,7 +72,7 @@ public class StuffTracker {
 		return result;
 	}
 	
-	public void updateProjectiles(Match match, Match oldMatch){
+	public void updateStuff(Match match, Match oldMatch){
 		//Update existing projectiles
 		
 		tickParticles.clear();
@@ -145,9 +156,14 @@ public class StuffTracker {
 					UserMessage create = (UserMessage)um.getProperty("create_particle");
 
 					Particle particle = new Particle(um, match);
+					if(particle.entity != null){
+						if(!unitParticles.containsKey(particle.entity.getHandle()))
+							unitParticles.put(particle.entity.getHandle(), new LinkedList<Integer>());
+						unitParticles.get(particle.entity.getHandle()).add(index);
+					}
 					activeParticles.put(index, particle);
-
-					System.out.println("Created particle "+index);
+					tickParticles.put(particle.name, particle);
+					//System.out.println("Created particle "+index);
 				}
 			}
 		}
@@ -174,7 +190,7 @@ public class StuffTracker {
 				db.addEventRealArgument(eventID, "VelocityX", (Float)velocity.getProperty("x"));
 				db.addEventRealArgument(eventID, "VelocityY", (Float)velocity.getProperty("y"));
 				currentLinearProjectiles.put((Integer)um.getProperty("handle"), new Projectile(projectileIndex, um, match));
-				System.out.println("Created linear proj "+um.toString());
+				//System.out.println("Created linear proj "+um.toString());
 				break;
 			case "CDOTAUserMsg_DestroyLinearProjectile":
 				if(currentLinearProjectiles.containsKey((Integer)um.getProperty("handle"))){
@@ -214,7 +230,6 @@ public class StuffTracker {
 				int index = um.getProperty("index");
 				//Globals.countString((String)um.getProperty("type"));
 				//System.out.println(ConstantMapper.formatTime(Utils.getTime(match))+" "+index+" "+(String)um.getProperty("type"));
-				
 				switch((String)um.getProperty("type")){
 				case "DOTA_PARTICLE_MANAGER_EVENT_CREATE"://LOTS
 					//Already prcoessed before
@@ -242,7 +257,9 @@ public class StuffTracker {
 				case "DOTA_PARTICLE_MANAGER_EVENT_UPDATE"://LOTS
 					UserMessage update = (UserMessage)um.getProperty("update_particle");
 					if(!activeParticles.containsKey(index)){
-						System.out.println("updating sth nonexisting "+index+" \n"+update.toString());
+						Particle createdParticle = new Particle(um, match);
+						activeParticles.put(index, createdParticle);
+						tickParticles.put(createdParticle.name, createdParticle);
 					}
 					else{
 						//System.out.println(currentParticles.get(index).name+": "+update.toString());
@@ -256,12 +273,13 @@ public class StuffTracker {
 					//System.out.println(particleEffectNames.getNameByIndex((int)updateEnt.getProperty("attachment"))+" "+particleEffectNames.getNameByIndex((int)updateEnt.getProperty("attach_type")));
 					if(!activeParticles.containsKey(index)){
 						//Create new particle
-						Particle createdParticle = new Particle(um, match, true);
-						activeParticles.put(index, createdParticle);
+						Particle createdEntityParticle = new Particle(um, match);
+						activeParticles.put(index, createdEntityParticle);
 						int entHandle = (int)updateEnt.getProperty("entity_handle");
 						if(!unitParticles.containsKey(entHandle))
-							unitParticles.put(entHandle, new LinkedList<Particle>());
-						unitParticles.get(entHandle).add(createdParticle);
+							unitParticles.put(entHandle, new LinkedList<Integer>());
+						unitParticles.get(entHandle).add(index);
+						tickParticles.put(createdEntityParticle.name, createdEntityParticle);
 						//System.out.println(ConstantMapper.formatTime(Utils.getTime(match))+" "+match.getEntities().getByHandle((int)updateEnt.getProperty("entity_handle")).getDtClass().getDtName()+" "+currentParticles.get(index).name+": "+updateEnt.toString());
 						//currentParticles.get(index).update(updateEnt);
 					}
@@ -280,29 +298,32 @@ public class StuffTracker {
 					//System.out.println(um.toString());
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_DESTROY_INVOLVING":
-					if(activeParticles.get(index) != null){
-						activeParticles.get(index).addMessage(um, Utils.getTime(match));
-						//System.out.println("Destroy involv "+index+" "+activeParticles.get(index).name);
-						tickParticles.put(activeParticles.get(index).name, activeParticles.get(index));
-						activeParticles.remove(index);
+					UserMessage destroy_involving = (UserMessage)um.getProperty("destroy_particle_involving");
+					int involvingEntityHandle = destroy_involving.getProperty("entity_handle");
+					if(unitParticles.containsKey(involvingEntityHandle)){
+						for(Integer i : unitParticles.get(involvingEntityHandle))
+							activeParticles.remove(i);
+						unitParticles.remove(involvingEntityHandle);
 					}
-					else System.out.println("Destroying unknown involving"+index);
+					else
+						System.out.println("Removing particles for entity without particles");
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_DESTROY":
-					if(!activeParticles.containsKey(index))
-						System.out.println("Destroying unused index "+index);
-					else{
+					if(activeParticles.containsKey(index)){
 						activeParticles.get(index).addMessage(um, Utils.getTime(match));
-						tickParticles.put(activeParticles.get(index).name, activeParticles.get(index));
 						activeParticles.remove(index);
 					}
+					else
+						System.out.println("Destroying unknown particle "+index);
+						
 					activeParticles.remove(index);
 					//System.out.println("Release "+um);
 					break;
 				case "DOTA_PARTICLE_MANAGER_EVENT_RELEASE"://LOTS
-					activeParticles.get(index).addMessage(um, Utils.getTime(match));
-					tickParticles.put(activeParticles.get(index).name, activeParticles.get(index));
-					activeParticles.remove(index);
+					if(activeParticles.containsKey(index)){
+						activeParticles.get(index).addMessage(um, Utils.getTime(match));
+						activeParticles.remove(index);
+					}
 					//Globals.countInt(index);
 					break;
 				default:
@@ -355,56 +376,13 @@ public class StuffTracker {
 					it.remove();
 			}
 		}
-		
-		for(Particle p : tickParticles.values()){
-			ParticleType type = ConstantMapper.particleType(p.name);
-			if(handleParticle(type))
-				handleEffect(type, p, match);
-		}
 	}
 	
-	private void handleEffect(ParticleType effectType, Particle particle, Match match){
-		StringTable particleEffectNames = match.getStringTables().forName("ParticleEffectNames");
-		switch(effectType){
-		case EffectEntity:
-			//System.out.println(particle.name);
-			//effectEntities.put(particle.index, particle);
-			break;
-		case AffectedUnit:
-			//System.out.println("Affected unit: "+particle.name);
-			Entity ent = particle.entity;
-			if(ent != null){
-			//	System.out.println("Entity: "+ match.getEntities().getByHandle(ent.getHandle()).getDtClass().getDtName());
-				if(!unitParticles.containsKey(ent.getHandle()))
-					unitParticles.put(ent.getHandle(), new LinkedList<Particle>());
-				unitParticles.get(ent.getHandle()).add(particle);
-			}
-			else
-			{}//	System.out.println("No entity");
-			//unitParticles.put(, new Particle(um));
-			break;
-		default:
-			//System.out.println(um.toString());
-			return;
-		}
+	public Map<String, Particle> getTickParticles(){
+		return tickParticles;
 	}
 	
-	private boolean handleParticle(ParticleType type){
-		//Only handle particles for stuff that is a) not cosmetic b) not observable through unit data
-		//Examples: ground-targeted casts
-		//			effects of casts on units
-		switch(type){
-		case EffectEntity:
-		case AffectedUnit:
-			return true;
-		case Cosmetic:
-		case Redundant:
-		case Unknown:
-			return false;
-		default:
-			System.out.println("Unhandled particle type "+type);
-			return false;
-		}
+	public Map<Integer, Particle> allParticles(){
+		return activeParticles;
 	}
-	
 }

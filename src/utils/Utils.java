@@ -39,6 +39,10 @@ public class Utils {
 		return m.getGameTime() - gameStartTime;
 	}
 	
+	public static double computeTime(float time){
+		return time - gameStartTime;
+	}
+	
 	public static Vector2f getPosition(Entity e){
 		int cell_x = e.getProperty("m_cellX");
 		int cell_y = e.getProperty("m_cellY");

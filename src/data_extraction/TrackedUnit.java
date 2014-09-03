@@ -302,25 +302,6 @@ public class TrackedUnit {
 		}
 	}
 
-	public void checkModifiers(Match match, Match oldMatch,
-			Map<String, LinkedList<TrackedUnit>> modifierChanges, Map<String, LinkedList<TrackedUnit>> modifierLosses) {
-		//Entity e = match.getEntities().getByHandle(handle);
-		//System.out.println("Modifiers for "+unitID+": "+e.getDtClass().getDtName());
-		List<ModifierTableEntry> modifierEntries = match.getModifiers().getAllForEntity(handle);
-		/*if(modifierEntries.size() > 0)
-			System.out.println(ConstantMapper.formatTime(Utils.getTime(match))+" modifier change for "+e.getDtClass().getDtName());*/
-		for(ModifierTableEntry modifier : modifierEntries){
-			if(modifier.hasField("modifier_class")){
-				//System.out.println(match.getStringTables().forName("ModifierNames").getNameByIndex((Integer)modifier.getField("modifier_class"))+" "+modifier.toString());
-				Globals.countString(match.getStringTables().forName("ModifierNames").getNameByIndex((Integer)modifier.getField("modifier_class")));
-				System.out.println(ConstantMapper.formatTime(match.getReplayTime())+": "+(String)modifier.getField("entry_type")+" "+(Integer)modifier.getField("index")+" "+match.getStringTables().forName("ModifierNames").getNameByIndex((Integer)modifier.getField("modifier_class"))+" "+match.getEntities().getByHandle((Integer)modifier.getField("caster")).getDtClass().getDtName());
-			}
-			else{}
-				//System.out.println(modifier.toString());
-		} 		
-		
-	}
-
 	public void updateInventory(Match match, Match oldMatch) {
 		Entity e = match.getEntities().getByHandle(handle);
 		Entity eOld = oldMatch.getEntities().getByHandle(handle);

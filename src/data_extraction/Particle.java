@@ -19,21 +19,50 @@ public class Particle {
 	public Vector2f position;
 	public int index;
 	
-	private List<UserMessage> messages = new LinkedList<UserMessage>();
+	public List<UserMessage> messages = new LinkedList<UserMessage>();
 	private List<Double> messageTimes = new LinkedList<Double>();
 	
 	public Particle(UserMessage message, Match match){
 		index = (int)message.getProperty("index");
 		timeCreated = Utils.getTime(match);
-		UserMessage createMsg = (UserMessage) message.getProperty("create_particle");
+		
 		StringTable particleEffectNames = match.getStringTables().forName("ParticleEffectNames");
-		name = particleEffectNames.getNameByIndex((int)createMsg.getProperty("particle_name_index"));
-		if((int)createMsg.getProperty("entity_handle") != 2097151){
-			entity  = match.getEntities().getByHandle((int)createMsg.getProperty("entity_handle"));
+		
+		switch((String)message.getProperty("type")){
+		case "DOTA_PARTICLE_MANAGER_EVENT_CREATE":
+			UserMessage createMsg = (UserMessage) message.getProperty("create_particle");
+			name = particleEffectNames.getNameByIndex((int)createMsg.getProperty("particle_name_index"));
+			if((int)createMsg.getProperty("entity_handle") != 2097151){
+				entity  = match.getEntities().getByHandle((int)createMsg.getProperty("entity_handle"));
+			}
+			else
+				entity = null;
+			position = null;
+			break;
+		case "DOTA_PARTICLE_MANAGER_EVENT_UPDATE":
+			UserMessage updateMsg = (UserMessage) message.getProperty("update_particle");
+			name = "UpdateCreated";
+			UserMessage positionMsg = updateMsg.getProperty("position");
+			position = new Vector2f();
+			position.x = (float)positionMsg.getProperty("x");
+			position.y = (float)positionMsg.getProperty("y");
+			
+			break;
+		case "DOTA_PARTICLE_MANAGER_EVENT_UPDATE_ENT":
+			UserMessage upMsg = (UserMessage) message.getProperty("update_particle_ent");
+			name = "AttackHit";
+			if((int)upMsg.getProperty("entity_handle") != 2097151){
+				entity  = match.getEntities().getByHandle((int)upMsg.getProperty("entity_handle"));
+			}
+			else
+				entity = null;
+			position = null;
+			break;
+		default:
+			System.out.println("Strange message "+message.toString());
+			break;
 		}
-		else
-			entity = null;
-		position = null;
+
 		addMessage(message, Utils.getTime(match));
 	}
 	
@@ -50,21 +79,6 @@ public class Particle {
 		return result;
 	}
 	
-	public Particle(UserMessage message, Match match, boolean fromEntUpdate){
-		index = (int)message.getProperty("index");
-		timeCreated = Utils.getTime(match);
-		UserMessage upMsg = (UserMessage) message.getProperty("update_particle_ent");
-		name = "AttackHit";
-		if((int)upMsg.getProperty("entity_handle") != 2097151){
-			entity  = match.getEntities().getByHandle((int)upMsg.getProperty("entity_handle"));
-		}
-		else
-			entity = null;
-		position = null;
-		addMessage(message, Utils.getTime(match));
-
-	}
-
 	public void update(UserMessage update) {
 		UserMessage positionMsg = (UserMessage)update.getProperty("position");
 		position = new Vector2f();

@@ -812,6 +812,8 @@ public class ConstantMapper {
 			return "Recipe: Drums of Endurance";
 		case "item_ancient_janggo":
 			return "Drums of Endurance";
+		case "item_recipe_pipe":
+			return "Recipe: Pipe of Insight";
 		case "item_pipe":
 			return "Pipe of Insight";
 
@@ -1773,7 +1775,16 @@ public class ConstantMapper {
 	}
 	
 	public static ParticleType particleType(String particle){
+		if(particle == null){
+			System.out.println("null name?");
+			return ParticleType.Unknown;
+		}
 		switch(particle){
+		
+		//For all heroes
+		case "AttackHit":
+			return ParticleType.AffectedUnit;
+		
 		//Shadow Fiend
 		case "nevermore_necro_souls":
 		case "nevermore_souls":
@@ -1929,10 +1940,11 @@ public class ConstantMapper {
 			return ParticleType.AffectedUnit;
 			
 		case "":
+		case "UpdateCreated":
 			return ParticleType.Unknown;
 		
 		default:
-			//System.out.println("Unhandled particle "+particle);
+			System.out.println("Unhandled particle "+particle);
 			//Globals.countString(particle);
 			return ParticleType.Unknown;
 		}

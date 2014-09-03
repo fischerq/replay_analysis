@@ -61,7 +61,7 @@ public class DataExtraction {
 				e1.printStackTrace();
 			}
         	
-        	
+        	System.out.println("Starting real analysis");
             TickIterator iter;
             TickIterator iter_old;
     		try {

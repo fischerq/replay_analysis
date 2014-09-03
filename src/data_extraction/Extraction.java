@@ -11,14 +11,21 @@ import java.util.Set;
 
 
 
+
+
+
 import database.Constants;
 import database.Database;
 import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
 import skadistats.clarity.model.GameEvent;
 import skadistats.clarity.model.GameEventDescriptor;
+import skadistats.clarity.model.ModifierTableEntry;
+import skadistats.clarity.model.StringTable;
+import skadistats.clarity.model.UserMessage;
 import utils.ConstantMapper;
 import utils.Utils;
+import utils.ConstantMapper.ParticleType;
 
 
 public class Extraction {
@@ -29,8 +36,9 @@ public class Extraction {
 	private UnitTracker units;
 	private AnimationTracker animations;
 	private Set<Integer> attackingUnits;
-	private StuffTracker projectiles;
-	//private Set<> rangedAttacks;
+	private StuffTracker stuff;
+	private ModifierTracker modifiers;
+	private Map<String, ModifierChange> modifierChangesByName; 
 	
 	private Match currentMatch = null;
 	private Match oldMatch = null;
@@ -44,7 +52,10 @@ public class Extraction {
 				
 		units = new UnitTracker(replay, db);
 		animations = new AnimationTracker();
-		projectiles = new StuffTracker(replay, db, units);
+		stuff = new StuffTracker(replay, db, units);
+		
+		modifiers = new ModifierTracker();
+		modifierChangesByName = new HashMap<String, ModifierChange>();
 		
 		attackingUnits = new HashSet<Integer>();
 	}
@@ -52,7 +63,7 @@ public class Extraction {
 	public void analyseTick(Match match, Match matchOld) {
 		db.startTransaction();
 
-		//System.out.println("\n\n"+ConstantMapper.formatTime(match.getReplayTime())+" Tick");
+		//System.out.println("\n"+ConstantMapper.formatTime(match.getGameTime())+" Tick");
 		currentMatch = match;
 		oldMatch = matchOld;
 		
@@ -66,7 +77,12 @@ public class Extraction {
 
 		updateAndProcessAnimations();
 		
-		projectiles.updateProjectiles(currentMatch, oldMatch);
+		updateStuff();
+		
+		updateModifiers();
+		
+
+		
 				
 		processCombatLog();
 		 
@@ -147,6 +163,35 @@ public class Extraction {
 		}
 */		
 		return true;
+	}
+
+	private void updateStuff(){
+		stuff.updateStuff(currentMatch, oldMatch);
+	}
+	
+	private void updateModifiers(){
+		modifiers.updateModifiers(currentMatch);
+		
+		modifierChangesByName.clear();
+		
+		StringTable modifierNames = currentMatch.getStringTables().forName("ModifierNames");
+		
+		
+		for(ModifierChange  change : modifiers.modifierChanges()){
+			if(change.entry.hasField("modifier_class"))
+				modifierChangesByName.put(modifierNames.getNameByIndex((Integer)change.entry.getField("modifier_class")), change);
+			String parentDT = "BadHandle";
+			if( currentMatch.getEntities().getByHandle((Integer)change.entry.getField("parent")) != null)
+				parentDT = currentMatch.getEntities().getByHandle((Integer)change.entry.getField("parent")).getDtClass().getDtName();
+			String indexDT = "Bad Index";
+			int entityIndex = (Integer)change.entry.getField("parent") & 0x7FF;
+			if( currentMatch.getEntities().getByIndex(entityIndex) != null)
+				indexDT = currentMatch.getEntities().getByIndex(entityIndex).getDtClass().getDtName();
+			if(change.entry.hasField("modifier_class"))
+				System.out.println(ConstantMapper.formatTime(currentMatch.getGameTime())+ " "+ConstantMapper.formatTime(currentMatch.getReplayTime())+" "+change.type+" "+modifierNames.getNameByIndex((Integer)change.entry.getField("modifier_class"))+" "+(Integer)change.entry.getField("parent")+" "+parentDT+" ("+indexDT+")");
+			else
+				System.out.println(ConstantMapper.formatTime(currentMatch.getGameTime())+ " "+ConstantMapper.formatTime(currentMatch.getReplayTime())+" "+change.type+" "+(Integer)change.entry.getField("parent")+" "+parentDT+" ("+indexDT+")"+" "+change.entry.toString());
+		}
 	}
 
 	
@@ -326,7 +371,6 @@ public class Extraction {
 		                 
 		                 db.addEventIntArgument(purchaseID, "Player", replay.getPlayerID(hero));
 	                	 db.addEventIntArgument(purchaseID, "Item", Constants.getIndex("Items", ConstantMapper.itemName(cle.getValueName())));
-		            	 System.out.println("spurchased item");
 		            	 break;
 		             default:
 		            	 System.out.format(MessageFormat.format("\nUNKNOWN: {0}\n", cle.toString()));
@@ -526,6 +570,17 @@ public class Extraction {
 	}
 	
 	public void finish() {
+		/*TODO apparently some particles are not removed
+		 * mostly: 	sf necromastery souls
+		 * 			Orchid pop
+		 * 			Rosh timer, maybe only the last one
+		 * System.out.println("Left Particles"+ stuff.allParticles().size());
+		for(Particle p : stuff.allParticles().values()){
+			System.out.println("Particle "+p.toString());
+			for(UserMessage m: p.messages)
+				System.out.println(m.toString());
+			System.out.println();
+		}*/
 		//Globals.print_names();
 		Globals.printCountedInts();
 		Globals.printCountedStrings();

@@ -57,7 +57,6 @@ public class UnitTracker {
 		}
 		for(TrackedUnit u : units.values()){
 			u.update(match, oldMatch);
-			u.checkModifiers(match, oldMatch, modifierAdds, modifierLosses);
 			u.updateInventory(match, oldMatch);
 		}
 	}

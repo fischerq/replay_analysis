@@ -443,6 +443,7 @@ public class Constants {
 		put("Arcane Boots");
 		put("Recipe: Drums of Endurance");
 		put("Drums of Endurance");
+		put("Recipe: Pipe of Insight");
 		put("Pipe of Insight");
 
 		put("Recipe: Force Staff");
