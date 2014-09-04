@@ -176,21 +176,41 @@ public class Extraction {
 		
 		StringTable modifierNames = currentMatch.getStringTables().forName("ModifierNames");
 		
-		
 		for(ModifierChange  change : modifiers.modifierChanges()){
-			if(change.entry.hasField("modifier_class"))
-				modifierChangesByName.put(modifierNames.getNameByIndex((Integer)change.entry.getField("modifier_class")), change);
-			String parentDT = "BadHandle";
-			if( currentMatch.getEntities().getByHandle((Integer)change.entry.getField("parent")) != null)
-				parentDT = currentMatch.getEntities().getByHandle((Integer)change.entry.getField("parent")).getDtClass().getDtName();
-			String indexDT = "Bad Index";
-			int entityIndex = (Integer)change.entry.getField("parent") & 0x7FF;
-			if( currentMatch.getEntities().getByIndex(entityIndex) != null)
-				indexDT = currentMatch.getEntities().getByIndex(entityIndex).getDtClass().getDtName();
-			if(change.entry.hasField("modifier_class"))
-				System.out.println(ConstantMapper.formatTime(currentMatch.getGameTime())+ " "+ConstantMapper.formatTime(currentMatch.getReplayTime())+" "+change.type+" "+modifierNames.getNameByIndex((Integer)change.entry.getField("modifier_class"))+" "+(Integer)change.entry.getField("parent")+" "+parentDT+" ("+indexDT+")");
-			else
-				System.out.println(ConstantMapper.formatTime(currentMatch.getGameTime())+ " "+ConstantMapper.formatTime(currentMatch.getReplayTime())+" "+change.type+" "+(Integer)change.entry.getField("parent")+" "+parentDT+" ("+indexDT+")"+" "+change.entry.toString());
+			
+			Entity ent = currentMatch.getEntities().getByIndex((Integer)change.entry.getField("parent") & 0x7FF);
+			if(ent != null){
+				String rawName = modifierNames.getNameByIndex((Integer)change.entry.getField("modifier_class"));
+				modifierChangesByName.put(rawName, change);
+				String modifierName = ConstantMapper.modifier(rawName);
+				if(units.exists(ent.getHandle()) && modifierName != null){
+					int eventID = 0;
+					switch(change.type){
+					case CREATE:
+						eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "ModifierGain");
+						break;
+					case TIMEOUT:
+					case REMOVE:
+						eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "ModifierLoss");
+						break;
+					}
+					int unitID = units.getUnitID(ent.getHandle());
+					db.addEventIntArgument(eventID, "Unit", unitID);
+					db.addEventIntArgument(eventID, "Modifier", Constants.getIndex("Modifiers", modifierName));
+					if(change.entry.hasField("caster")){
+						Entity caster = currentMatch.getEntities().getByIndex((Integer)change.entry.getField("caster") & 0x7FF);
+						int casterID = units.getUnitID(ent.getHandle());
+						if(units.exists(caster.getHandle()) && unitID != casterID){
+							db.addEventIntArgument(eventID, "ActingUnit", casterID);
+						}
+					}
+				}
+				
+				/*String indexDT = "BadIndex";
+				indexDT = currentMatch.getEntities().getByIndex((Integer)change.entry.getField("parent") & 0x7FF).getDtClass().getDtName();
+				System.out.println(ConstantMapper.formatTime(currentMatch.getGameTime())+ " "+ConstantMapper.formatTime(currentMatch.getReplayTime())+" "+change.type+" "+modifierNames.getNameByIndex((Integer)change.entry.getField("modifier_class"))+" "+(Integer)change.entry.getField("parent")+" "+indexDT+ " "+change.entry.toString());
+				*/
+			}
 		}
 	}
 
@@ -264,7 +284,7 @@ public class Extraction {
 				 continue;
             }
             CombatLogEntry cle = new CombatLogEntry(g);
-            System.out.println(cle.toString());
+            //System.out.println(cle.toString());
             /*if(true)
             	continue;*/
             boolean found = false;
@@ -304,20 +324,24 @@ public class Extraction {
 		                 e.value = cle.getValue();
 		                 break;
 		             case 2:
+		            	 //already tracked
+		            	 break;
 		            	 //Buff add
 		            	 //+e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
 		                 //+e.affected_unit = findUnit(cle.getTargetName(), cle, target);
-		                 e.action = cle.getInflictorName();
+		                 //e.action = cle.getInflictorName();
 		                 //e.value = cle.getValue();
 		                 
-		                 break;
+		                 //break;
 		             case 3:
+		            	 //already tracked
+		            	 break;
 		            	 //Buff loss
 		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);
 		                 //+e.affected_unit = findUnit(cle.getTargetName(), cle, target);
-		                 e.action = cle.getInflictorName();
+		                 //e.action = cle.getInflictorName();
 		                 //e.value = cle.getValue();
-		                 break;
+		                 //break;
 		             case 4:
 		            	 //unit Kill
 		            	 //e.acting_unit = findUnit(cle.getAttackerName(), cle, attacker);

@@ -1613,25 +1613,25 @@ public class ConstantMapper {
 		case 0:
 			return "Walking";
 		case 424:
-			return "AttackDefault";
+			return "Attack Default";
 		case 425:
-			return "AttackVariant";
+			return "Attack Variant";
 		case 426:
-			return "AttackSpecial";//Example: Jinada hit
+			return "Attack Special";//Example: Jinada hit
 		case 431:
-			return "AbilitySlot1";
+			return "Ability Slot1";
 		case 432:
-			return "AbilitySlot2";
+			return "Ability Slot2";
 		case 433:
-			return "AbilitySlot3";
+			return "Ability Slot3";
 		case 434:
-			return "AbilitySlot4";
+			return "Ability Slot4";
 		case 435:
-			return "AbilitySlot5";
+			return "Ability Slot5";
 		case 436:
-			return "AbilitySlot6";
+			return "Ability Slot6";
 		case 438:
-			return "AbilitySpecial";//Known cases: Start of sandking's sandstorm from walking
+			return "Ability Special";//Known cases: Start of sandking's sandstorm from walking
 		default:
 			//System.out.println("Animation: "+action);
 			return ""+action;
@@ -1950,32 +1950,443 @@ public class ConstantMapper {
 		}
 	}
 	
+	public static String modifier(String className){
+		if(className == null){
+			System.out.println("Modifier is null");
+			return null;
+		}
+		switch(className){
+		//Ignore modifiers that don't add information
+		// - exist for the whole lifetime for every entity of the type e.g. neutral skills, natural passives
+		// - status is tracked already(skills, items)
+		
+		//General
+		case "modifier_illusion":
+			return "Illusion";
+		case "modifier_phased":
+			return "Phased";
+		case "modifier_magic_immune":
+			return "Magic Immune";
+		case "modifier_stunned":
+			return "Stunned";
+		case "modifier_projectile_vision":
+			return "Projectile Vision";
+		case "modifier_truesight":
+			return "True Sight";
+		case "modifier_invisible":
+			return "Invisible";
+		case "modifier_kill":
+			return "Kill";
+			
+		//Runes
+		case "modifier_rune_haste":
+			return "Haste Rune";
+		case "modifier_rune_invis":
+			return "Invisibility Rune";
+		case "modifier_rune_doubledamage":
+			return "Double Damage Rune";
+		case "modifier_rune_regen":
+			return "Regeneration Rune";
+			
+		//Heroes
+		//Remove skills, only keep non-permanent stuff			
+		case "modifier_attribute_bonus":
+			return null;
+		case "modifier_buyback_gold_penalty":
+			return "Buyback";
+			
+		case "modifier_zuus_arc_lightning":
+		case "modifier_zuus_static_field":
+		case "modifier_zuus_lightningbolt_vision_thinker":
+		case "modifier_zuus_thundergodswrath_vision_thinker":
+			return null;
+			
+
+			
+		case "modifier_bounty_hunter_jinada":
+			return "Jinada";
+		case "modifier_bounty_hunter_jinada_slow":
+			return "Jinada Slow";
+		case "modifier_bounty_hunter_wind_walk":
+			return "Wind Walk";
+		case "modifier_bounty_hunter_track":
+			return "Track";
+		case "modifier_bounty_hunter_track_effect":
+			return "Track Effect";
+			
+		case "modifier_nevermore_necromastery":
+		case "modifier_nevermore_presence_aura":
+		case "modifier_nevermore_requiem_passive":
+			return null;
+		case "modifier_nevermore_presence":
+			return "Presence of the Dark Lord";
+		case "modifier_nevermore_requiem_invis_break":
+			return "Requiem of Souls Invisibility Break";
+		case "modifier_nevermore_requiem":
+			return "Requiem of Souls";
+			
+		case "modifier_dragon_knight_dragon_blood":
+		case "modifier_dragon_knight_dragon_form":
+		case "modifier_dragon_knight_splash_attack":
+		case "modifier_dragon_knight_corrosive_breath":
+		case "modifier_dragon_knight_frost_breath":
+			return null;
+		case "modifier_dragon_knight_corrosive_breath_dot":
+			return "Corrosive Breath";
+		case "modifier_dragon_knight_frost_breath_slow":
+			return "Frost Breath";
+			
+		case "modifier_mirana_leap":
+			return null;
+		case "modifier_mirana_leap_buff":
+			return "Leap Buff";
+		case "modifier_mirana_moonlight_shadow":
+			return "Moonlight Shadow";
+			
+		case "modifier_windrunner_shackle_shot":
+			return "Shackle Shot";
+		case "modifier_windrunner_windrun":
+			return "Windrun";
+		case "modifier_windrunner_windrun_slow":
+			return "Windrun Slow";
+		case "modifier_windrunner_focusfire":
+			return "Focus Fire";
+			
+		case "modifier_sandking_burrowstrike":
+		case "modifier_sand_king_caustic_finale":
+		case "modifier_sand_king_epicenter":
+			return null;
+		case "modifier_sandking_impale":
+			return "Burrowstrike Impale";
+		case "modifier_sandking_sand_storm":
+			return "Sandstorm";
+		case "modifier_sandking_sand_storm_invis":
+			return "Invisibility";
+		case "modifier_sand_king_caustic_finale_orb":
+			return "Caustic Finale";
+		case "modifier_sand_king_epicenter_slow":
+			return "Epicenter Slow"; 
+			
+		case "modifier_vengefulspirit_command_aura":
+		case "modifier_vengefulspirit_command_negative_aura":
+			return null;
+		case "modifier_vengefulspirit_wave_of_terror":
+			return "Wave of Terror";
+		case "modifier_vengefulspirit_command_aura_effect":
+			return "Vengeance Aura";
+		case "modifier_vengefulspirit_command_negative_aura_effect":
+			return "Negative Vengeance Aura";
+			
+		case "modifier_viper_poison_attack":
+		case "modifier_viper_nethertoxin":
+		case "modifier_viper_corrosive_skin":
+			return null;
+		case "modifier_viper_poison_attack_slow":
+			return "Poison Attack";
+		case "modifier_viper_corrosive_skin_slow":
+			return "Corrosive Skin";
+		case "modifier_viper_viper_strike_slow":
+			return "Viper Strike";
+			
+		//Buildings 
+		case "modifier_invulnerable":
+			return "Invulnerable";
+		case "modifier_tower_truesight_aura":
+			return "True Sight";
+		case "modifier_backdoor_protection_active":
+			return "Backdoor Protection";
+			
+		case "modifier_fountain_glyph":
+			return "Glyph";
+			
+		case "modifier_fountain_aura":
+			return null;
+		case "modifier_fountain_aura_buff":
+			return "Fountain Regeneration";
+			
+		//Creeps
+		case "modifier_creep_haste":
+			return "Creep Haste";
+		case "modifier_creep_slow":
+			return "Creep Slow";
+			
+		//Ignore Items, they are handled by the inventory tracking
+		case "modifier_item_boots_of_speed":
+		case "modifier_item_magic_stick":
+		case "modifier_item_stout_shield":
+		case "modifier_item_ironwood_branch":
+		case "modifier_item_observer_ward":
+		case "modifier_item_sentry_ward":
+		case "modifier_item_gauntlets":
+		case "modifier_item_slippers":
+		case "modifier_item_ring_of_protection":
+		case "modifier_item_blades_of_attack":
+		case "modifier_item_circlet":
+		case "modifier_item_quelling_blade":
+		case "modifier_item_gloves_of_haste":
+		case "modifier_item_empty_bottle":
+		case "modifier_item_wraith_band":
+		case "modifier_item_sobi_mask":
+		case "modifier_item_ring_of_regeneration":
+		case "modifier_item_ring_of_basilius":
+		case "modifier_item_ring_of_basilius_aura":
+		case "modifier_item_bracer":
+		case "modifier_item_magic_wand":
+		case "modifier_item_soul_ring":
+		case "modifier_item_robe_of_magi":
+		case "modifier_item_ancient_janggo":
+		case "modifier_item_null_talisman":
+		case "modifier_item_ring_of_aquila":
+		case "modifier_item_staff_of_wizardry":
+		case "modifier_item_boots_of_elves":
+		case "modifier_item_blade_of_alacrity":
+		case "modifier_item_mithril_hammer":
+		case "modifier_item_arcane_boots":
+		case "modifier_item_ogre_axe":
+		case "modifier_item_ultimate_orb":
+		case "modifier_item_necronomicon":
+		case "modifier_item_blink_dagger":
+		case "modifier_item_veil_of_discord":
+		case "modifier_item_oblivion_staff":
+		case "modifier_item_javelin":
+		case "modifier_item_broadsword":
+		case "modifier_item_assault":
+		case "modifier_item_assault_positive_aura":
+		case "modifier_item_assault_positive_buildings_aura":
+		case "modifier_item_assault_negative_armor_aura":
+		case "modifier_item_phase_boots":
+		case "modifier_item_power_treads":
+		case "modifier_item_yasha":
+		case "modifier_item_ring_of_aquila_aura":
+		case "modifier_item_black_king_bar":
+		case "modifier_item_lesser_crit":
+		case "modifier_item_forcestaff":
+		case "modifier_item_hyperstone":
+		case "modifier_item_mystic_staff":
+		case "modifier_item_point_booster":
+		case "modifier_item_demon_edge":
+		case "modifier_item_ultimate_scepter":
+		case "modifier_item_orchid_malevolence":
+		case "modifier_item_desolator":
+		case "modifier_item_maelstrom":
+		case "modifier_item_monkey_king_bar":
+		case "modifier_item_sheepstick":
+		case "modifier_item_quarterstaff":
+		case "modifier_item_boots_of_travel":
+		case "modifier_item_talisman_of_evasion":
+		case "modifier_item_greater_crit":
+		case "modifier_item_ring_of_health":
+		case "modifier_item_perseverance":
+		case "modifier_item_reaver":
+		case "modifier_item_ghost_scepter":
+		case "modifier_item_refresherorb":
+		case "modifier_item_aegis":
+		case "modifier_item_mjollnir":
+		//case "modifier_item_manta_style":
+		case "modifier_item_planeswalkers_cloak":
+		case "modifier_item_heart":
+		case "modifier_item_hood_of_defiance":
+		case "modifier_item_sange_and_yasha":
+		case "modifier_item_headdress":
+		case "modifier_item_eaglehorn":
+		case "modifier_item_gem_of_true_sight":
+		case "modifier_item_pipe":
+			return null;
+			
+		case "modifier_item_ring_of_basilius_aura_bonus":
+			return "Ring of Basilius";
+		case "modifier_item_ring_of_aquila_aura_bonus":
+			return "Ring of Aquila";
+		case "modifier_item_headdress_aura":
+			return "Headdress";
+		case "modifier_item_pipe_aura":
+			return "Insight Aura";
+		case "modifier_item_pipe_barrier":
+			return "Barrier";
+		case "modifier_item_ancient_janggo_aura_effect":
+			return "Drums of Endurance";
+		case "modifier_item_ancient_janggo_active":
+			return "Drums od Endurance Active";
+		case "modifier_item_assault_positive":
+			return "Assault Cuirass Positive";
+		case "modifier_item_assault_positive_buildings":
+			return "Assault Cuirass Positive Building";
+		case "modifier_item_assault_negative_armor":
+			return "Assault Cuirass Negative";
+		case "modifier_item_soul_ring_buff":
+			return "Soul Ring";			
+		case "modifier_item_phase_boots_active":
+			return "Phase Boots";
+		case "modifier_black_king_bar_immune":
+			return "Black King Bar";
+		case "modifier_sheepstick_debuff":
+			return "Scythe of Vyse";
+		case "modifier_orchid_malevolence_debuff":
+			return "Orchid Malevolence";
+		case "modifier_maelstrom_chain":
+			return "Maelstrom Chain Lightning";
+		case "modifier_item_mjollnir_static":
+			return "Static Charge";
+		case "modifier_mjollnir_chain":
+			return "Mjollnir Chain Lightning";
+		case "modifier_item_veil_of_discord_debuff":
+			return "Veil of Discord";
+		case "modifier_item_forcestaff_active":
+			return "Force Staff";
+		case "modifier_desolator_buff":
+			return "Desolator";
+		case "modifier_sange_and_yasha_buff":
+			return "Greater Maim";
+		case "modifier_item_ethereal_blade_ethereal":
+			return "Ethereal Blade Ethereal";
+		case "modifier_item_ethereal_blade_slow":
+			return "Ethereal Blade Slow";
+			
+		//case "modifier_manta_phase":
+		//	return "Manta Phase";
+		//case "modifier_manta":
+		//	return "Manta Illusion?";
+		case "modifier_item_buff_ward":
+			return null;
+		case "modifier_item_ward_true_sight":
+			return "True Sight";
+		case "modifier_item_dustofappearance":
+			return "Dust of Appearance";
+		case "modifier_smoke_of_deceit":
+			return "Smoke of Deceit";
+		case "modifier_boots_of_travel_incoming":
+			return "Boots of Travel Incoming";
+			
+		case "modifier_necronomicon_warrior_mana_burn":
+		case "modifier_necronomicon_warrior_last_will":
+		case "modifier_necronomicon_archer_aoe":
+		case "modifier_necronomicon_archer_aura":
+			return null;
+		case "modifier_necronomicon_warrior_sight":
+			return "True Sight"; 
+			
+		case "modifier_teleporting":
+			return "Teleporting";
+		case "modifier_clarity_potion":
+			return "Clarity Regeneration";
+		case "modifier_tango_heal":
+			return "Tango Regeneration";
+		case "modifier_flask_healing":
+			return "Healing Salve Regeneration";
+		case "modifier_bottle_regeneration":
+			return "Bottle Regeneration";
+			
+		//Courier Commands
+		case "modifier_courier_flying":
+			return "Flying";
+		case "modifier_courier_take_stash_items":
+			return "Courier Take Stash";
+		case "modifier_courier_transfer_items":
+			return "Courier Transfer Items";
+		case "modifier_courier_burst":
+			return "Courier Burst";
+			
+		//Neutrals
+		case "modifier_roshan_spell_block":
+			return "Roshan Spell Block";
+		case "modifier_roshan_bash":
+		case "modifier_roshan_inherent_buffs":
+		case "modifier_roshan_devotion":
+		case "modifier_roshan_devotion_aura":
+			return null;
+		case "modifier_roshan_slam":
+			return "Roshan Slam";
+
+		case "modifier_neutral_spell_immunity":
+			return "Neutral Spell Immunity";
+
+		case "modifier_ghost_frost_attack_slow":
+			return "Frost Attack";
+		case "modifier_gnoll_assassin_envenomed_weapon_poison":
+			return "Envenomed Weapon";
+		case "modifier_forest_troll_high_priest_mana_aura_bonus":
+			return "Mana Aura";
+		case "modifier_kobold_taskmaster_speed_aura_bonus":
+			return "Speed Aura";
+		case "modifier_satyr_hellcaller_unholy_aura_bonus":
+			return "Unholy Aura";
+		case "modifier_enraged_wildkin_toughness_aura_bonus":
+			return "Toughness Aura";
+		case "modifier_centaur_khan_endurance_aura_bonus":
+			return "Endurance Aura";
+		case "modifier_alpha_wolf_command_aura_bonus":
+			return "Command Aura";
+		case "modifier_big_thunder_lizard_frenzy":
+			return "Frenzy";
+			
+		case "modifier_forest_troll_high_priest_heal_autocast":
+		case "modifier_forest_troll_high_priest_mana_aura":
+		case "modifier_gnoll_assassin_envenomed_weapon":
+		case "modifier_satyr_hellcaller_unholy_aura":
+		case "modifier_kobold_taskmaster_speed_aura":
+		case "modifier_ghost_frost_attack":
+		case "modifier_enraged_wildkin_toughness_aura":
+		case "modifier_centaur_khan_endurance_aura":
+		case "modifier_alpha_wolf_command_aura":
+		case "modifier_alpha_wolf_critical_strike":
+		case "modifier_giant_wolf_critical_strike":
+		case "modifier_black_dragon_splash_attack":
+
+			return null;
+			
+		/*case "":
+			return "";
+
+		case "":
+			return "";
+		case "":
+			return "";
+		case "":
+			return "";
+		case "":
+			return "";
+		case "":
+			return "";
+		case "":
+			return "";
+		case "":
+			return "";
+		case "":
+			return "";
+		case "":
+			return "";*/
+		default: 
+			System.out.println("Unknown modifier class "+className);
+			return null;
+		}
+	}
+	
 	public static String clickType(int orderType){
 		switch(orderType){
 		case 1:
-			return "MoveGround";
+			return "Move Ground";
 		case 2:
-			return "MoveUnit";
+			return "Move Unit";
 		case 3:
-			return "AttackGround";
+			return "Attack Ground";
 		case 4:
-			return "AttackUnit";
+			return "Attack Unit";
 		case 5:
-			return "CastGround";
+			return "Cast Ground";
 		case 6:
-			return "CastUnit";
+			return "Cast Unit";
 		case 7:
-		 	return "CastTree";
+		 	return "Cast Tree";
 		case 12:
-			return "DropItem";
+			return "Drop Item";
 		case 13:
-			return "GiveItem";
+			return "Give Item";
 		case 14:
-			return "PickupItem";
+			return "Pick Up Item";
 		case 15:
-			return "PickRune";
+			return "Pick Rune";
 		case 19:
-			return "RepositionItem";
+			return "Reposition Item";
 		default:
 			System.out.println("Unknown orderType "+orderType);
 			return "";

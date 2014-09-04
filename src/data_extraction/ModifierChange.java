@@ -7,7 +7,6 @@ public class ModifierChange {
 	public ModifierTableEntry entry;
 	public static enum Type{
 		CREATE,
-		CHANGE,
 		TIMEOUT,
 		REMOVE,
 	};

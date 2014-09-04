@@ -77,6 +77,6 @@ public class UnitTracker {
 		if(units.containsKey(handle))
 			return units.get(handle).getID();
 		else
-			return 0;
+			return -1;
 	}
 }

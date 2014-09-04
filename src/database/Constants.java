@@ -27,6 +27,7 @@ public class Constants {
 		tmpMap.put("Actions", getActions());
 		tmpMap.put("Projectiles", getProjectiles());
 		tmpMap.put("ClickTypes", getClickTypes());
+		tmpMap.put("Modifiers", getModifiers());
 		
 		current_map = new HashMap<String, Integer>();
 		put("StringMappings");
@@ -41,7 +42,8 @@ public class Constants {
 		put("TimeSeries");
 		put("Actions");
 		put("Projectiles");
-		put("ClickTypes");		
+		put("ClickTypes");
+		put("Modifiers");
 		tmpMap.put("StringMappings", current_map);
 				
 		maps = Collections.unmodifiableMap(tmpMap); 
@@ -284,8 +286,10 @@ public class Constants {
         
         put("DealDamage");
         put("Heal");
+        
         put("ModifierGain");
         put("ModifierLoss");
+        
         put("Kill");
         put("AbilityUse");
         put("ItemUse");
@@ -551,16 +555,16 @@ public class Constants {
 	private static HashMap<String, Integer> getActions(){
         current_map = new HashMap<String, Integer>();
 		put("Walking");
-		put("AttackDefault");
-		put("AttackVariant");
-		put("AttackSpecial");
-		put("AbilitySlot1");
-		put("AbilitySlot2");
-		put("AbilitySlot3");
-		put("AbilitySlot4");
-		put("AbilitySlot5");
-		put("AbilitySlot6");
-		put("AbilitySpecial");
+		put("Attack Default");
+		put("Attack Variant");
+		put("Attack Special");
+		put("Ability Slot1");
+		put("Ability Slot2");
+		put("Ability Slot3");
+		put("Ability Slot4");
+		put("Ability Slot5");
+		put("Ability Slot6");
+		put("Ability Special");
 
 		return current_map;
     }
@@ -582,21 +586,101 @@ public class Constants {
     
 	private static HashMap<String, Integer> getClickTypes(){
         current_map = new HashMap<String, Integer>();
-        put("MoveGround");
-        put("MoveUnit");
-        put("AttackGround");
-        put("AttackUnit");
-        put("CastGround");
-        put("CastUnit");
-        put("CastTree");
-        put("DropItem");
-        put("GiveItem");
-        put("PickupItem");
-        put("PickRune");
-        put("RepositionItem");
+        put("Move Ground");
+        put("Move Unit");
+        put("Attack Ground");
+        put("Attack Unit");
+        put("Cast Ground");
+        put("Cast Unit");
+        put("Cast Tree");
+        put("Drop Item");
+        put("Give Item");
+        put("Pick Up Item");
+        put("Pick Rune");
+        put("Reposition Item");
         
         return current_map;
     }
     
-    
+	private static HashMap<String, Integer> getModifiers(){
+        current_map = new HashMap<String, Integer>();
+        put("Phased");
+        put("Magic Immune");
+        put("True Sight");
+        put("Illusion");
+        put("Stunned");
+        put("Kill");
+        
+        put("Haste Rune");
+        put("Invisibility Rune");
+        put("Double Damage Rune");
+        
+        put("Buyback");
+        
+        put("Jinada Slow");
+        put("Track");
+        
+        put("Presence of the Dark Lord");
+        put("Requiem of Souls Invisibility Break");
+        put("Requiem of Souls");
+        
+        put("Windrun");
+        
+        put("Vengeance Aura");
+        
+        put("Poison Attack");
+        put("Corrosive Skin");
+        put("Viper Strike");
+                
+        put("Invulnerable");
+        put("Backdoor Protection");
+        
+        put("Fountain Regeneration");
+        
+        put("Creep Haste");
+        put("Creep Slow");
+        
+        put("Teleporting");
+        put("Soul Ring");        
+        put("Tango Regeneration");
+        put("Bottle Regeneration");
+        put("Ring of Basilius");
+        put("Ring of Aquila");
+        put("Drums of Endurance");
+        put("Drums od Endurance Active");
+        put("Assault Cuirass Positive");
+        put("Force Staff");
+        put("Desolator");
+        put("Dust of Appearance");
+        put("Smoke of Deceit");
+        
+        put("Courier Take Stash");
+        put("Courier Transfer Items");
+        
+        put("Roshan Spell Block");
+        
+        put("Neutral Spell Immunity");
+        
+        put("Unholy Aura");
+        put("Speed Aura");
+        put("Toughness Aura");
+        put("Endurance Aura");
+        put("Command Aura");
+        put("");
+
+
+
+
+
+
+
+        put("");
+        put("");
+        put("");
+        put("");
+        put("");
+        put("");
+        
+        return current_map;
+    }
 }
