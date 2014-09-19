@@ -10,11 +10,13 @@ import javax.vecmath.Vector2f;
 
 
 
+
 import database.Constants;
 import database.Database;
 import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
 import skadistats.clarity.model.ModifierTableEntry;
+import skadistats.clarity.model.ReceiveProp;
 import utils.ConstantMapper;
 import utils.Utils;
 
@@ -76,7 +78,22 @@ public class TrackedUnit {
 	private Database db;
 	private Map<String, Integer> trackedTimeSeries;
 	private Map<String, DataPoint> lastWrittenNode;
+
+	private Vector2f position;
+	private Vector2f oldPosition;
+	private boolean denieable;
 	
+	boolean hasInventory;
+	
+	private int[] abilityIDs;
+	private Match currentMatch;
+	
+	enum LifeChange{
+		NOTHING, 
+		SPAWN,
+		DEATH
+	};
+	private LifeChange lastLifeChange;
 	
 	public TrackedUnit(Entity unit, ReplayData replay, Database db){
 		handle = unit.getHandle();
@@ -88,13 +105,37 @@ public class TrackedUnit {
 		controlID = 0;
 		trackedTimeSeries = new HashMap<String, Integer>();
 		lastWrittenNode = new HashMap<String, DataPoint>();
+		lastLifeChange = LifeChange.NOTHING;
+		position = null;
+		oldPosition = null;
+		denieable = false;
+		System.out.println("reset "+handle);
+		abilityIDs = new int[0];
+		hasInventory = true;
+	}
+	
+	public int getHandle(){
+		return handle;
 	}
 	
 	public int getID(){
 		return unitID;
 	}
 	
+	public LifeChange getLifeChange(){
+		return lastLifeChange;
+	}
+	
+	public Vector2f getPosition(){
+		return position;
+	}
+	public Vector2f getOldPosition(){
+		return oldPosition;
+	}
+	
 	public boolean update(Match match, Match oldMatch){
+		currentMatch = match;
+		
 		Entity e = match.getEntities().getByHandle(handle);
 		Entity eOld = oldMatch.getEntities().getByHandle(handle);
 		if(e == null)
@@ -105,16 +146,27 @@ public class TrackedUnit {
 		if(eOld != null)
 			aliveOld = ConstantMapper.isAlive((Integer)eOld.getProperty("m_lifeState"));
 		
+		if(aliveNow){
+			oldPosition = position;
+			position = Utils.getPosition(e);
+			if(oldPosition == null)
+				oldPosition = position;
+		}
+	
 		if(created){
 			if(aliveNow && !aliveOld){
+				lastLifeChange = LifeChange.SPAWN;
 				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "Spawn");
 				db.addEventIntArgument(eventID, "Unit", unitID);
 				pushTimeSeries(match);
 			}
-			else if(!aliveNow && aliveOld){				
+			else if(!aliveNow && aliveOld){	
+				lastLifeChange = LifeChange.DEATH;
 				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "Death");
 				db.addEventIntArgument(eventID, "Unit", unitID);
 				pushTimeSeries(match);
+				position = null;
+				oldPosition = null;
 			}
 			else if(aliveNow && aliveOld){
 				if(ownerHandle != 0 && (Integer)e.getProperty("m_hOwnerEntity") != ownerHandle){
@@ -129,6 +181,10 @@ public class TrackedUnit {
 				}
 				updateTimeSeries(match, oldMatch);
 				checkVisibility(match, oldMatch);
+				updateDenieable(match);
+				if(hasInventory)
+					updateInventory(match, oldMatch);
+				updateAbilities(match, oldMatch);
 			}
 		}
 		else{
@@ -136,19 +192,30 @@ public class TrackedUnit {
 				created = true;
 				controlID = 0;
 				if((Integer)e.getProperty("m_hOwnerEntity") != 2097151){
-					controlID = replay.getPlayerID((Integer) match.getEntities().getByHandle((Integer)e.getProperty("m_hOwnerEntity")).getProperty("m_iPlayerID"));
+					if(match.getEntities().getByHandle((Integer)e.getProperty("m_hOwnerEntity")) == null)
+						System.out.println("Owner is null");
+					else
+						controlID = replay.getPlayerID((Integer) match.getEntities().getByHandle((Integer)e.getProperty("m_hOwnerEntity")).getProperty("m_iPlayerID"));
 				}
 				unitID = db.createUnit(ConstantMapper.nameForIndex((Integer)e.getProperty("m_iUnitNameIndex")),
 							ConstantMapper.team((Integer)e.getProperty("m_iTeamNum")),
 							controlID,
 							Utils.isIllusion(e),
 							replay.getReplayID());
+				lastLifeChange = LifeChange.SPAWN;
 				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "Spawn");
 				db.addEventIntArgument(eventID, "Unit", unitID);
 				creationTime = Utils.getTime(match);
 				ownerHandle = (Integer)e.getProperty("m_hOwnerEntity");
 				createTimeSeries(e);
 				pushTimeSeries(match);
+				
+				if(e.getDtClass().getPropertyIndex("m_Inventory.m_hItems.0000") == null)
+					hasInventory = false;
+				else
+					hasInventory = true;
+				//For initialization
+				updateAbilities(match, oldMatch);
 			}
 		}
 		return true;
@@ -262,17 +329,14 @@ public class TrackedUnit {
 	private DataPoint getTimeSeriesValue(String type, Match match){
 		Entity e = match.getEntities().getByHandle(handle);
 		double time = Utils.getTime(match);
-		Vector2f position = null;
 		
 		switch(type){
 		case "PositionX":
-			position = Utils.getPosition(e);
 			return new DataPoint(time, position.x, Interval.rounded((int) position.x));
 		case "PositionY":
-			position = Utils.getPosition(e);
 			return new DataPoint(time, position.y, Interval.rounded((int) position.y));
 		case "Orientation":
-			double orientation = (Float)e.getProperty("m_angRotation[1]")/360.0;
+			double orientation = (Float)e.getProperty("m_angRotation[1]")/360.0*2*Math.PI;
 			return new DataPoint(time, orientation, new Interval(orientation, orientation));
 		case "Health":
 			if(e.getDtClass().getPropertyIndex("m_iHealthPercentage") != null){
@@ -302,16 +366,46 @@ public class TrackedUnit {
 		}
 	}
 
-	public void updateInventory(Match match, Match oldMatch) {
+	private void updateInventory(Match match, Match oldMatch) {
 		Entity e = match.getEntities().getByHandle(handle);
 		Entity eOld = oldMatch.getEntities().getByHandle(handle);
 		
-		if(eOld == null || e == null)
+		if(eOld == null || e == null )
 			return;
 		//System.out.println("Checking inventory "+e.getDtClass().getDtName());
 		//System.out.println(e.toString());
-		Integer[] items = e.getArrayProperty(Integer.class, "m_Inventory.m_hItems");
-		Integer[] itemsOld = eOld.getArrayProperty(Integer.class, "m_Inventory.m_hItems");
+		int[] items = new int[14];
+		items[0] = e.getProperty("m_Inventory.m_hItems.0000");
+		items[1] = e.getProperty("m_Inventory.m_hItems.0001");
+		items[2] = e.getProperty("m_Inventory.m_hItems.0002");
+		items[3] = e.getProperty("m_Inventory.m_hItems.0003");
+		items[4] = e.getProperty("m_Inventory.m_hItems.0004");
+		items[5] = e.getProperty("m_Inventory.m_hItems.0005");
+		items[6] = e.getProperty("m_Inventory.m_hItems.0006");
+		items[7] = e.getProperty("m_Inventory.m_hItems.0007");
+		items[8] = e.getProperty("m_Inventory.m_hItems.0008");
+		items[9] = e.getProperty("m_Inventory.m_hItems.0009");
+		items[10] = e.getProperty("m_Inventory.m_hItems.0010");
+		items[11] = e.getProperty("m_Inventory.m_hItems.0011");
+		items[12] = e.getProperty("m_Inventory.m_hItems.0012");
+		items[13] = e.getProperty("m_Inventory.m_hItems.0013");
+
+		int[] itemsOld = new int[14];
+		itemsOld[0] = eOld.getProperty("m_Inventory.m_hItems.0000");
+		itemsOld[1] = eOld.getProperty("m_Inventory.m_hItems.0001");
+		itemsOld[2] = eOld.getProperty("m_Inventory.m_hItems.0002");
+		itemsOld[3] = eOld.getProperty("m_Inventory.m_hItems.0003");
+		itemsOld[4] = eOld.getProperty("m_Inventory.m_hItems.0004");
+		itemsOld[5] = eOld.getProperty("m_Inventory.m_hItems.0005");
+		itemsOld[6] = eOld.getProperty("m_Inventory.m_hItems.0006");
+		itemsOld[7] = eOld.getProperty("m_Inventory.m_hItems.0007");
+		itemsOld[8] = eOld.getProperty("m_Inventory.m_hItems.0008");
+		itemsOld[9] = eOld.getProperty("m_Inventory.m_hItems.0009");
+		itemsOld[10] = eOld.getProperty("m_Inventory.m_hItems.0010");
+		itemsOld[11] = eOld.getProperty("m_Inventory.m_hItems.0011");
+		itemsOld[12] = eOld.getProperty("m_Inventory.m_hItems.0012");
+		itemsOld[13] = eOld.getProperty("m_Inventory.m_hItems.0013");
+		//itemsOld.getArrayProperty(Integer.class, "m_Inventory.m_hItems");
 		if(items != null && itemsOld != null){
 			for(int i = 0; i< items.length; ++i){
 				//System.out.println(itemsOld[i]+" "+items[i]);
@@ -319,12 +413,12 @@ public class TrackedUnit {
 					continue;
 				Entity itemNew = match.getEntities().getByHandle(items[i]);
 				Entity itemOld = oldMatch.getEntities().getByHandle(itemsOld[i]);
-				if(!items[i].equals(itemsOld[i])){
+				if(items[i] != itemsOld[i]){
 					boolean found = false;
 					int index = -1;
 					if(itemNew == null){
 						for(int j = 0; j < items.length; ++j)
-							if(items[j].equals(itemsOld[i])){
+							if(items[j] == itemsOld[i]){
 								found = true;
 								index = j;
 								break;
@@ -349,7 +443,7 @@ public class TrackedUnit {
 					}
 					else if(itemOld == null){
 						for(int j = 0; j < itemsOld.length; ++j)
-							if(itemsOld[j].equals(items[i])){
+							if(itemsOld[j] == items[i]){
 								found = true;
 								index = j;
 								break;
@@ -372,7 +466,7 @@ public class TrackedUnit {
 					}
 					else{
 						for(int j = 0; j < items.length; ++j)
-							if(items[j].equals(itemsOld[i]) && itemsOld[j].equals(items[i])){
+							if(items[j] == itemsOld[i] && itemsOld[j] == items[i]){
 								found = true;
 								index = j;
 								break;
@@ -431,9 +525,137 @@ public class TrackedUnit {
 						db.addEventIntArgument(eventID, "InventorySlot", Constants.getIndex("InventorySlots", ConstantMapper.inventorySlotName(i)));
 						db.addEventIntArgument(eventID, "ToggleState", Constants.getIndex("ToggleStates", ConstantMapper.treadsToggle((Integer)itemNew.getProperty("m_iStat"))));
 					}
+					
+					for(ReceiveProp p : itemNew.getDtClass().getReceiveProps())
+						printPropChange(itemNew, itemOld, p.getVarName());
 				}
 			}
 				
 		}
+	}
+	
+	public void updateDenieable(Match match){
+		Entity e = match.getEntities().getByHandle(handle);
+		int unitNameIndex = e.getProperty("m_iUnitNameIndex");
+		if(unitNameIndex <= 115 ){//Heroes
+			denieable =  true;
+		}
+		else if(unitNameIndex >= 124 && unitNameIndex <= 157){//Buildings
+			if(Utils.getHealth(e) < (int)e.getProperty("m_iMaxHealth")/10)
+				denieable =  true;
+			else
+				denieable =  false;
+		}
+		else if(unitNameIndex >= 116 && unitNameIndex <= 123 || unitNameIndex >= 160 && unitNameIndex <= 163){
+			if(Utils.getHealth(e) < (int)e.getProperty("m_iMaxHealth")/2)
+				denieable =  true;
+			else
+				denieable =  false;
+		}
+	}
+	
+	public boolean isDenieable(){
+		return denieable;
+	}
+	
+	private void printPropChange(Entity e, Entity old, String name){
+		//System.out.println(name+" "+e.getProperty(name)+" "+old.getProperty(name)+" "+e.getProperty(name).equals(old.getProperty(name)));
+		if(!e.getProperty(name).equals(old.getProperty(name)))
+			System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+name+" "+old.getProperty(name)+" -> "+e.getProperty(name));
+	}
+	
+	private void updateAbilities(Match match, Match oldMatch){
+		Entity e = match.getEntities().getByHandle(handle);
+		Entity eOld = oldMatch.getEntities().getByHandle(handle);
+		
+		if(eOld == null && e != null){
+			System.out.println("init "+handle);
+			//System.out.println(e.toString());
+			int[] abilities_extract = new int[16];
+			abilities_extract[0] = e.getProperty("m_hAbilities.0000");
+			abilities_extract[1] = e.getProperty("m_hAbilities.0001");
+			abilities_extract[2] = e.getProperty("m_hAbilities.0002");
+			abilities_extract[3] = e.getProperty("m_hAbilities.0003");
+			abilities_extract[4] = e.getProperty("m_hAbilities.0004");
+			abilities_extract[5] = e.getProperty("m_hAbilities.0005");
+			abilities_extract[6] = e.getProperty("m_hAbilities.0006");
+			abilities_extract[7] = e.getProperty("m_hAbilities.0007");
+			abilities_extract[8] = e.getProperty("m_hAbilities.0008");
+			abilities_extract[9] = e.getProperty("m_hAbilities.0009");
+			abilities_extract[10] = e.getProperty("m_hAbilities.0010");
+			abilities_extract[11] = e.getProperty("m_hAbilities.0011");
+			abilities_extract[12] = e.getProperty("m_hAbilities.0012");
+			abilities_extract[13] = e.getProperty("m_hAbilities.0013");
+			abilities_extract[14] = e.getProperty("m_hAbilities.0014");
+			abilities_extract[15] = e.getProperty("m_hAbilities.0015");
+			int nAbilities = 0;
+			for(int i = 0; i < 16;++i)
+				if(abilities_extract[i] == 2097151){
+					nAbilities = i;
+					break;
+				}
+			abilityIDs = new int[nAbilities];
+			for(int i = 0; i< nAbilities; ++i){
+				abilityIDs[i] = abilities_extract[i];
+				Entity ability = match.getEntities().getByHandle(abilityIDs[i]);
+				//System.out.println(ability.toString());
+			}
+		}
+		
+		if(eOld == null || e == null)
+			return;
+
+		Entity abilityEntity = null;
+		Entity abilityEntityOld = null;
+		//System.out.println(ConstantMapper.formatTime(Utils.getTime(match))+" "+match.getGameTime()+" "+match.getReplayTime()+" ");
+		for(int i = 0; i < abilityIDs.length; ++i){
+			abilityEntity = match.getEntities().getByHandle(abilityIDs[i]);
+			abilityEntityOld = oldMatch.getEntities().getByHandle(abilityIDs[i]);
+			for(ReceiveProp p : abilityEntity.getDtClass().getReceiveProps())
+				printPropChange(abilityEntity, abilityEntityOld, p.getVarName());
+		}
+		
+		for(int i = 0; i < abilityIDs.length; ++i){
+			abilityEntity = match.getEntities().getByHandle(abilityIDs[i]);
+			abilityEntityOld = oldMatch.getEntities().getByHandle(abilityIDs[i]);
+			if(!abilityEntity.getProperty("m_iLevel").equals(abilityEntityOld.getProperty("m_iLevel"))){
+				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "AbilityLevel");
+				db.addEventIntArgument(eventID, "Unit", unitID);
+				db.addEventIntArgument(eventID, "Ability", Constants.getIndex("Actions", ConstantMapper.abilityName((String)abilityEntity.getProperty("m_iName"))));
+				db.addEventIntArgument(eventID, "Level", (int)abilityEntity.getProperty("m_iLevel"));
+			}
+			if(!abilityEntity.getProperty("m_fCooldown").equals(abilityEntityOld.getProperty("m_fCooldown"))){
+				if((float)abilityEntity.getProperty("m_fCooldown") > currentMatch.getReplayTime()){
+					if(!abilityEntity.getProperty("m_bInAbilityPhase").equals(abilityEntityOld.getProperty("m_bInAbilityPhase")) && (int)abilityEntity.getProperty("m_bInAbilityPhase") == 0){
+						int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "AbilityUse");
+						db.addEventIntArgument(eventID, "Unit", unitID);
+						db.addEventIntArgument(eventID, "Ability", Constants.getIndex("Actions", ConstantMapper.abilityName((String)abilityEntity.getProperty("m_iName"))));
+						System.out.println("casted "+ConstantMapper.abilityName((String)abilityEntity.getProperty("m_iName")));
+					}
+					
+					int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "CooldownStart");
+					db.addEventIntArgument(eventID, "Unit", unitID);
+					db.addEventIntArgument(eventID, "Ability", Constants.getIndex("Actions", ConstantMapper.abilityName((String)abilityEntity.getProperty("m_iName"))));
+					double cd = (float)abilityEntity.getProperty("m_fCooldown") - currentMatch.getReplayTime();
+					System.out.println("Enter cooldown "+cd);
+					db.addEventRealArgument(eventID, "Duration", cd);
+				}
+				else{
+					System.out.println("Strange cd change. Refresher?");
+					int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "CooldownEnd");
+					db.addEventIntArgument(eventID, "Unit", unitID);
+					db.addEventIntArgument(eventID, "Ability", Constants.getIndex("Actions", ConstantMapper.abilityName((String)abilityEntity.getProperty("m_iName"))));
+				}	
+			}
+			else{
+				if((float)abilityEntity.getProperty("m_fCooldown") <= currentMatch.getReplayTime() && (float)abilityEntity.getProperty("m_fCooldown") > oldMatch.getReplayTime()){
+					int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "CooldownEnd");
+					db.addEventIntArgument(eventID, "Unit", unitID);
+					db.addEventIntArgument(eventID, "Ability", Constants.getIndex("Actions", ConstantMapper.abilityName((String)abilityEntity.getProperty("m_iName"))));
+					System.out.println("Ability came off cd");
+				}
+			}
+		}
+		//Maybe todo: Channelign abilities
 	}
 }

@@ -15,4 +15,8 @@ public class ModifierChange {
 		this.type = type;
 		this.entry = entry;
 	}
+	
+	public String toString(){
+		return type+" "+entry.toString();
+	}
 }

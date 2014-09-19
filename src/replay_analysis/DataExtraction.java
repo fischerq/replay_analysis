@@ -41,7 +41,7 @@ public class DataExtraction {
         	else if(db.replayExists(replay.id)){
         		db.deleteReplay(replay.id);
         	}
-        	
+        	db.startTransaction();
         	db.createReplay(replay.id);
         	
         	try {
@@ -82,6 +82,7 @@ public class DataExtraction {
     		} catch (IOException e) {
     			System.out.println("opening replay failed");
     		}
+    		db.stopTransaction();
         }
         db.close();
 	}

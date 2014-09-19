@@ -3,6 +3,7 @@ package data_extraction;
 import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
 import utils.ConstantMapper;
+import utils.Utils;
 
 public class Animation {
 	public Entity entity;
@@ -11,6 +12,9 @@ public class Animation {
 	public int activity;
 	public double time_cast;
 	public double cast_point;
+	
+	public int eventID;
+	public TrackedUnit target;
 	
 	public Animation(Entity temp_ent, Match match){
 		if(temp_ent.getProperty("m_iType") == null)
@@ -35,9 +39,12 @@ public class Animation {
 			time_cast = match.getGameTime() + (Float)temp_ent.getProperty("m_flCastPoint") - ConstantMapper.replay_tick/4;
 			cast_point = (Float)temp_ent.getProperty("m_flCastPoint");
 		}
+		
+		eventID = -1;
+		target = null;
     }
 	
 	public String toString(){
-		return "Animation: "+entity.getDtClass().getDtName()+"("+entity.getHandle()+") "+ConstantMapper.animationAction(activity)+" "+type+" "+sequence_index+" "+cast_point+ " "+ConstantMapper.formatTime(time_cast);
+		return "Animation: "+entity.getDtClass().getDtName()+"("+entity.getHandle()+") "+ConstantMapper.animationAction(activity)+" "+type+" "+sequence_index+" "+cast_point+ " "+ConstantMapper.formatTime(Utils.computeTime(time_cast));
 	}
 }

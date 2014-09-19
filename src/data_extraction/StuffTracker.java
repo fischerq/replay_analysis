@@ -311,10 +311,10 @@ public class StuffTracker {
 				case "DOTA_PARTICLE_MANAGER_EVENT_DESTROY":
 					if(activeParticles.containsKey(index)){
 						activeParticles.get(index).addMessage(um, Utils.getTime(match));
-						activeParticles.remove(index);
 					}
-					else
-						System.out.println("Destroying unknown particle "+index);
+					/*	MAYBE TODO
+					 * else
+						System.out.println("Destroying unknown particle "+index);*/
 						
 					activeParticles.remove(index);
 					//System.out.println("Release "+um);

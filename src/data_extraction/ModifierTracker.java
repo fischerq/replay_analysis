@@ -95,6 +95,8 @@ public class ModifierTracker {
 	private int highestSerialNum;
 	private Set<Integer> unusedSerials;
 	
+	private Match currentMatch;
+	
 	public ModifierTracker(){
 		Comparator<ModifierTableEntry> compStart = new ModifierSerialComparator();
 		storedModifiers = new PriorityQueue<ModifierTableEntry>(1, compStart);
@@ -113,6 +115,8 @@ public class ModifierTracker {
 	}
 	
 	public void updateModifiers(Match match){
+		currentMatch = match;
+		
 		modifierChanges.clear();
 		
 		List<ModifierTableEntry> modifierEntries = match.getModifiers().getAll();
@@ -180,15 +184,15 @@ public class ModifierTracker {
 		
 		next = durativeModifiers.peek(); 
 		while(next != null && ((Float)((Float)next.getField("creation_time")+(Float)next.getField("duration"))).compareTo(roundedTime) < 0){
-			//int entityIndex = (Integer)next.getField("parent") & 0x7FF;
-			int entityHandle = (Integer)next.getField("parent");
+			int entityIndex = (Integer)next.getField("parent") & 0x7FF;
+			//int entityHandle = (Integer)next.getField("parent");
 			int index = (Integer)next.getField("index");
 			
-			if(modifiersByEntity.containsKey(entityHandle) && modifiersByEntity.get(entityHandle).containsKey(index)){
-				modifierChanges.add(new ModifierChange(ModifierChange.Type.TIMEOUT, modifiersByEntity.get(entityHandle).get(index)));
-				modifiersByEntity.get(entityHandle).remove(index);
-				if(modifiersByEntity.get(entityHandle).size() == 0)
-					modifiersByEntity.remove(entityHandle);
+			if(modifiersByEntity.containsKey(entityIndex) && modifiersByEntity.get(entityIndex).containsKey(index)){
+				modifierChanges.add(new ModifierChange(ModifierChange.Type.TIMEOUT, modifiersByEntity.get(entityIndex).get(index)));
+				modifiersByEntity.get(entityIndex).remove(index);
+				if(modifiersByEntity.get(entityIndex).size() == 0)
+					modifiersByEntity.remove(entityIndex);
 			}
 			else{
 				//Entity does not exist anymore
@@ -202,17 +206,25 @@ public class ModifierTracker {
 	}
 	
 	private void executeEntry(ModifierTableEntry entry){
-		//int entityIndex = (Integer)next.getField("parent") & 0x7FF;
-		int entityHandle = (Integer)entry.getField("parent");
+		int entityIndex = (Integer)entry.getField("parent") & 0x7FF;
+		//int entityHandle = (Integer)entry.getField("parent");
 		int index = (Integer)entry.getField("index");
 		
 		if(entry.getField("entry_type").equals("DOTA_MODIFIER_ENTRY_TYPE_ACTIVE")){
-			if(modifiersByEntity.containsKey(entityHandle)){
-				HashMap<Integer, ModifierTableEntry> mods = modifiersByEntity.get(entityHandle);
+			if(modifiersByEntity.containsKey(entityIndex)){
+				HashMap<Integer, ModifierTableEntry> mods = modifiersByEntity.get(entityIndex);
 				if(mods.containsKey(index)){
+
+					/*StringTable modifierNames = currentMatch.getStringTables().forName("ModifierNames");
+					
+					ModifierTableEntry old = mods.get(index);
+					System.out.println("Change Modifier "+mods.get(index)+" -> "+entry);
+					System.out.println(""+modifierNames.getNameByIndex((Integer)old.getField("modifier_class"))+" -> "+modifierNames.getNameByIndex((Integer)entry.getField("modifier_class")));
+					mods.put(index, entry);*/
+					modifierChanges.add(new ModifierChange(ModifierChange.Type.REMOVE, mods.get(index)));
 					mods.put(index, entry);
-					//modifierChanges.add(new ModifierChange(ModifierChange.Type.CHANGE, entry));
-					System.out.println("Changed Modifier ?"+entry);
+					modifierChanges.add(new ModifierChange(ModifierChange.Type.CREATE, entry));
+
 				}
 				else{
 					mods.put(index, entry);
@@ -223,20 +235,20 @@ public class ModifierTracker {
 			else{
 				HashMap<Integer, ModifierTableEntry> mods = new HashMap<Integer, ModifierTableEntry>();
 				mods.put(index, entry);
-				modifiersByEntity.put(entityHandle, mods);
+				modifiersByEntity.put(entityIndex, mods);
 				modifierChanges.add(new ModifierChange(ModifierChange.Type.CREATE, entry));
 			}
 
 		}
 		else if(entry.getField("entry_type").equals("DOTA_MODIFIER_ENTRY_TYPE_REMOVED")){
-			if(modifiersByEntity.containsKey(entityHandle) && modifiersByEntity.get(entityHandle).containsKey(index)){
-				modifierChanges.add(new ModifierChange(ModifierChange.Type.REMOVE, modifiersByEntity.get(entityHandle).get(index)));
-				modifiersByEntity.get(entityHandle).remove(index);
-				if(modifiersByEntity.get(entityHandle).size() == 0)
-					modifiersByEntity.remove(entityHandle);
+			if(modifiersByEntity.containsKey(entityIndex) && modifiersByEntity.get(entityIndex).containsKey(index)){
+				modifierChanges.add(new ModifierChange(ModifierChange.Type.REMOVE, modifiersByEntity.get(entityIndex).get(index)));
+				modifiersByEntity.get(entityIndex).remove(index);
+				if(modifiersByEntity.get(entityIndex).size() == 0)
+					modifiersByEntity.remove(entityIndex);
 			}
 			else{
-				System.out.println("Omitting unknown entity removal "+entry.toString());
+				//System.out.println("Omitting unknown entity removal "+entry.toString());
 				//modifierChanges.add(new ModifierChange(ModifierChange.Type.REMOVE, next));
 			}
 		}

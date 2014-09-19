@@ -246,8 +246,8 @@ public class Constants {
         put("Alpha Wolf");
         put("Wildwing");
         put("Wildwing Ripper");
-        put("Satyr Soulstealer");
-        put("Satyr Hellcaller");
+        put("Satyr Mindstealer");
+        put("Satyr Tormenter");
         put("Rock Golem");
         put("Granite Golem");
         put("Thunderhide");
@@ -256,8 +256,9 @@ public class Constants {
         put("Ghost");
         put("Dark Troll");
         put("Dark Troll Summoner");
-        put("Satyr Trickster");
-        put("Forest Troll Berserker");
+        put("Satyr Banisher");
+        put("Hill Troll Berserker");
+        put("Hill Troll Priest");
         put("Harpy Scout");
         put("Harpy Stormcrafter");
         put("Black Drake");
@@ -290,8 +291,13 @@ public class Constants {
         put("ModifierGain");
         put("ModifierLoss");
         
-        put("Kill");
+        put("AbilityLevel");
         put("AbilityUse");
+        
+        put("CooldownStart");
+        put("CooldownEnd");
+        
+        put("Kill");
         put("ItemUse");
         put("GoldGain");
         put("ExperienceGain");
@@ -334,11 +340,14 @@ public class Constants {
         put("Amount");
         put("Modifier");
         put("Ability");
+        put("Level");
+        put("Duration");
         put("Item");
         put("InventorySlot");
         put("InventorySlotOrigin");
         put("ToggleState");
         put("Action");
+        put("AnimationEvent");
         put("Projectile");
         put("Index");
         put("PositionX");
@@ -558,14 +567,48 @@ public class Constants {
 		put("Attack Default");
 		put("Attack Variant");
 		put("Attack Special");
-		put("Ability Slot1");
-		put("Ability Slot2");
-		put("Ability Slot3");
-		put("Ability Slot4");
-		put("Ability Slot5");
-		put("Ability Slot6");
+
 		put("Ability Special");
 
+		//Abilities
+		put("Shadowraze Short");
+		put("Shadowraze Medium");
+		put("Shadowraze Long");
+		put("Requiem of Souls");
+		
+		put("Magic Missile");
+		put("Wave of Terror");
+		
+		put("Breathe Fire");
+		put("Dragon Tail");
+		
+		put("Viper Strike");
+		
+		put("Shuriken Toss");
+		put("Track");
+		
+		put("Epicenter");
+		
+		put("Starfall");
+		put("Sacred Arrow");
+		
+		put("Shackleshot");
+		put("Powershot");
+		
+		put("Sprout");
+		put("Teleportation");
+		put("Force of Nature");
+		put("Wrath of Nature");
+		
+		put("Arc Lightning");
+		put("Lightning Bolt");
+		put("Thundergod's Wrath");
+		
+		put("Necronomicon Archer Mana Burn");
+		
+		put("War Stomp");
+		put("Frenzy");
+		
 		return current_map;
     }
     
@@ -609,29 +652,53 @@ public class Constants {
         put("True Sight");
         put("Illusion");
         put("Stunned");
+        put("Invisible");
         put("Kill");
+        put("Projectile Vision");
         
         put("Haste Rune");
         put("Invisibility Rune");
         put("Double Damage Rune");
+        put("Regeneration Rune");
         
         put("Buyback");
         
+        put("Jinada");
         put("Jinada Slow");
+        put("Shadow Walk");
         put("Track");
+        put("Track Effect");
+        
+        put("Burrowstrike Impale");
+        put("Sandstorm");
+        put("Sandstorm Invisibility");
+        put("Caustic Finale");
+        put("Epicenter Slow");
+        
+        put("Corrosive Breath");
+        put("Frost Breath");
+        
+        put("Leap Buff");
+        put("Moonlight Shadow");
         
         put("Presence of the Dark Lord");
         put("Requiem of Souls Invisibility Break");
         put("Requiem of Souls");
         
+        put("Shackle Shot");
         put("Windrun");
+        put("Windrun Slow");
+        put("Focus Fire");
         
+        put("Wave of Terror");
         put("Vengeance Aura");
+        put("Negative Vengeance Aura");
         
         put("Poison Attack");
         put("Corrosive Skin");
         put("Viper Strike");
                 
+        put("Glyph");
         put("Invulnerable");
         put("Backdoor Protection");
         
@@ -641,32 +708,60 @@ public class Constants {
         put("Creep Slow");
         
         put("Teleporting");
-        put("Soul Ring");        
+        put("Soul Ring");
+        put("Clarity Regeneration");
         put("Tango Regeneration");
+        put("Healing Salve Regeneration");
         put("Bottle Regeneration");
         put("Ring of Basilius");
         put("Ring of Aquila");
+        put("Phase Boots");
+        put("Headdress");
+        put("Insight Aura");
         put("Drums of Endurance");
         put("Drums od Endurance Active");
         put("Assault Cuirass Positive");
         put("Force Staff");
         put("Desolator");
+        put("Greater Maim");
+        put("Maelstrom Chain Lightning");
+        put("Static Charge");
+        put("Mjollnir Chain Lightning");
         put("Dust of Appearance");
         put("Smoke of Deceit");
+        put("Black King Bar");
+        put("Veil of Discord");
+        put("Assault Aura Positive");
+        put("Assault Aura Negative");
+        put("Orchid Malevolence");
+        put("Scythe of Vyse");
+        put("Manta Phase");
+        put("Manta Illusion");
+        put("Boots of Travel Incoming");
+        put("Ethereal Blade Ethereal");
+        put("Ethereal Blade Slow");
+        put("Barrier");
+        put("Pipe Debuff");
         
+
+        put("Flying");
         put("Courier Take Stash");
         put("Courier Transfer Items");
+        put("Courier Burst");
         
         put("Roshan Spell Block");
+        put("Roshan Slam");
         
+        put("Frost Attack");
+        put("Envenomed Weapon");
         put("Neutral Spell Immunity");
-        
+        put("Mana Aura");
         put("Unholy Aura");
         put("Speed Aura");
         put("Toughness Aura");
         put("Endurance Aura");
         put("Command Aura");
-        put("");
+        put("Frenzy");
 
 
 

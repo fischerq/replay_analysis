@@ -14,6 +14,11 @@ import java.util.Set;
 
 
 
+
+
+
+import javax.vecmath.Vector2f;
+
 import database.Constants;
 import database.Database;
 import skadistats.clarity.match.Match;
@@ -35,10 +40,11 @@ public class Extraction {
 	
 	private UnitTracker units;
 	private AnimationTracker animations;
+	private Map<Integer, Integer> actionTargets;
 	private Set<Integer> attackingUnits;
 	private StuffTracker stuff;
 	private ModifierTracker modifiers;
-	private Map<String, ModifierChange> modifierChangesByName; 
+	private Map<String, LinkedList<ModifierChange>> modifierChangesByName; 
 	
 	private Match currentMatch = null;
 	private Match oldMatch = null;
@@ -46,22 +52,25 @@ public class Extraction {
 	private static int attacker = 0;
 	private static int target = 1;
 	
+	private static int maxRangeSq = 1000000;
+	
 	public Extraction(int id, Database db){
 		this.db = db;
 		replay = new ReplayData(id, db);
 				
 		units = new UnitTracker(replay, db);
 		animations = new AnimationTracker();
+		actionTargets = new HashMap<Integer, Integer>();
 		stuff = new StuffTracker(replay, db, units);
 		
 		modifiers = new ModifierTracker();
-		modifierChangesByName = new HashMap<String, ModifierChange>();
+		modifierChangesByName = new HashMap<String, LinkedList<ModifierChange>>();
 		
 		attackingUnits = new HashSet<Integer>();
 	}
 	
 	public void analyseTick(Match match, Match matchOld) {
-		db.startTransaction();
+		//db.startTransaction();
 
 		//System.out.println("\n"+ConstantMapper.formatTime(match.getGameTime())+" Tick");
 		currentMatch = match;
@@ -81,12 +90,9 @@ public class Extraction {
 		
 		updateModifiers();
 		
-
-		
-				
 		processCombatLog();
 		 
-		db.stopTransaction();
+		//db.stopTransaction();
 	}
 	
 	private boolean doPrints(){
@@ -181,8 +187,14 @@ public class Extraction {
 			Entity ent = currentMatch.getEntities().getByIndex((Integer)change.entry.getField("parent") & 0x7FF);
 			if(ent != null){
 				String rawName = modifierNames.getNameByIndex((Integer)change.entry.getField("modifier_class"));
-				modifierChangesByName.put(rawName, change);
+
+				if(!modifierChangesByName.containsKey(rawName))
+					modifierChangesByName.put(rawName, new LinkedList<ModifierChange>());
+				modifierChangesByName.get(rawName).add(change);
+				//System.out.println(rawName+" "+change.toString());
+				
 				String modifierName = ConstantMapper.modifier(rawName);
+
 				if(units.exists(ent.getHandle()) && modifierName != null){
 					int eventID = 0;
 					switch(change.type){
@@ -211,6 +223,11 @@ public class Extraction {
 				System.out.println(ConstantMapper.formatTime(currentMatch.getGameTime())+ " "+ConstantMapper.formatTime(currentMatch.getReplayTime())+" "+change.type+" "+modifierNames.getNameByIndex((Integer)change.entry.getField("modifier_class"))+" "+(Integer)change.entry.getField("parent")+" "+indexDT+ " "+change.entry.toString());
 				*/
 			}
+			else {
+				//MAYBE TODO: Fix not-found entities
+				/*if(!change.type.equals(ModifierChange.Type.TIMEOUT))
+					System.out.println("Couldn't find entity "+modifierNames.getNameByIndex((Integer)change.entry.getField("modifier_class"))+" "+change.toString());*/
+			}
 		}
 	}
 
@@ -229,42 +246,150 @@ public class Extraction {
 				System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" "+a.entity.getDtClass().getDtName());*/
 			if(a.activity != 0){
 				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "AnimationStart");
+				a.eventID = eventID;
 				db.addEventIntArgument(eventID, "Unit", units.getUnitID(a.entity.getHandle()));
-				db.addEventIntArgument(eventID, "Action", Constants.getIndex("Actions", ConstantMapper.animationAction(a.activity)));
+				//System.out.println(ConstantMapper.formatTime(Utils.getTime(currentMatch))+" Animation type "+ConstantMapper.animationType(a.type)+" "+ConstantMapper.animationAction(a.activity));
+				
+				String type = ConstantMapper.animationType(a.type);
+				if(type.equals("Unknown")){
+					if(a.activity >= 424 && a.activity <= 426)
+						type = "Attack";
+					else if (a.activity >= 431 && a.activity <= 436)
+						type = "AbilityUse";
+				}
+					
+				switch(type){
+				case "Unknown":
+					System.out.println("Unknown type: "+a.activity);
+					db.addEventIntArgument(eventID, "Action", Constants.getIndex("Actions", ConstantMapper.animationAction(a.activity)));
+					break;
+				case "Attack":
+					//attack
+					db.addEventIntArgument(eventID, "Action", Constants.getIndex("Actions", ConstantMapper.animationAction(a.activity)));
+					//Find target
+					/*Vector2f position = Utils.getPosition(a.entity); 
+					Vector2f positionOld = Utils.getPosition(oldMatch.getEntities().getByHandle(a.entity.getHandle())); 
+					Vector2f dir = Utils.getDirection(a.entity);
+					Vector2f dirOld = Utils.getDirection(oldMatch.getEntities().getByHandle(a.entity.getHandle()));
+					double attackRangeSq = Utils.getAttackRange(a.entity) + 150;//522 speed for 2/30 sec
+					attackRangeSq *= attackRangeSq;
+					List<Integer> targets = new LinkedList<Integer>();
+					
+					System.out.println("## Searching for target "+a.entity.getDtClass().getDtName()+" "+a.entity.getProperty("m_iAttackCapabilities"));
+					for(Integer handle : units.getLivingUnits()){
+						TrackedUnit t = units.getUnit(handle);
+						if((Integer)currentMatch.getEntities().getByHandle(t.getHandle()).getProperty("m_iTeamNum") == (int)a.entity.getProperty("m_iTeamNum") && (!t.isDenieable() || !Utils.isPlayerControlled(a.entity)))
+							continue;
+												
+						Vector2f relative = t.getPosition();
+						relative.sub(position);
+						
+						Vector2f relativeOld = t.getOldPosition();
+						relativeOld.sub(positionOld);
+						
+						double angle;
+						double angleChange;
+						if(dir == null){
+							angle = 1;
+							angleChange = 0;
+						}
+						else{
+							angle = relative.dot(dir)/relative.length();
+							angleChange = angle - relativeOld.dot(dirOld)/relativeOld.length();
+						}
+						
+						if(relative.lengthSquared() > attackRangeSq || relative.lengthSquared() == 0 || angle < 0.9 || angleChange < 0){
+							//System.out.println("Skipped "+relative.length()+" "+relative.dot(dir)/relative.length()+" "+angleChange+" "+currentMatch.getEntities().getByHandle(t.getHandle()).getDtClass().getDtName());
+							continue;
+						}
+						double distance = relative.length();
+						System.out.println("Found "+distance+" "+relative.dot(dir)/distance+" "+angleChange+" "+currentMatch.getEntities().getByHandle(t.getHandle()).getDtClass().getDtName());
+						targets.add(handle);
+					}
+					if(targets.size() == 1)
+						System.out.println("Found one");
+					else if(targets.size() > 1)
+						System.out.println("Found multiple");
+					else{
+						System.out.println("None");
+						for(Integer handle : units.getLivingUnits()){
+							TrackedUnit t = units.getUnit(handle);
+							if(!t.isDenieable() && (Integer)currentMatch.getEntities().getByHandle(t.getHandle()).getProperty("m_iTeamNum") == (int)a.entity.getProperty("m_iTeamNum"))
+								continue;
+													
+							Vector2f relative = t.getPosition();
+							relative.sub(position);
+							
+							Vector2f relativeOld = t.getOldPosition();
+							relativeOld.sub(positionOld);
+							
+							double angle = relative.dot(dir)/relative.length();
+							double angleChange = angle - relativeOld.dot(dirOld)/relativeOld.length();
+							
+							if(relative.lengthSquared() > attackRangeSq || relative.lengthSquared() == 0 || angle < 0.9 || angleChange < 0){
+								System.out.println("Skipped "+relative.length()+" "+relative.dot(dir)/relative.length()+" "+angleChange+" "+currentMatch.getEntities().getByHandle(t.getHandle()).getDtClass().getDtName());
+								continue;
+							}
+						}
+					}*/
+					break;
+				case "AbilityUse":
+					int abilityIndex = a.activity - 431;
+					if(a.activity > 436){
+						db.addEventIntArgument(eventID, "Action", Constants.getIndex("Actions", ConstantMapper.animationAction(a.activity)));
+						break;
+					}						
+					//ability?
+					int abilityHandle = (Integer)a.entity.getProperty("m_hAbilities.000"+abilityIndex);
+					String rawName = currentMatch.getEntities().getByHandle(abilityHandle).getProperty("m_iName");
+					String name = ConstantMapper.abilityName(rawName);
+					db.addEventIntArgument(eventID, "Action", Constants.getIndex("Actions", name));
+					if(name == null)
+						break;
+					switch(name){
+					//Find target if necessary
+					default:
+						break;
+					}
+					break;
+				default:
+					System.out.println("Unknown animation type");
+					break;
+					//System.out.println("animation type "+a.type);
+				}
 			}
-			//System.out.println("Started "+a.toString());
+			System.out.println("Started "+a.toString());
 		}
 		for(Animation a : animations.getCastedAnimations()){
 			if(!units.exists(a.entity.getHandle()))
 				continue;
 			if(a.activity != 0){
 				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "AnimationCast");
-				db.addEventIntArgument(eventID, "Unit", units.getUnitID(a.entity.getHandle()));
-				db.addEventIntArgument(eventID, "Action", Constants.getIndex("Actions", ConstantMapper.animationAction(a.activity)));
+				db.addEventIntArgument(eventID, "AnimationEvent", a.eventID);
 			}
+			
+			//TODO Search affected
 			if(Utils.isAttack(a))
 				attackingUnits.add(a.entity.getHandle());
-			//System.out.println("Casted "+a.toString());
+			System.out.println("Casted "+a.toString());
 		}
 		for(Animation a : animations.getCancelledAnimations()){
 			if(!units.exists(a.entity.getHandle()))
 				continue;
 			if(a.activity != 0){
 				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "AnimationCancel");
-				db.addEventIntArgument(eventID, "Unit", units.getUnitID(a.entity.getHandle()));
-				db.addEventIntArgument(eventID, "Action", Constants.getIndex("Actions", ConstantMapper.animationAction(a.activity)));			
+				db.addEventIntArgument(eventID, "AnimationEvent", a.eventID);		
 			}
-			//System.out.println("Cancelled "+a.toString());
+			System.out.println("Cancelled "+a.toString());
 		}
 		for(Animation a : animations.getStoppedAnimations()){
 			if(!units.exists(a.entity.getHandle()))
 				continue;
 			if(a.activity != 0){
 				int eventID = db.createEvent(replay.getReplayID(), Utils.getTime(currentMatch), "AnimationStop");
-				db.addEventIntArgument(eventID, "Unit", units.getUnitID(a.entity.getHandle()));
-				db.addEventIntArgument(eventID, "Action", Constants.getIndex("Actions", ConstantMapper.animationAction(a.activity)));
+				db.addEventIntArgument(eventID, "AnimationEvent", a.eventID);
 			}
-			//System.out.println("Stopped "+a.toString());
+			System.out.println("Stopped "+a.toString());
 		}
 	}
 	
@@ -284,7 +409,7 @@ public class Extraction {
 				 continue;
             }
             CombatLogEntry cle = new CombatLogEntry(g);
-            //System.out.println(cle.toString());
+            System.out.println(cle.toString());
             /*if(true)
             	continue;*/
             boolean found = false;
@@ -300,7 +425,7 @@ public class Extraction {
             	new_group.add(cle);
             	grouped_cles.add(new_group);
             }
-		}
+		}/*
 		 for (LinkedList<CombatLogEntry> group : grouped_cles) {
 			 CombatLogEntry firstEntry = group.get(0);
              //System.out.println("Times replay "+match.getReplayTime()+" game "+match.getGameTime()+" raw "+cle.getTimestampRaw()+" timestamp "+cle.getTimestamp());
@@ -355,6 +480,7 @@ public class Extraction {
 		                 //+e.affected_unit = findUnit(cle.getTargetName(), cle, target);
 		                 e.action = ConstantMapper.abilityName(cle.getInflictorName());
 		                 //e.value = cle.getValue();
+		                 //System.out.println(cle.toString());
 		            	 break;
 		             case 6:
 		            	 //Item use
@@ -404,7 +530,7 @@ public class Extraction {
 			 else{
 				 //System.out.println("Skipping group "+group.size());
 			 }
-		 }
+		 }*/
 	}
 	
 	private boolean shouldGroupCLEs(CombatLogEntry a, CombatLogEntry b){

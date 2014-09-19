@@ -603,11 +603,11 @@ public class ConstantMapper {
 			return "Wildwing";
 		
 		case "npc_dota_neutral_satyr_hellcaller":
-			return "Satyr Hellcaller";
+			return "Satyr Tormenter";
 		case "npc_dota_neutral_satyr_soulstealer":
-			return "Satyr Soulstealer";
+			return "Satyr Mindstealer";
 		case "npc_dota_neutral_satyr_trickster":
-			return "Satyr Trickster";
+			return "Satyr Banisher";
 		
 		case "npc_dota_neutral_centaur_khan":
 			return "Centaur Khan";
@@ -640,7 +640,7 @@ public class ConstantMapper {
 			return "Kobold Tunneler";
 		
 		case "npc_dota_neutral_forest_troll_berserker":
-			return "Forest Troll Berserker";
+			return "Hill Troll Berserker";
 		
 		case "npc_dota_neutral_ghost":
 			return "Ghost";
@@ -999,10 +999,6 @@ public class ConstantMapper {
 		}
 	}
 	
-	public static String abilityName(String combatlog_ability){
-		return combatlog_ability;
-	}
-	
 	public static String DTClassForName(String name){
 		//System.out.println("DT requested: "+name);
 		switch(name){
@@ -1337,9 +1333,9 @@ public class ConstantMapper {
 		case "Wildwing Ripper":
 		case "Wildwing":
 		
-		case "Satyr Hellcaller":
-		case "Satyr Soulstealer":
-		case "Satyr Trickster":
+		case "Satyr Tormenter":
+		case "Satyr Mindstealer":
+		case "Satyr Banisher":
 		
 		case "Centaur Khan":
 		case "Centaur Outrunner":
@@ -1359,7 +1355,8 @@ public class ConstantMapper {
 		case "Kobold":
 		case "Kobold Tunneler":
 		
-		case "Forest Troll Berserker":
+		case "Hill Troll Berserker":
+		case "Hill Troll Priest":
 		
 		case "Ghost":
 		case "Fell Spirit":
@@ -1552,9 +1549,9 @@ public class ConstantMapper {
 		case 186:
 			return "Wildwing Ripper";
 		case 187:
-			return "Satyr Soulstealer";
+			return "Satyr Mindstealer";
 		case 188:
-			return "Satyr Hellcaller";
+			return "Satyr Tormenter";
 		case 193:
 			return "Rock Golem";
 		case 194:
@@ -1572,9 +1569,11 @@ public class ConstantMapper {
 		case 200:
 			return "Dark Troll Summoner";
 		case 201:
-			return "Satyr Trickster";
+			return "Satyr Banisher";
 		case 202:
-			return "Forest Troll Berserker";
+			return "Hill Troll Berserker";
+		case 203:
+			return "Hill Troll Priest";
 		case 204:
 			return "Harpy Scout";
 		case 205:
@@ -1641,9 +1640,9 @@ public class ConstantMapper {
 	public static String animationType(int type){
 		switch(type){
 		case 0:
-			return "?";
+			return "Unknown";
 		case 1:
-			return "Attack?";
+			return "Attack";
 		case 2:
 			return "AbilityUse";
 		default:
@@ -1652,8 +1651,104 @@ public class ConstantMapper {
 		}
 	}
 	
+	public static String abilityName(String rawName){
+		switch(rawName){
+		case "nevermore_shadowraze1":
+			return "Shadowraze Short";
+		case "nevermore_shadowraze2":
+			return "Shadowraze Medium";
+		case "nevermore_shadowraze3":
+			return "Shadowraze Long";
+		case "nevermore_requiem":
+			return "Requiem of Souls";
+		
+		case "vengefulspirit_magic_missile":
+			return "Magic Missile";
+		case "vengefulspirit_wave_of_terror":
+			return "Wave of Terror";
+		case "vengefulspirit_nether_swap":
+			return "Nether Swap";
+			
+		case "viper_viper_strike":
+			return "Viper Strike";
+		
+		case "dragon_knight_breathe_fire":
+			return "Breathe Fire";
+		case "dragon_knight_dragon_tail":
+			return "Dragon Tail";
+		case "dragon_knight_elder_dragon_form":
+			return "Elder Dragon Form";
+			
+		case "mirana_starfall":
+			return "Starfall";
+		case "mirana_arrow":
+			return "Sacred Arrow";
+		case "mirana_leap":
+			return "Leap";
+		case "mirana_invis":
+			return "Moonlight Shadow";
+			
+		case "furion_sprout":
+			return "Sprout";
+		case "furion_teleportation":
+			return "Teleportation";
+		case "furion_force_of_nature":
+			return "Force of Nature";
+		case "furion_wrath_of_nature":
+			return "Wrath of Nature";
+		
+		case "bounty_hunter_shuriken_toss":
+			return "Shuriken Toss";
+		case "bounty_hunter_wind_walk":
+			return "Shadow Walk";
+		case "bounty_hunter_track":
+			return "Track";
+			
+		case "sandking_burrowstrike":
+			return "Burrowstrike";
+		case "sandking_sand_storm":
+			return "Sand Storm";
+		case "sandking_epicenter":
+			return "Epicenter";
+			
+		case "windrunner_shackleshot":
+			return "Shackleshot";
+		case "windrunner_powershot":
+			return "Powershot";
+		case "windrunner_windrun":
+			return "Windrun";
+		case "windrunner_focusfire":
+			return "Focus Fire";
+			
+		case "zuus_arc_lightning":
+			return "Arc Lightning";
+		case "zuus_lightning_bolt":
+			return "Lightning Bolt";
+		case "zuus_thundergods_wrath":
+			return "Thundergod's Wrath";
+
+			
+		case "necronomicon_archer_mana_burn":
+			return "Necronomicon Archer Mana Burn";
+			
+		case "centaur_khan_war_stomp":
+			return "War Stomp";
+		case "big_thunder_lizard_frenzy":
+			return "Frenzy";
+		
+		default:
+			System.out.println("Unknown ability: "+rawName);
+			return null;
+		}
+	}
+	
 	public static String formatTime(double time){
-		return "["+ (int)(time/60)+":"+(int)(time%60)+"."+(int)((time*1000)%1000)+ "]";
+		if(time < 0){
+			double postime = -time;
+			return "[-"+ (int)(postime/60)+":"+(int)(postime%60)+"."+(int)((postime*1000)%1000)+ "]";
+		}
+		else
+			return "["+ (int)(time/60)+":"+(int)(time%60)+"."+(int)((time*1000)%1000)+ "]";
 	}
 	
 	public static double replay_tick = 0.066;
@@ -2008,7 +2103,7 @@ public class ConstantMapper {
 		case "modifier_bounty_hunter_jinada_slow":
 			return "Jinada Slow";
 		case "modifier_bounty_hunter_wind_walk":
-			return "Wind Walk";
+			return "Shadow Walk";
 		case "modifier_bounty_hunter_track":
 			return "Track";
 		case "modifier_bounty_hunter_track_effect":
@@ -2037,6 +2132,7 @@ public class ConstantMapper {
 			return "Frost Breath";
 			
 		case "modifier_mirana_leap":
+		case "modifier_mirana_starfall_thinker":
 			return null;
 		case "modifier_mirana_leap_buff":
 			return "Leap Buff";
@@ -2061,7 +2157,7 @@ public class ConstantMapper {
 		case "modifier_sandking_sand_storm":
 			return "Sandstorm";
 		case "modifier_sandking_sand_storm_invis":
-			return "Invisibility";
+			return "Sandstorm Invisibility";
 		case "modifier_sand_king_caustic_finale_orb":
 			return "Caustic Finale";
 		case "modifier_sand_king_epicenter_slow":
@@ -2087,6 +2183,9 @@ public class ConstantMapper {
 			return "Corrosive Skin";
 		case "modifier_viper_viper_strike_slow":
 			return "Viper Strike";
+			
+		case "modifier_furion_wrath_of_nature_thinker":
+			return null;
 			
 		//Buildings 
 		case "modifier_invulnerable":
@@ -2182,7 +2281,7 @@ public class ConstantMapper {
 		case "modifier_item_refresherorb":
 		case "modifier_item_aegis":
 		case "modifier_item_mjollnir":
-		//case "modifier_item_manta_style":
+		case "modifier_item_manta_style":
 		case "modifier_item_planeswalkers_cloak":
 		case "modifier_item_heart":
 		case "modifier_item_hood_of_defiance":
@@ -2191,6 +2290,7 @@ public class ConstantMapper {
 		case "modifier_item_eaglehorn":
 		case "modifier_item_gem_of_true_sight":
 		case "modifier_item_pipe":
+		case "modifier_item_ethereal_blade":
 			return null;
 			
 		case "modifier_item_ring_of_basilius_aura_bonus":
@@ -2203,16 +2303,17 @@ public class ConstantMapper {
 			return "Insight Aura";
 		case "modifier_item_pipe_barrier":
 			return "Barrier";
+		case "modifier_item_pipe_debuff":
+			return "Pipe Debuff";
 		case "modifier_item_ancient_janggo_aura_effect":
 			return "Drums of Endurance";
 		case "modifier_item_ancient_janggo_active":
 			return "Drums od Endurance Active";
 		case "modifier_item_assault_positive":
-			return "Assault Cuirass Positive";
 		case "modifier_item_assault_positive_buildings":
-			return "Assault Cuirass Positive Building";
+			return "Assault Aura Positive";
 		case "modifier_item_assault_negative_armor":
-			return "Assault Cuirass Negative";
+			return "Assault Aura Negative";
 		case "modifier_item_soul_ring_buff":
 			return "Soul Ring";			
 		case "modifier_item_phase_boots_active":
@@ -2241,6 +2342,10 @@ public class ConstantMapper {
 			return "Ethereal Blade Ethereal";
 		case "modifier_item_ethereal_blade_slow":
 			return "Ethereal Blade Slow";
+		case "modifier_manta_phase":
+			return "Manta Phase";
+		case "modifier_manta":
+			return "Manta Illusion";
 			
 		//case "modifier_manta_phase":
 		//	return "Manta Phase";

@@ -8,8 +8,6 @@ import java.util.List;
 import javax.vecmath.Vector2f;
 
 import data_extraction.Animation;
-
-
 import skadistats.clarity.match.Match;
 import skadistats.clarity.model.Entity;
 
@@ -39,8 +37,17 @@ public class Utils {
 		return m.getGameTime() - gameStartTime;
 	}
 	
-	public static double computeTime(float time){
+	public static double computeTime(double time){
 		return time - gameStartTime;
+	}
+	
+	public static int getHealth(Entity e){
+		if(e.getDtClass().getPropertyIndex("m_iHealthPercentage") != null){
+			double healthPercent = (Integer)e.getProperty("m_iMaxHealth")/127.0;
+			return (int) Math.floor((Integer)e.getProperty("m_iHealthPercentage")*healthPercent);
+		}
+		else
+			return (Integer)e.getProperty("m_iHealth");
 	}
 	
 	public static Vector2f getPosition(Entity e){
@@ -57,7 +64,10 @@ public class Utils {
 	    return pos;
 	}
 	
-	public static Vector2f getDirection(double angle){
+	public static Vector2f getDirection(Entity entity){
+		if(entity.getDtClass().getPropertyIndex("m_angRotation[1]") == null)
+			return null;
+		float angle = (Float)entity.getProperty("m_angRotation[1]");
 		double radian = angle /360.0 *2*Math.PI;
 		Vector2f vec = new Vector2f();
 		vec.x = (float) Math.cos(radian);
@@ -109,5 +119,178 @@ public class Utils {
 	    }
 	    
 	    return results;	    
+	}
+	
+	public static boolean isPlayerControlled(Entity e){
+		return (Integer)e.getProperty("m_hOwnerEntity") != 2097151;
+	}
+	
+	public static boolean isDenieable(Entity e){
+		int unitNameIndex = e.getProperty("m_iUnitNameIndex");
+		if(unitNameIndex <= 115 ){//Heroes
+			return true;
+		}
+		else if(unitNameIndex >= 124 && unitNameIndex <= 157){//Buildings
+			if(getHealth(e) < (int)e.getProperty("m_iMaxHealth")/10)
+				return true;
+			else
+				return false;
+		}
+		else if(unitNameIndex >= 116 && unitNameIndex <= 123 || unitNameIndex >= 160 && unitNameIndex <= 163){
+			if(getHealth(e) < (int)e.getProperty("m_iMaxHealth")/2)
+				return true;
+			else
+				return false;
+		}
+		return true;
+	}
+	
+	public static int getAttackRange(Entity e){
+		switch(ConstantMapper.nameForIndex((int) e.getProperty("m_iUnitNameIndex"))){
+		case "Sand King":
+		case "Magnus":
+		case "Kunkka":
+		case "Bounty Hunter":
+		case "Alchemist":
+		case "Faceless Void":
+			return 128;
+			
+		case "Mirana":
+			return 600;
+		case  "Shadow Fiend":
+			return 500;
+
+		case "Vengeful Spirit": 
+			return 400;
+		case "Windranger": 
+			return 600;
+		case "Zeus":
+			return 350;
+
+
+		case "Viper":
+			return 575;
+		case "Dragon Knight":
+			return 500;
+		case "Nature's Prophet":
+			return 600;
+
+		case "Batrider":
+			return 375;
+		case "Chen":
+			return 600;
+
+		case "Outworld Devourer":
+			return 450;
+		case "Rubick":
+			return 600;
+
+		
+		case "Dire Ranged Creep":
+		case "Dire Mega Ranged Creep":
+		case "Radiant Ranged Creep":
+		case "Radiant Mega Ranged Creep":
+			return 500;
+		case "Dire Melee Creep":
+		case "Dire Mega Melee Creep":
+		case "Radiant Melee Creep":
+		case "Radiant Mega Melee Creep":
+			return 100;
+		case "Radiant Tower T1 Top":
+		case "Radiant Tower T1 Middle":
+		case "Radiant Tower T1 Bottom":
+		case "Radiant Tower T2 Top":
+		case "Radiant Tower T2 Middle":
+		case "Radiant Tower T2 Bottom":
+		case "Radiant Tower T3 Top":
+		case "Radiant Tower T3 Middle":
+		case "Radiant Tower T3 Bottom":
+		case "Radiant Tower T4":
+		case "Dire Tower T1 Top":
+		case "Dire Tower T1 Middle":
+		case "Dire Tower T1 Bottom":
+		case "Dire Tower T2 Top":
+		case "Dire Tower T2 Middle":
+		case "Dire Tower T2 Bottom":
+		case "Dire Tower T3 Top":
+		case "Dire Tower T3 Middle":
+		case "Dire Tower T3 Bottom":
+		case "Dire Tower T4":
+			return 700;
+
+		case "Radiant Siege Creep":
+		case "Radiant Mega Siege Creep":
+		case "Dire Siege Creep":
+		case "Dire Mega Siege Creep":
+			return 690;
+		case "Kobold":
+		case "Kobold Tunneler":
+		case "Kobold Foreman":
+		case "Fell Spirit":
+		case "Mud Golem":
+		case "Ogre Bruiser":
+		case "Ogre Frostmage":
+		case "Centaur Outrunner":
+		case "Centaur Khan":
+		case "Hellbear":
+		case "Hellbear Smasher":
+		case "Satyr Mindstealer":
+		case "Satyr Tormenter":
+			return 100;
+
+
+		case "Giant Wolf":
+		case "Alpha Wolf":
+			return 90;
+		case "Wildwing":
+		case "Wildwing Ripper":
+			return 128;
+
+		case "Satyr Banisher":
+			return 600;
+		case "Rock Golem":
+			return 100;
+		case "Granite Golem":
+			return 128;
+		case "Thunderhide":
+		case "Rumblehide":
+			return 300;
+		case "Vhoul Assassin":
+			return 500;
+		case "Ghost":
+			return 300;
+		case "Dark Troll":
+		case "Dark Troll Summoner":
+			return 500;
+
+		case "Hill Troll Berserker":
+			return 500;
+		case "Hill Troll Priest":
+			return 600;
+		case "Harpy Scout":
+			return 300;
+		case "Harpy Stormcrafter":
+			return 450;
+		case "Black Drake":
+		case "Black Dragon":
+			return 300;
+		case "Necronomicon Warrior Lvl 1":
+		case "Necronomicon Warrior Lvl 2":
+		case "Necronomicon Warrior Lvl 3":
+			return 100;
+		case "Necronomicon Archer Lvl 1":
+			return 350;
+		case "Necronomicon Archer Lvl 2":
+			return 450;
+		case "Necronomicon Archer Lvl 3":
+			return 550;
+
+
+		case "Treant":
+			return 100;
+		default:
+			System.out.println("Unaccounted attack range for unit: "+ConstantMapper.nameForIndex((int) e.getProperty("m_iUnitNameIndex")));
+			return 1000;
+		}
 	}
 }

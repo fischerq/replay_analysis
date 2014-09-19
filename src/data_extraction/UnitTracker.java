@@ -21,8 +21,7 @@ public class UnitTracker {
 	
 	private Set<String> trackedClasses;
 	private Map<Integer, TrackedUnit> units;
-	private Map<String, LinkedList<TrackedUnit>> modifierAdds;
-	private Map<String, LinkedList<TrackedUnit>> modifierLosses;
+	private Set<Integer> livingUnits;
 	
 	public UnitTracker(ReplayData replay, Database db){
 		this.db = db;
@@ -39,6 +38,7 @@ public class UnitTracker {
 		//trackedClasses.add(ConstantMapper.DTClassForName("Radiant Siege Creep"));
 		
 		units = new HashMap<Integer, TrackedUnit>();
+		livingUnits = new HashSet<Integer>(); 
 	}
 	
 	public void update(Match match, Match oldMatch){
@@ -47,17 +47,28 @@ public class UnitTracker {
 		if(wroteTeams && !wrotePlayers){
 			wrotePlayers = replay.writePlayers(match, db);
 		}
-		for(String dtClass : trackedClasses){
-			Iterator<Entity> it = match.getEntities().getAllByDtName(dtClass);
-			while(it.hasNext()){
-				Entity e = it.next();
-				if(!units.containsKey(e.getHandle()))
-					units.put(e.getHandle(), new TrackedUnit(e, replay, db));
+		for(Integer handle : match.getEntities().getAddedHandles()){
+			if(units.containsKey(handle)){
+				//System.out.println("again"+handle);
+				continue;
 			}
+			Entity e = match.getEntities().getByHandle(handle);
+			if(trackedClasses.contains(e.getDtClass().getDtName()))
+				units.put(e.getHandle(), new TrackedUnit(e, replay, db));
+			
 		}
 		for(TrackedUnit u : units.values()){
 			u.update(match, oldMatch);
-			u.updateInventory(match, oldMatch);
+			switch(u.getLifeChange()){
+			case NOTHING:
+				break;
+			case SPAWN:
+				livingUnits.add(u.getHandle());
+				break;
+			case DEATH:
+				livingUnits.remove(u.getHandle());
+				break;
+			}
 		}
 	}
 	
@@ -65,18 +76,18 @@ public class UnitTracker {
 		return units.get(handle) != null;
 	}
 	
-	public LinkedList<TrackedUnit> getUnitsAddingModifier(String modifier){
-		return modifierAdds.get(modifier);
-	}
-	
-	public LinkedList<TrackedUnit> getUnitsLosingModifier(String modifier){
-		return modifierLosses.get(modifier);
-	}
-	
 	public int getUnitID(int handle){
 		if(units.containsKey(handle))
 			return units.get(handle).getID();
 		else
 			return -1;
+	}
+	
+	public TrackedUnit getUnit(int handle){
+		return units.get(handle);
+	}
+	
+	public Set<Integer> getLivingUnits(){
+		return livingUnits;
 	}
 }
