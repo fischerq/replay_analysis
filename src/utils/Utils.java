@@ -64,6 +64,20 @@ public class Utils {
 	    return pos;
 	}
 	
+	public static Vector2f getPosition(Entity e, String prefix){
+		int cell_x = e.getProperty(prefix+"m_cellX");
+		int cell_y = e.getProperty(prefix+"m_cellY");
+		//System.out.println(e.toString());
+	    Vector2f offset = e.getProperty(prefix+"m_vecOrigin");
+	    int cellbits = e.getProperty(prefix+"m_cellbits");
+	    		
+	    int cellwidth = 1 << cellbits;
+	    Vector2f pos = new Vector2f();
+	    pos.x = (float)(((cell_x * cellwidth) - MAX_COORD_INTEGER) + (double)offset.x);
+	    pos.y = (float) (((cell_y * cellwidth) - MAX_COORD_INTEGER) + (double)offset.y);
+	    return pos;
+	}
+	
 	public static Vector2f getDirection(Entity entity){
 		if(entity.getDtClass().getPropertyIndex("m_angRotation[1]") == null)
 			return null;

@@ -27,6 +27,7 @@ public class Constants {
 		tmpMap.put("Actions", getActions());
 		tmpMap.put("Projectiles", getProjectiles());
 		tmpMap.put("ClickTypes", getClickTypes());
+		tmpMap.put("Panels", getPanels());
 		tmpMap.put("Modifiers", getModifiers());
 		
 		current_map = new HashMap<String, Integer>();
@@ -327,7 +328,17 @@ public class Constants {
 
         put("PlayerClick");
         put("Ping");
-        put("SelectUnits");
+
+        
+        put("QuickbuyAddition");
+        put("QuickbuyRemoval");
+        put("QuickbuyPurchasabilityChange");
+        
+        put("OpenPanel");
+        put("ClosePanel");        
+        
+        put("SelectUnit");
+        put("SelectSelf");
         
         return current_map;
     }
@@ -358,7 +369,11 @@ public class Constants {
         put("Side");
         put("Player");
         put("Cooldown");
+        put("MouseX");
+        put("MouseY");
         put("ClickType");
+        put("Availability");
+        put("PanelType");
 
         return current_map;
     }  
@@ -644,7 +659,14 @@ public class Constants {
         
         return current_map;
     }
-    
+	
+	private static HashMap<String, Integer> getPanels(){
+        current_map = new HashMap<String, Integer>();
+        put("Shop");
+        put("Scoreboard");        
+        return current_map;
+    }
+	    
 	private static HashMap<String, Integer> getModifiers(){
         current_map = new HashMap<String, Integer>();
         put("Phased");

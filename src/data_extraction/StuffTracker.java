@@ -15,6 +15,8 @@ import java.util.Map;
 
 import java.util.PriorityQueue;
 
+import javax.vecmath.Vector2f;
+
 import database.Constants;
 import database.Database;
 import skadistats.clarity.match.Match;
@@ -30,6 +32,7 @@ public class StuffTracker {
 	private Database db;
 	private ReplayData replay;
 	private UnitTracker units;
+	private PlayerTracker players;
 	
 	private Map<Integer, Projectile> currentLinearProjectiles;
 	private Map<Integer, LinkedList<Projectile> > currentTrackingProjectiles;
@@ -48,10 +51,11 @@ public class StuffTracker {
 
 	
 	
-	public StuffTracker(ReplayData replay, Database db, UnitTracker units){
+	public StuffTracker(ReplayData replay, Database db, UnitTracker units, PlayerTracker players){
 		this.db = db;
 		this.replay = replay;
 		this.units = units;
+		this.players = players;
 		
 		currentLinearProjectiles = new HashMap<Integer, Projectile>();
 		currentTrackingProjectiles = new HashMap<Integer, LinkedList<Projectile>>();
@@ -61,9 +65,7 @@ public class StuffTracker {
 		overheadEvents = new HashMap<Integer, OverheadEvent>();
 		tickParticles = new HashMap<String, Particle>();
 		nextIndex = 0;
-		
-
-		
+				
 	}
 	
 	private int getProjectileIndex(){
@@ -86,7 +88,7 @@ public class StuffTracker {
 				System.out.println(match.getStringTables().forName("EffectDispatch").getNameByIndex((Integer)e.getProperty("m_EffectData.m_iEffectName")));
 				System.out.println(match.getEntities().getByIndex((Integer)e.getProperty("m_EffectData.entindex")).getDtClass().getDtName());
 			}*/
-			Globals.countString(e.getDtClass().getDtName());
+			//Globals.countString(e.getDtClass().getDtName());
 			if(e.getDtClass().getDtName().equals("DT_TEDOTAProjectile")){
 				//System.out.println(e.toString());
 
@@ -335,6 +337,9 @@ public class StuffTracker {
 				int clickEventID = db.createEvent(replay.getReplayID(), Utils.getTime(match), "PlayerClick");
 				Entity player = match.getEntities().getByIndex((int)um.getProperty("entindex"));
 				db.addEventIntArgument(clickEventID, "Player", replay.getPlayerID((int)player.getProperty("m_iPlayerID")));
+				Vector2f pos = players.getMouse((int)player.getProperty("m_iPlayerID"));
+				db.addEventRealArgument(clickEventID, "MouseX", pos.x);
+				db.addEventRealArgument(clickEventID, "MouseY", pos.y);
 				if(ConstantMapper.clickType((int)um.getProperty("order_type")).equals("")){
 					System.out.println(ConstantMapper.formatTime(Utils.getTime(match))+" "+um.toString()+" "/*+player.toString()*/);
 					if(player.getProperty("m_hAssignedHero")!= null)

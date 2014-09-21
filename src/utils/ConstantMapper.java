@@ -2497,4 +2497,32 @@ public class ConstantMapper {
 			return "";
 		}
 	}
+	
+	public static String itemForType(int type){
+		switch(type){
+		case 41:
+			return "Bottle";
+		default:
+			System.out.println("Unknown itemType "+type);
+			return "Unknown";
+		}
+	}
+	
+	public static String clickBehaviour(int id){
+		switch(id){
+		case 0:
+			return "Default";
+		case 2:
+			return "Attack";
+		case 3:
+			return "AbilityTarget";
+		case 6:
+			return "MinimapDrag";
+		case 7:
+			return "SkillAbility";
+		default:
+			System.out.println("Unknown clickBehaviour "+id);
+			return "Unknown";
+		}
+	}
 }

@@ -48,6 +48,7 @@ public class UnitTracker {
 			wrotePlayers = replay.writePlayers(match, db);
 		}
 		for(Integer handle : match.getEntities().getAddedHandles()){
+			Globals.countString(match.getEntities().getByHandle(handle).getDtClass().getDtName());
 			if(units.containsKey(handle)){
 				//System.out.println("again"+handle);
 				continue;

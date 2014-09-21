@@ -17,6 +17,8 @@ import java.util.Set;
 
 
 
+
+
 import javax.vecmath.Vector2f;
 
 import database.Constants;
@@ -38,6 +40,7 @@ public class Extraction {
 	private ReplayData replay;
 	private Database db;
 	
+	private PlayerTracker players;
 	private UnitTracker units;
 	private AnimationTracker animations;
 	private Map<Integer, Integer> actionTargets;
@@ -59,9 +62,10 @@ public class Extraction {
 		replay = new ReplayData(id, db);
 				
 		units = new UnitTracker(replay, db);
+		players = new PlayerTracker(db, replay, units);
 		animations = new AnimationTracker();
 		actionTargets = new HashMap<Integer, Integer>();
-		stuff = new StuffTracker(replay, db, units);
+		stuff = new StuffTracker(replay, db, units, players);
 		
 		modifiers = new ModifierTracker();
 		modifierChangesByName = new HashMap<String, LinkedList<ModifierChange>>();
@@ -70,6 +74,7 @@ public class Extraction {
 	}
 	
 	public void analyseTick(Match match, Match matchOld) {
+		//else System.out.println(Utils.getTime(match) +" "+ Utils.getTime(matchOld));
 		//db.startTransaction();
 
 		//System.out.println("\n"+ConstantMapper.formatTime(match.getGameTime())+" Tick");
@@ -79,6 +84,8 @@ public class Extraction {
 		//if(true)
 		//	return;
 		doPrints();
+		
+		players.update(match, matchOld);
 		
 		attackingUnits.clear();
 		
@@ -409,7 +416,7 @@ public class Extraction {
 				 continue;
             }
             CombatLogEntry cle = new CombatLogEntry(g);
-            System.out.println(cle.toString());
+            //System.out.println(cle.toString());
             /*if(true)
             	continue;*/
             boolean found = false;

@@ -73,7 +73,7 @@ public class ReplayData {
 			return false;
 		Integer[] selected_heroes = player_resource.getArrayProperty(Integer.class, "m_nSelectedHeroID");
 		String[] nicks = player_resource.getArrayProperty(String.class, "m_iszPlayerNames");
-		
+
 		for(int i = 0; i < 10; ++i){
 			if(playerIDs[i] != -1)
 				continue;
